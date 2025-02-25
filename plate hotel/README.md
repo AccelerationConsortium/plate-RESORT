@@ -1,20 +1,8 @@
 # Plate Hotel Build Guide
 This document provides the steps required to assemble the plate hotel. Please review all instructions and notes before starting the build.
 
-## Assembly Notes
-
-- **BOM References:**  
-  Numbers in square brackets indicate the required quantities and the corresponding part numbers from the Bill of Materials (BOM).
-
-- **Build Configuration:**  
-  This build is designed for a 2ft long rail accommodating 10 well plate slots spaced 50mm apart. Adjust the lengths and spacing for custom configurations if needed.
-
-- **Base Plate:**  
-  The base plate is intended to be screwed into a breadboard with M6 threads and 25mm spacing.
-
----
-
-## Purchased Parts
+## Bill of Materials
+### Purchased Parts
 
 | #   | McMaster Part # | Part Description                                       | Quantity |
 |-----|-----------------|--------------------------------------------------------|----------|
@@ -30,17 +18,17 @@ This document provides the steps required to assemble the plate hotel. Please re
 | A10 | 3136N534        | cap, 25mm rail                                         | 1        |
 | A11 | 91458A115       | threadlocker, Loctite 243 (medium)                     | N/A      |
 
-**Note**: I like stainless steel screws, this is not necessary. The lengths are listed in the part description.
+<small>**Note**: I like stainless steel screws, this is not necessary. The lengths are listed in the part description. </small>
 ---
 
-## 3D Printed Parts
+### 3D Printed Parts
 
 | #   | Filament Qty (g) | Part Name         | Part Qty |
 |-----|------------------|-------------------|----------|
 | B1  | 48.9             | well plate tray   | 11       |
 | B2  | 50               | plate hotel base  | 1        |
 
-**Note**: The well plate trays are intended to print in vertical orientation. See *4xB1 well_plate_trays.3mf* file.
+<small>**Note**: The well plate trays are intended to print in vertical orientation. See *4xB1 well_plate_trays.3mf* file. </small>
 ---
 
 ## Tools Required
@@ -50,7 +38,20 @@ This document provides the steps required to assemble the plate hotel. Please re
 
 ---
 
-## Assembly Steps
+## Assembly Notes
+
+- **BOM References:**  
+  Numbers in square brackets indicate the required quantities and the corresponding part numbers from the Bill of Materials (BOM).
+
+- **Build Configuration:**  
+  This build is designed for a 2ft long rail accommodating 10 well plate slots spaced 50mm apart. Adjust the lengths and spacing for custom configurations if needed.
+
+- **Base Plate:**  
+  The base plate is intended to be screwed into a breadboard with M6 threads and 25mm spacing.
+
+---
+
+## Assembly Instructions
 
 1. **Install Heat Set Inserts:**  
    - Insert 3 heat set inserts [3x A9] into the plate hotel base [1x B2].
