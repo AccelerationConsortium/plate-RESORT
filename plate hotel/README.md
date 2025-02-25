@@ -64,6 +64,7 @@ This document provides the steps required to assemble the plate hotel. Please re
 <p align="center">
   <img src="https://github.com/user-attachments/assets/da46f050-f562-44f0-b350-769fb6c2611d" alt="image">
 </p>
+
 3. **Prepare Components for Attaching the DIN Rail:**  
    Gather the following parts:
    - 3 M6 15mm L screws [3x A7]
@@ -80,6 +81,7 @@ This document provides the steps required to assemble the plate hotel. Please re
 <p align="center">
   <img src="https://github.com/user-attachments/assets/6a47f600-ee72-447c-a47f-fd71f04df5e5" alt="image">
 </p>
+
 5. **Attach the Rail/Extrusion Assembly to the Hotel Base:**  
    - Use gussets [3x A6] (screws and nuts included with gusset) to secure the assembly.
      - Fasten a nut along three of the extrusion tracks to attach the gusset to the extrusion.
@@ -96,6 +98,7 @@ This document provides the steps required to assemble the plate hotel. Please re
 <p align="center">
   <img src="https://github.com/user-attachments/assets/c01c202f-ba65-443a-8bdf-577b822e6212" alt="image">
 </p>
+
 7. **Final Step – Cap Cover Installation:**  
    - Press the cap cover [1x A10] onto the top of the extrusion.
   
