@@ -44,7 +44,7 @@ This document provides the steps required to assemble the plate hotel. Please re
   Numbers in square brackets indicate the required quantities and the corresponding part numbers from the Bill of Materials (BOM).
 
 - **Build Configuration:**  
-  This build is designed for a 2ft long rail accommodating 10 well plate slots spaced 50mm apart. Adjust the lengths and spacing for custom configurations if needed.
+  This build is designed for a 2ft long rail accommodating 11 well plate slots spaced 50mm apart. Adjust the lengths, spacing, and quantities for custom configurations if needed.
 
 - **Base Plate:**  
   The base plate is intended to be screwed into a breadboard with M6 threads and 25mm spacing.
