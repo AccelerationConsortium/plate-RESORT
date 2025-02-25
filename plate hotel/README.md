@@ -18,7 +18,7 @@ This document provides the steps required to assemble the plate hotel. Please re
 | A10 | 3136N534        | cap, 25mm rail                                         | 1        |
 | A11 | 91458A115       | threadlocker, Loctite 243 (medium)                     | N/A      |
 
-<small>Note: I like stainless steel screws, this is not necessary. The lengths are listed in the part description.</small>
+<sub>Note: I like stainless steel screws, this is not necessary. The lengths are listed in the part description.</sub>
 ---
 
 ### 3D Printed Parts
@@ -28,7 +28,7 @@ This document provides the steps required to assemble the plate hotel. Please re
 | B1  | 48.9             | well plate tray   | 11       |
 | B2  | 50               | plate hotel base  | 1        |
 
-<small>Note: The well plate trays are intended to print in vertical orientation. See *4xB1 well_plate_trays.3mf* file.</small>
+<sub>Note: The well plate trays are intended to print in vertical orientation. See *4xB1 well_plate_trays.3mf* file.</sub>
 ---
 
 ## Tools Required
