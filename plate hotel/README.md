@@ -11,7 +11,7 @@ This document provides the steps required to assemble the plate hotel. Please re
 | A3  | 94639A569       | M6 Spacer, 1/4in L, Nylon                              | 3        |
 | A4  | 92095A224       | M6 PH Screw, 10mm L, SS                                | 22       |
 | A5  | 8961K96         | DIN 3 Rail, 600mm L, S                                 | 1        |
-| A6  | 4844N111        | single closed gusset for 25mm rail (with fasteners)    | 3        |
+| A6  | 4844N123        | single closed gusset for 25mm rail (with fasteners)    | 3        |
 | A7  | 92095A128       | M6 PH Screw, 15mm L, SS                                | 3        |
 | A8  | 4633N79         | extrusion, square, 25mm, 2ft L                         | 1        |
 | A9  | 94180A371       | M6 heat set insert                                     | 3        |
