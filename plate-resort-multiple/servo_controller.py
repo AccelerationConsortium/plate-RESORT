@@ -30,6 +30,7 @@ class ServoController:
         self.angle_index = 0
         self.is_moving = False
         self.last_movement_time = 0
+        self.stable_count = 0  # Track stability across cycles
 
     def start(self):
         """Start the servo at middle position"""
@@ -53,6 +54,19 @@ class ServoController:
             ratio = (angle - self.MID_ANGLE) / (self.MAX_ANGLE - self.MID_ANGLE)
             return 7.4 + ratio * (10.5 - 7.4)
 
+    def update_movement_status(self):
+        """Update movement status based on current conditions"""
+        # Check if we're at target position
+        if abs(self.target_angle - self.current_angle) < 2.0:
+            self.stable_count += 1
+            if self.stable_count >= 3:
+                self.is_moving = False
+                return True  # Indicates stability achieved
+        else:
+            self.stable_count = 0
+            self.is_moving = True
+        return False  # Not stable yet
+
     def set_angle(self, target_angle, max_attempts=50):
         """Set servo to specified angle using minimal PWM signals"""
         # Ensure minimum delay between movements
@@ -63,6 +77,7 @@ class ServoController:
         
         self.target_angle = target_angle
         self.is_moving = True
+        self.stable_count = 0  # Reset stability counter
         
         # Ensure target angle is within physical limits
         target_angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, target_angle))
@@ -76,7 +91,6 @@ class ServoController:
         self.pwm.ChangeDutyCycle(0)  # Stop signal after initial movement
         
         attempt = 0
-        stable_count = 0
         last_correction_time = time.time()
         
         while attempt < max_attempts:
@@ -85,23 +99,21 @@ class ServoController:
             self.current_angle = self.adc.voltage_to_angle(current_voltage)
             
             # Print diagnostic information
-            print(f"Target: {target_angle:.1f}°, Current: {self.current_angle:.1f}°")
+            status = "MOVING" if self.is_moving else "STABLE"
+            print(f"Target: {target_angle:.1f}°, Current: {self.current_angle:.1f}° [{status}]")
             print(f"Voltage: {current_voltage:.2f}V, Duty: {duty:.1f}%")
             
-            # Check if we've reached the target
-            if abs(target_angle - self.current_angle) < 2.0:
-                stable_count += 1
-                if stable_count >= 3:
-                    print("Target position reached and stable!")
-                    self.is_moving = False
-                    self.pwm.ChangeDutyCycle(0)  # Stop active signals
-                    self.last_movement_time = time.time()
-                    break
+            # Update movement status
+            if self.update_movement_status():
+                print("Target position reached and stable!")
+                self.pwm.ChangeDutyCycle(0)  # Stop active signals
+                self.last_movement_time = time.time()
+                break
             else:
-                stable_count = 0
                 # Only apply corrections every 2 seconds (increased from 0.5)
                 current_time = time.time()
                 if current_time - last_correction_time >= 2.0:
+                    self.is_moving = True  # Explicitly mark as moving during correction
                     self.pwm.ChangeDutyCycle(duty)
                     time.sleep(0.2)  # Increased pulse duration from 0.1 to 0.2
                     self.pwm.ChangeDutyCycle(0)  # Stop signal
