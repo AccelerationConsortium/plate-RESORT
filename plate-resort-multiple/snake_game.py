@@ -78,33 +78,66 @@ BG_COLOR = (0, 0, 0)       # Black
 TEXT_COLOR = (255, 255, 255)  # White
 
 class SnakeGame:
-    def __init__(self):
-        self.reset_game()
+    def __init__(self, display, draw):
+        self.display = display
+        self.draw = draw
+        self.width = display.width
+        self.height = display.height
         
+        # Game constants
+        self.GRID_SIZE = 10
+        self.GRID_WIDTH = self.width // self.GRID_SIZE
+        self.GRID_HEIGHT = self.height // self.GRID_SIZE
+        self.SNAKE_COLOR = (0, 255, 0)  # Green
+        self.FOOD_COLOR = (255, 0, 0)   # Red
+        self.BG_COLOR = (0, 0, 0)       # Black
+        self.TEXT_COLOR = (255, 255, 255)  # White
+        
+        # Load font
+        try:
+            self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16)
+        except:
+            self.font = ImageFont.load_default()
+        
+        # Initialize game state
+        self.reset_game()
+
     def reset_game(self):
+        """Reset the game state"""
         # Start with snake in the middle
-        self.snake = deque([(GRID_WIDTH//2, GRID_HEIGHT//2)])
+        self.snake = deque([(self.GRID_WIDTH//2, self.GRID_HEIGHT//2)])
         self.direction = (1, 0)  # Start moving right
         self.food = self.spawn_food()
         self.score = 0
         self.game_over = False
-        self.paused = False
         
     def spawn_food(self):
+        """Spawn food in a random location not occupied by snake"""
         while True:
-            food = (random.randint(0, GRID_WIDTH-1), 
-                   random.randint(0, GRID_HEIGHT-1))
+            food = (random.randint(0, self.GRID_WIDTH-1), 
+                   random.randint(0, self.GRID_HEIGHT-1))
             if food not in self.snake:
                 return food
-    
-    def update(self):
-        if self.game_over or self.paused:
+
+    def update(self, controls):
+        """Update game state based on controls"""
+        if self.game_over:
             return
+
+        # Update direction based on controls
+        if controls['up'] and self.direction != (0, 1):
+            self.direction = (0, -1)
+        elif controls['down'] and self.direction != (0, -1):
+            self.direction = (0, 1)
+        elif controls['left'] and self.direction != (1, 0):
+            self.direction = (-1, 0)
+        elif controls['right'] and self.direction != (-1, 0):
+            self.direction = (1, 0)
 
         # Get new head position
         new_head = (
-            (self.snake[0][0] + self.direction[0]) % GRID_WIDTH,
-            (self.snake[0][1] + self.direction[1]) % GRID_HEIGHT
+            (self.snake[0][0] + self.direction[0]) % self.GRID_WIDTH,
+            (self.snake[0][1] + self.direction[1]) % self.GRID_HEIGHT
         )
         
         # Check collision with self
@@ -120,47 +153,47 @@ class SnakeGame:
             self.food = self.spawn_food()
         else:
             self.snake.pop()
-    
-    def change_direction(self, new_dir):
-        # Prevent 180-degree turns
-        if (new_dir[0] != -self.direction[0] or 
-            new_dir[1] != -self.direction[1]):
-            self.direction = new_dir
-    
-    def draw(self, draw):
+
+    def draw_game(self):
+        """Draw the current game state"""
         # Clear screen
-        draw.rectangle((0, 0, width, height), fill=BG_COLOR)
+        self.draw.rectangle((0, 0, self.width, self.height), fill=self.BG_COLOR)
         
         # Draw snake
         for segment in self.snake:
             x, y = segment
-            draw.rectangle(
-                (x * GRID_SIZE, y * GRID_SIZE,
-                 (x + 1) * GRID_SIZE - 1, (y + 1) * GRID_SIZE - 1),
-                fill=SNAKE_COLOR
+            self.draw.rectangle(
+                (x * self.GRID_SIZE, y * self.GRID_SIZE,
+                 (x + 1) * self.GRID_SIZE - 1, (y + 1) * self.GRID_SIZE - 1),
+                fill=self.SNAKE_COLOR
             )
         
         # Draw food
         x, y = self.food
-        draw.rectangle(
-            (x * GRID_SIZE, y * GRID_SIZE,
-             (x + 1) * GRID_SIZE - 1, (y + 1) * GRID_SIZE - 1),
-            fill=FOOD_COLOR
+        self.draw.rectangle(
+            (x * self.GRID_SIZE, y * self.GRID_SIZE,
+             (x + 1) * self.GRID_SIZE - 1, (y + 1) * self.GRID_SIZE - 1),
+            fill=self.FOOD_COLOR
         )
         
         # Draw score
-        draw.text((5, 5), f"Score: {self.score}", font=font, fill=TEXT_COLOR)
+        self.draw.text((5, 5), f"Score: {self.score}", font=self.font, fill=self.TEXT_COLOR)
         
-        # Draw game over or paused message
+        # Draw game over message
         if self.game_over:
-            msg = "Game Over! Press RIGHT button to restart"
-            draw.text((20, height//2), msg, font=font, fill=TEXT_COLOR)
-        elif self.paused:
-            msg = "PAUSED"
-            draw.text((width//2 - 20, height//2), msg, font=font, fill=TEXT_COLOR)
+            msg = "Game Over! Press B to exit"
+            text_bbox = self.draw.textbbox((0, 0), msg, font=self.font)
+            text_width = text_bbox[2] - text_bbox[0]
+            text_height = text_bbox[3] - text_bbox[1]
+            x = (self.width - text_width) // 2
+            y = (self.height - text_height) // 2
+            self.draw.text((x, y), msg, font=self.font, fill=self.TEXT_COLOR)
+        
+        # Update display
+        self.display.image(self.draw._image)
 
 def main():
-    game = SnakeGame()
+    game = SnakeGame(disp, draw)
     last_update = time.monotonic()
     update_interval = 0.2  # Speed of snake movement
     
@@ -172,28 +205,27 @@ def main():
                 time.sleep(0.2)  # Debounce
                 
         if not button_B.value:  # Left front button pressed
-            game.paused = not game.paused
+            game.game_over = True
             time.sleep(0.2)  # Debounce
             
-        if not game.game_over and not game.paused:
+        if not game.game_over:
             if not button_U.value:  # Up pressed
-                game.change_direction((0, -1))
+                game.update({'up': True})
             elif not button_D.value:  # Down pressed
-                game.change_direction((0, 1))
+                game.update({'down': True})
             elif not button_L.value:  # Left pressed
-                game.change_direction((-1, 0))
+                game.update({'left': True})
             elif not button_R.value:  # Right pressed
-                game.change_direction((1, 0))
+                game.update({'right': True})
         
         # Update game state
         current_time = time.monotonic()
         if current_time - last_update > update_interval:
-            game.update()
+            game.update({'up': False, 'down': False, 'left': False, 'right': False})
             last_update = current_time
         
         # Draw everything
-        game.draw(draw)
-        disp.image(image)
+        game.draw_game()
         
         # Small delay to prevent too much CPU usage
         time.sleep(0.01)

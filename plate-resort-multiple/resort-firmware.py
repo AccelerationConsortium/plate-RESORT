@@ -14,7 +14,6 @@ def main():
         adc = ADCManager()
         servo = ServoController(adc)
         buttons = ButtonManager()
-        snake = SnakeGame(display.disp, display.draw)  # Pass display objects to snake game
         
         # Start display and servo
         display.init_display()
@@ -22,7 +21,10 @@ def main():
         servo.start()
         
         print("Starting servo control (Press A to cycle angles, B for Snake Game, Ctrl+C to exit)...")
+        
+        # Initialize game state
         in_snake_game = False
+        snake = None
         
         while True:
             if not in_snake_game:
@@ -33,7 +35,7 @@ def main():
                     print("Starting Snake Game...")
                     in_snake_game = True
                     display.stop_display_thread()
-                    snake.reset_game()
+                    snake = SnakeGame(display.disp, display.draw)
                     continue
                 
                 # Update display with servo state
@@ -48,13 +50,14 @@ def main():
                 if buttons.check_button_b():
                     print("Exiting Snake Game...")
                     in_snake_game = False
+                    snake = None
                     display.start_display_thread()
                     continue
                 
                 # Update snake game
                 controls = buttons.get_snake_controls()
                 snake.update(controls)
-                snake.draw()
+                snake.draw_game()
             
             time.sleep(0.01)
             
