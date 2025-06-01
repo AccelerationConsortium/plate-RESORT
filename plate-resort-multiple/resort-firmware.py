@@ -9,9 +9,9 @@ import time
 
 def main():
     try:
-        # Initialize all components
-        display = DisplayManager()
+        # Initialize components in correct order
         adc = ADCManager()
+        display = DisplayManager(adc)
         servo = ServoController(adc)
         buttons = ButtonManager()
         
@@ -41,7 +41,6 @@ def main():
                 # Update display with servo state
                 state = servo.get_state()
                 display.update_state(
-                    state['current_angle'],
                     state['target_angle'],
                     state['is_moving']
                 )

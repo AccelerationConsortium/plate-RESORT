@@ -8,7 +8,10 @@ import threading
 import time
 
 class DisplayManager:
-    def __init__(self):
+    def __init__(self, adc_manager):
+        # Store ADC manager for live readings
+        self.adc = adc_manager
+        
         # Initialize display
         self.cs_pin = DigitalInOut(board.CE0)
         self.dc_pin = DigitalInOut(board.D25)
@@ -45,7 +48,6 @@ class DisplayManager:
             self.font = ImageFont.load_default()
 
         # Display state
-        self.current_angle = 0
         self.target_angle = 0
         self.is_moving = False
         self.update_thread = None
@@ -66,10 +68,14 @@ class DisplayManager:
             # Create blank image for drawing
             self.draw.rectangle((0, 0, self.width, self.height), outline=0, fill=(0, 0, 0))
             
-            # Draw current angle
+            # Get live current angle reading
+            current_voltage = self.adc.get_voltage()
+            current_angle = self.adc.voltage_to_angle(current_voltage)
+            
+            # Draw current angle (live)
             self.draw.text(
                 (10, 10),
-                f"Current: {self.current_angle:.1f}°",
+                f"Current: {current_angle:.1f}°",
                 font=self.font,
                 fill=(255, 255, 255),
             )
@@ -92,9 +98,17 @@ class DisplayManager:
                 fill=color,
             )
             
+            # Draw voltage reading
+            self.draw.text(
+                (10, 130),
+                f"Voltage: {current_voltage:.2f}V",
+                font=self.font,
+                fill=(128, 128, 255),
+            )
+            
             # Draw button guide
             self.draw.text(
-                (10, 160),
+                (10, 180),
                 "A: Cycle angles | B: Snake Game",
                 font=self.font,
                 fill=(128, 128, 255),
@@ -102,7 +116,7 @@ class DisplayManager:
             
             # Display the image
             self.disp.image(self.image)
-            time.sleep(0.1)
+            time.sleep(0.1)  # Update 10 times per second
 
     def start_display_thread(self):
         """Start the display update thread"""
@@ -116,8 +130,7 @@ class DisplayManager:
         if self.update_thread:
             self.update_thread.join()
 
-    def update_state(self, current_angle, target_angle, is_moving):
+    def update_state(self, target_angle, is_moving):
         """Update the display state"""
-        self.current_angle = current_angle
         self.target_angle = target_angle
         self.is_moving = is_moving 
