@@ -10,9 +10,9 @@ from PIL import Image, ImageDraw, ImageFont
 from adafruit_rgb_display import st7789
 
 # Create the display
-cs_pin = DigitalInOut(board.CE0)
-dc_pin = DigitalInOut(board.D25)
-reset_pin = DigitalInOut(board.D24)
+cs_pin = DigitalInOut(board.CE0)      # CE0 for chip select
+dc_pin = DigitalInOut(board.GPIO25)   # GPIO25 for display control
+reset_pin = None                      # No reset pin mentioned in docs
 BAUDRATE = 24000000
 
 spi = board.SPI()
@@ -23,34 +23,34 @@ disp = st7789.ST7789(
     rotation=180,
     cs=cs_pin,
     dc=dc_pin,
-    rst=reset_pin,
+    rst=reset_pin,    # Set to None since no reset pin is mentioned
     baudrate=BAUDRATE,
 )
 
 # Input pins:
-button_A = DigitalInOut(board.D5)
+button_A = DigitalInOut(board.GPIO5)  # Front button A
 button_A.direction = Direction.INPUT
 
-button_B = DigitalInOut(board.D6)
+button_B = DigitalInOut(board.GPIO6)  # Front button B
 button_B.direction = Direction.INPUT
 
-button_L = DigitalInOut(board.D27)
+button_L = DigitalInOut(board.GPIO27) # Joystick Left
 button_L.direction = Direction.INPUT
 
-button_R = DigitalInOut(board.D23)
+button_R = DigitalInOut(board.GPIO23) # Joystick Right
 button_R.direction = Direction.INPUT
 
-button_U = DigitalInOut(board.D17)
+button_U = DigitalInOut(board.GPIO17) # Joystick Up
 button_U.direction = Direction.INPUT
 
-button_D = DigitalInOut(board.D22)
+button_D = DigitalInOut(board.GPIO22) # Joystick Down
 button_D.direction = Direction.INPUT
 
-button_C = DigitalInOut(board.D4)
+button_C = DigitalInOut(board.GPIO4)  # Joystick Center
 button_C.direction = Direction.INPUT
 
 # Turn on the Backlight
-backlight = DigitalInOut(board.D26)
+backlight = DigitalInOut(board.GPIO26)
 backlight.switch_to_output()
 backlight.value = True
 
