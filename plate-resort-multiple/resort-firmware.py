@@ -57,51 +57,51 @@ i2c = busio.I2C(board.SCL, board.SDA)
 ads = ADS.ADS1115(i2c)
 
 # Create PID controller instance with adjusted gains
-pid = PIDController(kp=0.5, ki=0.005, kd=0.02)
+pid = PIDController(kp=0.3, ki=0.001, kd=0.01)
 
 def voltage_to_angle(voltage):
-    """Convert feedback voltage to angle
-    FB5118M feedback voltage mapping:
-    2.60V = 900μs (60 degrees)
-    1.66V = 1500μs (150 degrees)
-    0.72V = 2100μs (240 degrees)
+    """Convert feedback voltage to angle based on observed readings:
+    2.51V ≈ 68.5° (minimum angle)
+    1.56V ≈ 159° (middle position)
+    0.58V ≈ 240° (maximum angle)
     """
-    if voltage >= 2.60:
-        return 60
-    elif voltage <= 0.72:
-        return 240
+    # Handle limits
+    if voltage >= 2.51:
+        return 68.5
+    elif voltage <= 0.58:
+        return 240.0
     
     # Linear interpolation between known points
-    if voltage >= 1.66:
-        # Between 2.60V (60°) and 1.66V (150°)
-        ratio = (2.60 - voltage) / (2.60 - 1.66)
-        return 60 + ratio * 90
+    if voltage >= 1.56:
+        # Between 2.51V (68.5°) and 1.56V (159°)
+        ratio = (2.51 - voltage) / (2.51 - 1.56)
+        return 68.5 + ratio * (159.0 - 68.5)
     else:
-        # Between 1.66V (150°) and 0.72V (240°)
-        ratio = (1.66 - voltage) / (1.66 - 0.72)
-        return 150 + ratio * 90
+        # Between 1.56V (159°) and 0.58V (240°)
+        ratio = (1.56 - voltage) / (1.56 - 0.58)
+        return 159.0 + ratio * (240.0 - 159.0)
 
 def angle_to_duty_cycle(angle):
-    """Convert angle to duty cycle
-    FB5118M pulse width range: 500-2500μs
-    For 50Hz PWM, period is 20ms (20000μs)
-    500μs = 2.5% duty cycle
-    2500μs = 12.5% duty cycle
+    """Convert angle to duty cycle based on observed working ranges
+    68.5° = 4.3% duty cycle
+    159° = 7.4% duty cycle
+    240° = 10.5% duty cycle
     """
-    # Ensure angle is within 0-300 degree range
-    angle = max(0, min(300, angle))
+    # Ensure angle is within physical limits
+    angle = max(68.5, min(240.0, angle))
     
-    # Convert angle to pulse width (500-2500μs)
-    pulse_width = 500 + (angle / 300.0) * 2000
-    
-    # Convert pulse width to duty cycle
-    duty_cycle = (pulse_width / 20000.0) * 100
-    return max(2.5, min(12.5, duty_cycle))
+    # Linear interpolation for duty cycle
+    if angle <= 159.0:
+        ratio = (angle - 68.5) / (159.0 - 68.5)
+        return 4.3 + ratio * (7.4 - 4.3)
+    else:
+        ratio = (angle - 159.0) / (240.0 - 159.0)
+        return 7.4 + ratio * (10.5 - 7.4)
 
 def set_servo_angle(target_angle, max_attempts=50):
     """Set servo to specified angle using closed-loop control"""
-    # Ensure target angle is within valid range
-    target_angle = max(0, min(300, target_angle))
+    # Ensure target angle is within physical limits
+    target_angle = max(68.5, min(240.0, target_angle))
     
     chan = AnalogIn(ads, ADS.P0)
     
@@ -120,11 +120,11 @@ def set_servo_angle(target_angle, max_attempts=50):
         pid_output = pid.compute(target_angle, current_angle)
         
         # Limit PID output more strictly
-        pid_output = max(-20, min(20, pid_output))
+        pid_output = max(-15, min(15, pid_output))
         
         # Calculate new angle with PID adjustment
         adjusted_angle = target_angle + pid_output
-        adjusted_angle = max(0, min(300, adjusted_angle))
+        adjusted_angle = max(68.5, min(240.0, adjusted_angle))
         
         # Convert to duty cycle
         current_duty = angle_to_duty_cycle(adjusted_angle)
@@ -145,7 +145,7 @@ def set_servo_angle(target_angle, max_attempts=50):
         if len(last_angles) == 3:
             # Check both position accuracy and stability
             max_diff = max(abs(a - b) for a, b in zip(last_angles[:-1], last_angles[1:]))
-            if abs(target_angle - current_angle) < 5.0 and max_diff < 2.0:
+            if abs(target_angle - current_angle) < 3.0 and max_diff < 1.0:
                 print("Target position reached and stable!")
                 break
         
@@ -158,14 +158,13 @@ def set_servo_angle(target_angle, max_attempts=50):
 def main():
     try:
         print("Initializing servo...")
-        pwm.start(7.5)  # Start at center position (150 degrees)
+        pwm.start(7.4)  # Start at middle position (159 degrees)
         time.sleep(1)   # Wait for servo to initialize
         
         print("Starting movement sequence with closed-loop control...")
         while True:
-            # Test sequence: 60° -> 150° -> 240° -> repeat
-            # These angles correspond to the calibrated feedback voltages
-            angles = [60, 150, 240]
+            # Test sequence using achievable angles based on observed limits
+            angles = [68.5, 159.0, 240.0]
             
             for angle in angles:
                 print(f"\nMoving to {angle} degrees")
