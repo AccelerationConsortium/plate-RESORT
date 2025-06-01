@@ -3,7 +3,7 @@
 import time
 import random
 import board
-from digitalio import DigitalInOut, Direction
+from digitalio import DigitalInOut, Direction, Pull
 from PIL import Image, ImageDraw, ImageFont
 from adafruit_rgb_display import st7789
 from collections import deque
@@ -26,24 +26,30 @@ disp = st7789.ST7789(
     baudrate=BAUDRATE,
 )
 
-# Initialize buttons
-button_A = DigitalInOut(board.D5)  # Start/Restart
+# Initialize buttons with pull-ups
+button_A = DigitalInOut(board.D5)  # Start/Restart (Right button)
 button_A.direction = Direction.INPUT
+button_A.pull = Pull.UP
 
-button_B = DigitalInOut(board.D6)  # Pause
+button_B = DigitalInOut(board.D6)  # Pause (Left button)
 button_B.direction = Direction.INPUT
+button_B.pull = Pull.UP
 
 button_L = DigitalInOut(board.D27) # Left
 button_L.direction = Direction.INPUT
+button_L.pull = Pull.UP
 
 button_R = DigitalInOut(board.D23) # Right
 button_R.direction = Direction.INPUT
+button_R.pull = Pull.UP
 
 button_U = DigitalInOut(board.D17) # Up
 button_U.direction = Direction.INPUT
+button_U.pull = Pull.UP
 
 button_D = DigitalInOut(board.D22) # Down
 button_D.direction = Direction.INPUT
+button_D.pull = Pull.UP
 
 # Turn on the Backlight
 backlight = DigitalInOut(board.D26)
@@ -75,6 +81,7 @@ TEXT_COLOR = (255, 255, 255)  # White
 
 class SnakeGame:
     def __init__(self):
+        self.started = False
         self.reset_game()
         
     def reset_game(self):
@@ -94,7 +101,7 @@ class SnakeGame:
                 return food
     
     def update(self):
-        if self.game_over or self.paused:
+        if not self.started or self.game_over or self.paused:
             return
 
         # Get new head position
@@ -127,6 +134,30 @@ class SnakeGame:
         # Clear screen
         draw.rectangle((0, 0, width, height), fill=BG_COLOR)
         
+        if not self.started:
+            # Draw start screen
+            title = "SNAKE GAME"
+            msg = "Press RIGHT button (A) to Start"
+            controls = "Controls:"
+            ctrl1 = "D-pad: Move snake"
+            ctrl2 = "Right button (A): Start/Restart"
+            ctrl3 = "Left button (B): Pause"
+            
+            # Draw title
+            w, h = draw.textsize(title, font=font)
+            draw.text(((width - w) // 2, 40), title, font=font, fill=TEXT_COLOR)
+            
+            # Draw start message
+            w, h = draw.textsize(msg, font=small_font)
+            draw.text(((width - w) // 2, 80), msg, font=small_font, fill=TEXT_COLOR)
+            
+            # Draw controls
+            draw.text(20, 120, controls, font=small_font, fill=TEXT_COLOR)
+            draw.text(20, 140, ctrl1, font=small_font, fill=TEXT_COLOR)
+            draw.text(20, 160, ctrl2, font=small_font, fill=TEXT_COLOR)
+            draw.text(20, 180, ctrl3, font=small_font, fill=TEXT_COLOR)
+            return
+            
         # Draw snake
         for segment in self.snake:
             x, y = segment
@@ -149,7 +180,7 @@ class SnakeGame:
         
         # Draw game over or paused message
         if self.game_over:
-            msg = "Game Over! Press A to restart"
+            msg = "Game Over! Press RIGHT button (A) to restart"
             w, h = draw.textsize(msg, font=small_font)
             draw.text(
                 ((width - w) // 2, (height - h) // 2),
@@ -174,16 +205,21 @@ def main():
     
     while True:
         # Handle input
-        if not button_A.value:  # A pressed
-            if game.game_over:
+        if not button_A.value:  # Right button (A) pressed
+            if not game.started:
+                game.started = True
+                time.sleep(0.2)  # Debounce
+            elif game.game_over:
                 game.reset_game()
+                game.started = True
                 time.sleep(0.2)  # Debounce
                 
-        if not button_B.value:  # B pressed
-            game.paused = not game.paused
-            time.sleep(0.2)  # Debounce
+        if not button_B.value:  # Left button (B) pressed
+            if game.started and not game.game_over:
+                game.paused = not game.paused
+                time.sleep(0.2)  # Debounce
             
-        if not game.game_over and not game.paused:
+        if game.started and not game.game_over and not game.paused:
             if not button_U.value:  # Up pressed
                 game.change_direction((0, -1))
             elif not button_D.value:  # Down pressed
