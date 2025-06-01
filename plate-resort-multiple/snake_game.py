@@ -27,11 +27,11 @@ disp = st7789.ST7789(
 )
 
 # Initialize buttons with pull-ups
-button_A = DigitalInOut(board.D5)  # Start/Restart (Right button)
+button_A = DigitalInOut(board.D5)  # Front button A
 button_A.direction = Direction.INPUT
 button_A.pull = Pull.UP
 
-button_B = DigitalInOut(board.D6)  # Pause (Left button)
+button_B = DigitalInOut(board.D6)  # Front button B
 button_B.direction = Direction.INPUT
 button_B.pull = Pull.UP
 
@@ -64,11 +64,9 @@ draw = ImageDraw.Draw(image)
 
 # Load font
 try:
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
-    small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+    font = ImageFont.load_default()
 except:
     font = ImageFont.load_default()
-    small_font = ImageFont.load_default()
 
 # Game constants
 GRID_SIZE = 10
@@ -81,7 +79,6 @@ TEXT_COLOR = (255, 255, 255)  # White
 
 class SnakeGame:
     def __init__(self):
-        self.started = False
         self.reset_game()
         
     def reset_game(self):
@@ -101,7 +98,7 @@ class SnakeGame:
                 return food
     
     def update(self):
-        if not self.started or self.game_over or self.paused:
+        if self.game_over or self.paused:
             return
 
         # Get new head position
@@ -134,34 +131,6 @@ class SnakeGame:
         # Clear screen
         draw.rectangle((0, 0, width, height), fill=BG_COLOR)
         
-        if not self.started:
-            # Draw start screen
-            title = "SNAKE GAME"
-            msg = "Press RIGHT button (A) to Start"
-            controls = "Controls:"
-            ctrl1 = "D-pad: Move snake"
-            ctrl2 = "Right button (A): Start/Restart"
-            ctrl3 = "Left button (B): Pause"
-            
-            # Draw title
-            bbox = draw.textbbox((0, 0), title, font=font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            draw.text((width - text_width) // 2, 40, title, fill=TEXT_COLOR, font=font)
-            
-            # Draw start message
-            bbox = draw.textbbox((0, 0), msg, font=small_font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            draw.text((width - text_width) // 2, 80, msg, fill=TEXT_COLOR, font=small_font)
-            
-            # Draw controls
-            draw.text(20, 120, controls, fill=TEXT_COLOR, font=small_font)
-            draw.text(20, 140, ctrl1, fill=TEXT_COLOR, font=small_font)
-            draw.text(20, 160, ctrl2, fill=TEXT_COLOR, font=small_font)
-            draw.text(20, 180, ctrl3, fill=TEXT_COLOR, font=small_font)
-            return
-            
         # Draw snake
         for segment in self.snake:
             x, y = segment
@@ -180,33 +149,15 @@ class SnakeGame:
         )
         
         # Draw score
-        draw.text(5, 5, f"Score: {self.score}", fill=TEXT_COLOR, font=font)
+        draw.text((5, 5), f"Score: {self.score}", font=font, fill=TEXT_COLOR)
         
         # Draw game over or paused message
         if self.game_over:
-            msg = "Game Over! Press RIGHT button (A) to restart"
-            bbox = draw.textbbox((0, 0), msg, font=small_font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            draw.text(
-                (width - text_width) // 2,
-                (height - text_height) // 2,
-                msg,
-                fill=TEXT_COLOR,
-                font=small_font
-            )
+            msg = "Game Over! Press RIGHT button to restart"
+            draw.text((20, height//2), msg, font=font, fill=TEXT_COLOR)
         elif self.paused:
             msg = "PAUSED"
-            bbox = draw.textbbox((0, 0), msg, font=font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            draw.text(
-                (width - text_width) // 2,
-                (height - text_height) // 2,
-                msg,
-                fill=TEXT_COLOR,
-                font=font
-            )
+            draw.text((width//2 - 20, height//2), msg, font=font, fill=TEXT_COLOR)
 
 def main():
     game = SnakeGame()
@@ -215,21 +166,16 @@ def main():
     
     while True:
         # Handle input
-        if not button_A.value:  # Right button (A) pressed
-            if not game.started:
-                game.started = True
-                time.sleep(0.2)  # Debounce
-            elif game.game_over:
+        if not button_A.value:  # Right front button pressed
+            if game.game_over:
                 game.reset_game()
-                game.started = True
                 time.sleep(0.2)  # Debounce
                 
-        if not button_B.value:  # Left button (B) pressed
-            if game.started and not game.game_over:
-                game.paused = not game.paused
-                time.sleep(0.2)  # Debounce
+        if not button_B.value:  # Left front button pressed
+            game.paused = not game.paused
+            time.sleep(0.2)  # Debounce
             
-        if game.started and not game.game_over and not game.paused:
+        if not game.game_over and not game.paused:
             if not button_U.value:  # Up pressed
                 game.change_direction((0, -1))
             elif not button_D.value:  # Down pressed
