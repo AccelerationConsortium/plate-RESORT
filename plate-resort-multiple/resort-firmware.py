@@ -14,6 +14,7 @@ class PIDController:
         self.last_error = 0
         self.integral = 0
         self.last_time = time.time()
+        self.integral_limit = 50  # Limit integral windup
 
     def compute(self, setpoint, measured_value):
         current_time = time.time()
@@ -25,8 +26,9 @@ class PIDController:
         # Proportional term
         p_term = self.kp * error
         
-        # Integral term
+        # Integral term with anti-windup
         self.integral += error * dt
+        self.integral = max(-self.integral_limit, min(self.integral_limit, self.integral))
         i_term = self.ki * self.integral
         
         # Derivative term
@@ -54,10 +56,8 @@ pwm = GPIO.PWM(SERVO_PIN, 50)  # 50Hz frequency
 i2c = busio.I2C(board.SCL, board.SDA)
 ads = ADS.ADS1115(i2c)
 
-# Create PID controller instance with adjusted gains
-# Increased proportional gain for faster response
-# Reduced integral gain to prevent oscillation
-pid = PIDController(kp=4.0, ki=0.05, kd=0.1)
+# Create PID controller instance with gentler gains
+pid = PIDController(kp=1.0, ki=0.01, kd=0.05)
 
 def voltage_to_angle(voltage):
     """Convert feedback voltage to angle based on observed readings:
@@ -73,13 +73,12 @@ def voltage_to_angle(voltage):
 
 def angle_to_duty_cycle(angle):
     """Convert angle (0-300 degrees) to duty cycle"""
-    if angle < 0 or angle > 300:
-        # Instead of raising an error, clamp the value
-        angle = max(0, min(300, angle))
+    # Clamp angle to valid range
+    angle = max(0, min(300, angle))
     
     # Convert angle to duty cycle (2.5-12.5%)
     duty_cycle = 2.5 + (angle / 300.0) * 10.0
-    return max(2.5, min(12.5, duty_cycle))  # Clamp to valid range
+    return max(2.5, min(12.5, duty_cycle))
 
 def set_servo_angle(target_angle, max_attempts=50):
     """Set servo to specified angle using closed-loop control"""
@@ -87,7 +86,9 @@ def set_servo_angle(target_angle, max_attempts=50):
     target_angle = max(0, min(270, target_angle))  # Limit to 270 degrees as per your setup
     
     chan = AnalogIn(ads, ADS.P0)
-    current_angle = voltage_to_angle(chan.voltage)
+    
+    # Reset PID integral term when starting new movement
+    pid.integral = 0
     
     attempt = 0
     while attempt < max_attempts:
@@ -98,9 +99,12 @@ def set_servo_angle(target_angle, max_attempts=50):
         # Calculate PID output
         pid_output = pid.compute(target_angle, current_angle)
         
+        # Limit PID output more strictly
+        pid_output = max(-30, min(30, pid_output))
+        
         # Calculate new angle with PID adjustment
         adjusted_angle = target_angle + pid_output
-        adjusted_angle = max(0, min(300, adjusted_angle))  # Clamp to valid range
+        adjusted_angle = max(0, min(300, adjusted_angle))
         
         # Convert to duty cycle
         current_duty = angle_to_duty_cycle(adjusted_angle)
@@ -110,14 +114,14 @@ def set_servo_angle(target_angle, max_attempts=50):
         
         # Print diagnostic information
         print(f"Target: {target_angle:.1f}°, Current: {current_angle:.1f}°, Adjusted: {adjusted_angle:.1f}°")
-        print(f"Voltage: {current_voltage:.2f}V, PID Output: {pid_output:.1f}, Duty: {current_duty:.1f}%")
+        print(f"Voltage: {current_voltage:.2f}V, PID Output: {pid_output:.1f}, Duty: {current_duty:.1f}%, I-term: {pid.integral:.1f}")
         
         # Check if we've reached the target (within tolerance)
-        if abs(target_angle - current_angle) < 5.0:  # 5 degree tolerance
+        if abs(target_angle - current_angle) < 8.0:  # Increased tolerance
             print("Target position reached!")
             break
             
-        time.sleep(0.1)  # 100ms control loop
+        time.sleep(0.2)  # Slower control loop (200ms)
         attempt += 1
     
     if attempt >= max_attempts:
