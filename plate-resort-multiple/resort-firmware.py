@@ -74,7 +74,8 @@ def voltage_to_angle(voltage):
 def angle_to_duty_cycle(angle):
     """Convert angle (0-300 degrees) to duty cycle"""
     if angle < 0 or angle > 300:
-        raise ValueError("Angle must be between 0 and 300 degrees")
+        # Instead of raising an error, clamp the value
+        angle = max(0, min(300, angle))
     
     # Convert angle to duty cycle (2.5-12.5%)
     duty_cycle = 2.5 + (angle / 300.0) * 10.0
@@ -82,6 +83,9 @@ def angle_to_duty_cycle(angle):
 
 def set_servo_angle(target_angle, max_attempts=50):
     """Set servo to specified angle using closed-loop control"""
+    # Ensure target angle is within valid range
+    target_angle = max(0, min(270, target_angle))  # Limit to 270 degrees as per your setup
+    
     chan = AnalogIn(ads, ADS.P0)
     current_angle = voltage_to_angle(chan.voltage)
     
@@ -94,16 +98,19 @@ def set_servo_angle(target_angle, max_attempts=50):
         # Calculate PID output
         pid_output = pid.compute(target_angle, current_angle)
         
-        # Convert PID output to duty cycle adjustment
-        # Limit the adjustment range to prevent overshooting
-        pid_output = max(-45, min(45, pid_output))  # Limit correction to ±45 degrees
-        current_duty = angle_to_duty_cycle(target_angle + pid_output)
+        # Calculate new angle with PID adjustment
+        adjusted_angle = target_angle + pid_output
+        adjusted_angle = max(0, min(300, adjusted_angle))  # Clamp to valid range
+        
+        # Convert to duty cycle
+        current_duty = angle_to_duty_cycle(adjusted_angle)
         
         # Apply the control signal
         pwm.ChangeDutyCycle(current_duty)
         
         # Print diagnostic information
-        print(f"Target: {target_angle:.1f}°, Current: {current_angle:.1f}°, Voltage: {current_voltage:.2f}V, PID Output: {pid_output:.1f}, Duty: {current_duty:.1f}%")
+        print(f"Target: {target_angle:.1f}°, Current: {current_angle:.1f}°, Adjusted: {adjusted_angle:.1f}°")
+        print(f"Voltage: {current_voltage:.2f}V, PID Output: {pid_output:.1f}, Duty: {current_duty:.1f}%")
         
         # Check if we've reached the target (within tolerance)
         if abs(target_angle - current_angle) < 5.0:  # 5 degree tolerance
