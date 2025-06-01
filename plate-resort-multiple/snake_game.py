@@ -144,12 +144,16 @@ class SnakeGame:
             ctrl3 = "Left button (B): Pause"
             
             # Draw title
-            w, h = draw.textsize(title, font=font)
-            draw.text(((width - w) // 2, 40), title, font=font, fill=TEXT_COLOR)
+            bbox = draw.textbbox((0, 0), title, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+            draw.text(((width - text_width) // 2, 40), title, font=font, fill=TEXT_COLOR)
             
             # Draw start message
-            w, h = draw.textsize(msg, font=small_font)
-            draw.text(((width - w) // 2, 80), msg, font=small_font, fill=TEXT_COLOR)
+            bbox = draw.textbbox((0, 0), msg, font=small_font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+            draw.text(((width - text_width) // 2, 80), msg, font=small_font, fill=TEXT_COLOR)
             
             # Draw controls
             draw.text(20, 120, controls, font=small_font, fill=TEXT_COLOR)
@@ -181,18 +185,22 @@ class SnakeGame:
         # Draw game over or paused message
         if self.game_over:
             msg = "Game Over! Press RIGHT button (A) to restart"
-            w, h = draw.textsize(msg, font=small_font)
+            bbox = draw.textbbox((0, 0), msg, font=small_font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
             draw.text(
-                ((width - w) // 2, (height - h) // 2),
+                ((width - text_width) // 2, (height - text_height) // 2),
                 msg,
                 font=small_font,
                 fill=TEXT_COLOR
             )
         elif self.paused:
             msg = "PAUSED"
-            w, h = draw.textsize(msg, font=font)
+            bbox = draw.textbbox((0, 0), msg, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
             draw.text(
-                ((width - w) // 2, (height - h) // 2),
+                ((width - text_width) // 2, (height - text_height) // 2),
                 msg,
                 font=font,
                 fill=TEXT_COLOR
