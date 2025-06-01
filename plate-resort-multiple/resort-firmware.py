@@ -30,6 +30,11 @@ def main():
             if not in_snake_game:
                 # Normal servo control mode
                 if buttons.check_button_a():
+                    # Get next angle before movement
+                    next_angle = servo.get_next_angle()
+                    # Update display immediately with new target
+                    display.update_state(next_angle, True)
+                    # Now start the movement
                     servo.cycle_angle()
                 elif buttons.check_button_b():
                     print("Starting Snake Game...")

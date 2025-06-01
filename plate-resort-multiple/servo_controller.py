@@ -128,6 +128,11 @@ class ServoController:
             self.pwm.ChangeDutyCycle(0)
             self.last_movement_time = time.time()
 
+    def get_next_angle(self):
+        """Get the next angle in the sequence without moving"""
+        next_index = (self.angle_index + 1) % len(self.angles)
+        return self.angles[next_index]
+
     def cycle_angle(self):
         """Cycle through preset angles"""
         self.angle_index = (self.angle_index + 1) % len(self.angles)
