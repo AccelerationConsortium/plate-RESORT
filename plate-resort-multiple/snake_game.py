@@ -147,19 +147,19 @@ class SnakeGame:
             bbox = draw.textbbox((0, 0), title, font=font)
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
-            draw.text(((width - text_width) // 2, 40), title, font=font, fill=TEXT_COLOR)
+            draw.text((width - text_width) // 2, 40, title, fill=TEXT_COLOR, font=font)
             
             # Draw start message
             bbox = draw.textbbox((0, 0), msg, font=small_font)
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
-            draw.text(((width - text_width) // 2, 80), msg, font=small_font, fill=TEXT_COLOR)
+            draw.text((width - text_width) // 2, 80, msg, fill=TEXT_COLOR, font=small_font)
             
             # Draw controls
-            draw.text(20, 120, controls, font=small_font, fill=TEXT_COLOR)
-            draw.text(20, 140, ctrl1, font=small_font, fill=TEXT_COLOR)
-            draw.text(20, 160, ctrl2, font=small_font, fill=TEXT_COLOR)
-            draw.text(20, 180, ctrl3, font=small_font, fill=TEXT_COLOR)
+            draw.text(20, 120, controls, fill=TEXT_COLOR, font=small_font)
+            draw.text(20, 140, ctrl1, fill=TEXT_COLOR, font=small_font)
+            draw.text(20, 160, ctrl2, fill=TEXT_COLOR, font=small_font)
+            draw.text(20, 180, ctrl3, fill=TEXT_COLOR, font=small_font)
             return
             
         # Draw snake
@@ -180,7 +180,7 @@ class SnakeGame:
         )
         
         # Draw score
-        draw.text((5, 5), f"Score: {self.score}", font=font, fill=TEXT_COLOR)
+        draw.text(5, 5, f"Score: {self.score}", fill=TEXT_COLOR, font=font)
         
         # Draw game over or paused message
         if self.game_over:
@@ -189,10 +189,11 @@ class SnakeGame:
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
             draw.text(
-                ((width - text_width) // 2, (height - text_height) // 2),
+                (width - text_width) // 2,
+                (height - text_height) // 2,
                 msg,
-                font=small_font,
-                fill=TEXT_COLOR
+                fill=TEXT_COLOR,
+                font=small_font
             )
         elif self.paused:
             msg = "PAUSED"
@@ -200,10 +201,11 @@ class SnakeGame:
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
             draw.text(
-                ((width - text_width) // 2, (height - text_height) // 2),
+                (width - text_width) // 2,
+                (height - text_height) // 2,
                 msg,
-                font=font,
-                fill=TEXT_COLOR
+                fill=TEXT_COLOR,
+                font=font
             )
 
 def main():
