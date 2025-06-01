@@ -11,39 +11,57 @@ from adafruit_rgb_display import st7789
 import threading
 from digitalio import DigitalInOut, Direction, Pull
 
-# Configuration for CS and DC pins:
-cs_pin = DigitalInOut(board.CE0)    # Chip select
-dc_pin = DigitalInOut(board.D25)   # GPIO25
-reset_pin = DigitalInOut(board.D24) # GPIO24
-BAUDRATE = 24000000  # Updated to match documentation
+# Initialize display
+cs_pin = DigitalInOut(board.CE0)
+dc_pin = DigitalInOut(board.D25)
+reset_pin = DigitalInOut(board.D24)
+BAUDRATE = 24000000
 
-# Setup SPI bus using hardware SPI
 spi = board.SPI()
-
-# Create the ST7789 display:
-display = st7789.ST7789(
+disp = st7789.ST7789(
     spi,
+    height=240,
+    y_offset=80,
+    rotation=180,
     cs=cs_pin,
     dc=dc_pin,
     rst=reset_pin,
     baudrate=BAUDRATE,
-    width=240,
-    height=240,
-    x_offset=0,
-    y_offset=80,
-    rotation=180,  # Adjust if display is upside down
 )
 
-# Button pins (TFT Bonnet)
-BUTTON_A = 23  # Up
-BUTTON_B = 24  # Down
-BUTTON_L = 27  # Left
-BUTTON_R = 5   # Right
-BUTTON_U = 6   # Center
+# Initialize buttons with pull-ups
+button_A = DigitalInOut(board.D5)  # Front button A
+button_A.direction = Direction.INPUT
+button_A.pull = Pull.UP
 
-# Create image buffer
-width = 240
-height = 240
+button_B = DigitalInOut(board.D6)  # Front button B
+button_B.direction = Direction.INPUT
+button_B.pull = Pull.UP
+
+button_L = DigitalInOut(board.D27) # Left
+button_L.direction = Direction.INPUT
+button_L.pull = Pull.UP
+
+button_R = DigitalInOut(board.D23) # Right
+button_R.direction = Direction.INPUT
+button_R.pull = Pull.UP
+
+button_U = DigitalInOut(board.D17) # Up
+button_U.direction = Direction.INPUT
+button_U.pull = Pull.UP
+
+button_D = DigitalInOut(board.D22) # Down
+button_D.direction = Direction.INPUT
+button_D.pull = Pull.UP
+
+# Turn on the Backlight
+backlight = DigitalInOut(board.D26)
+backlight.switch_to_output()
+backlight.value = True
+
+# Create blank image for drawing
+width = disp.width
+height = disp.height
 image = Image.new("RGB", (width, height))
 draw = ImageDraw.Draw(image)
 
@@ -60,10 +78,19 @@ is_moving = False
 angle_index = 0
 angles = [68.5, 159.0, 240.0]  # Available angles
 
+# Color definitions (16-bit RGB565 format)
+BLACK = 0x0000
+WHITE = 0xFFFF
+YELLOW = 0xFFE0
+GREEN = 0x07E0
+ORANGE = 0xFD20
+BLUE = 0x001F
+
 def init_display():
     """Initialize display"""
-    display.fill((0, 0, 0))  # Use RGB tuple (0,0,0) for black
-    display.init()
+    # Clear display
+    draw.rectangle((0, 0, width, height), outline=0, fill=(0, 0, 0))
+    disp.image(image)
 
 def update_display():
     """Update display with current angle and status"""
@@ -108,22 +135,22 @@ def update_display():
         )
         
         # Display the image
-        display.image(image)
+        disp.image(image)
         time.sleep(0.1)
 
 def button_callback(channel):
     """Handle button press"""
     global angle_index, target_display_angle
     
-    if channel == BUTTON_A:  # Only use button A to cycle through angles
+    if channel == button_A:  # Only use button A to cycle through angles
         angle_index = (angle_index + 1) % len(angles)
         target_display_angle = angles[angle_index]
         print(f"Moving to angle: {target_display_angle}")
 
 def setup_buttons():
     """Setup button inputs"""
-    GPIO.setup(BUTTON_A, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(BUTTON_A, GPIO.FALLING, callback=button_callback, bouncetime=200)
+    GPIO.setup(button_A, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.add_event_detect(button_A, GPIO.FALLING, callback=button_callback, bouncetime=200)
 
 class PIDController:
     def __init__(self, kp, ki, kd):
