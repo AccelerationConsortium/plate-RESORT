@@ -138,14 +138,16 @@ def update_display():
         disp.image(image)
         time.sleep(0.1)
 
-def button_callback(channel):
-    """Handle button press"""
+def check_button_press():
+    """Check button states and handle presses"""
     global angle_index, target_display_angle
     
-    if channel == button_A:  # Only use button A to cycle through angles
+    if not button_A.value:  # Button A pressed (cycle through angles)
         angle_index = (angle_index + 1) % len(angles)
         target_display_angle = angles[angle_index]
         print(f"Moving to angle: {target_display_angle}")
+        set_servo_angle(target_display_angle)
+        time.sleep(0.2)  # Debounce
 
 def setup_buttons():
     """Setup button inputs"""
@@ -315,9 +317,6 @@ def main():
         # Initialize display
         init_display()
         
-        # Setup buttons
-        setup_buttons()
-        
         # Start display update thread
         display_thread = threading.Thread(target=update_display, daemon=True)
         display_thread.start()
@@ -328,14 +327,19 @@ def main():
         
         print("Starting servo control (Press A to cycle angles, Ctrl+C to exit)...")
         while True:
-            # Wait for button press to change angle
-            time.sleep(0.1)
+            check_button_press()
+            time.sleep(0.01)  # Small delay to prevent CPU overuse
             
     except KeyboardInterrupt:
-        print("\nProgram stopped by user")
+        print("\nProgram terminated by user")
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
     finally:
         pwm.stop()
         GPIO.cleanup()
+        # Clear display
+        draw.rectangle((0, 0, width, height), fill=(0, 0, 0))
+        disp.image(image)
         print("Cleanup completed")
 
 if __name__ == "__main__":
