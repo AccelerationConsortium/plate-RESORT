@@ -11,10 +11,10 @@ from adafruit_rgb_display import st7789
 import threading
 
 # Configuration for CS and DC pins:
-cs_pin = digitalio.DigitalInOut(board.D8)    # CE0 is GPIO8
+cs_pin = digitalio.DigitalInOut(board.CE0)    # Chip select
 dc_pin = digitalio.DigitalInOut(board.D25)   # GPIO25
 reset_pin = digitalio.DigitalInOut(board.D24) # GPIO24
-BAUDRATE = 64000000
+BAUDRATE = 24000000  # Updated to match documentation
 
 # Setup SPI bus using hardware SPI
 spi = board.SPI()
