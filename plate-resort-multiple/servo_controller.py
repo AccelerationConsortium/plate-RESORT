@@ -34,7 +34,7 @@ class ServoController:
     def start(self):
         """Start the servo at middle position"""
         self.pwm.start(7.4)  # Start at middle position
-        time.sleep(1)   # Wait for servo to initialize
+        time.sleep(2)   # Wait longer for servo to initialize
         self.pwm.ChangeDutyCycle(0)  # Stop active signal
 
     def stop(self):
@@ -58,8 +58,8 @@ class ServoController:
         # Ensure minimum delay between movements
         current_time = time.time()
         time_since_last_move = current_time - self.last_movement_time
-        if time_since_last_move < 1.0:
-            time.sleep(1.0 - time_since_last_move)
+        if time_since_last_move < 3.0:  # Increased from 1.0 to 3.0 seconds
+            time.sleep(3.0 - time_since_last_move)
         
         self.target_angle = target_angle
         self.is_moving = True
@@ -72,7 +72,8 @@ class ServoController:
         
         # Apply PWM signal
         self.pwm.ChangeDutyCycle(duty)
-        time.sleep(0.5)  # Give initial time to move
+        time.sleep(1.5)  # Increased from 0.5 to 1.5 seconds for initial movement
+        self.pwm.ChangeDutyCycle(0)  # Stop signal after initial movement
         
         attempt = 0
         stable_count = 0
@@ -98,15 +99,15 @@ class ServoController:
                     break
             else:
                 stable_count = 0
-                # Only apply corrections every 0.5 seconds
+                # Only apply corrections every 2 seconds (increased from 0.5)
                 current_time = time.time()
-                if current_time - last_correction_time >= 0.5:
+                if current_time - last_correction_time >= 2.0:
                     self.pwm.ChangeDutyCycle(duty)
-                    time.sleep(0.1)  # Brief pulse
+                    time.sleep(0.2)  # Increased pulse duration from 0.1 to 0.2
                     self.pwm.ChangeDutyCycle(0)  # Stop signal
                     last_correction_time = current_time
             
-            time.sleep(0.1)  # Check position every 100ms
+            time.sleep(0.2)  # Increased from 0.1 to 0.2 seconds between checks
             attempt += 1
         
         if attempt >= max_attempts:
