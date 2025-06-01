@@ -3,28 +3,20 @@
 import random
 import time
 from colorsys import hsv_to_rgb
-import RPi.GPIO as GPIO
+
+import board
+from digitalio import DigitalInOut, Direction
 from PIL import Image, ImageDraw, ImageFont
 from adafruit_rgb_display import st7789
-import busio
-import board
 
-# Initialize GPIO
-GPIO.setmode(GPIO.BCM)
-
-# Pin definitions
-CS_PIN = 8      # CE0 is GPIO8
-DC_PIN = 25     # GPIO25
-RESET_PIN = 24  # GPIO24
+# Create the display
+cs_pin = DigitalInOut(board.CE0)      # CE0 for chip select
+dc_pin = DigitalInOut(board.D25)      # GPIO25 for DC
+reset_pin = DigitalInOut(board.D24)    # GPIO24 for Reset
 BAUDRATE = 24000000
 
-# Setup SPI
+# Setup SPI bus using hardware SPI
 spi = board.SPI()
-
-# Setup pins
-GPIO.setup(CS_PIN, GPIO.OUT)
-GPIO.setup(DC_PIN, GPIO.OUT)
-GPIO.setup(RESET_PIN, GPIO.OUT)
 
 # Create the ST7789 display:
 disp = st7789.ST7789(
@@ -32,31 +24,38 @@ disp = st7789.ST7789(
     height=240,
     y_offset=80,
     rotation=180,
-    cs=CS_PIN,
-    dc=DC_PIN,
-    rst=RESET_PIN,
+    cs=cs_pin,
+    dc=dc_pin,
+    rst=reset_pin,
     baudrate=BAUDRATE,
 )
 
-# Button pins setup
-BUTTON_PINS = {
-    'A': 5,    # Front button A
-    'B': 6,    # Front button B
-    'L': 27,   # Joystick Left
-    'R': 23,   # Joystick Right
-    'U': 17,   # Joystick Up
-    'D': 22,   # Joystick Down
-    'C': 4     # Joystick Center
-}
+# Input pins:
+button_A = DigitalInOut(board.D5)  # Front button A
+button_A.direction = Direction.INPUT
 
-# Setup all buttons as inputs with pull-up
-for pin in BUTTON_PINS.values():
-    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+button_B = DigitalInOut(board.D6)  # Front button B
+button_B.direction = Direction.INPUT
 
-# Setup backlight
-BACKLIGHT_PIN = 26
-GPIO.setup(BACKLIGHT_PIN, GPIO.OUT)
-GPIO.output(BACKLIGHT_PIN, GPIO.HIGH)  # Turn on backlight
+button_L = DigitalInOut(board.D27) # Joystick Left
+button_L.direction = Direction.INPUT
+
+button_R = DigitalInOut(board.D23) # Joystick Right
+button_R.direction = Direction.INPUT
+
+button_U = DigitalInOut(board.D17) # Joystick Up
+button_U.direction = Direction.INPUT
+
+button_D = DigitalInOut(board.D22) # Joystick Down
+button_D.direction = Direction.INPUT
+
+button_C = DigitalInOut(board.D4)  # Joystick Center
+button_C.direction = Direction.INPUT
+
+# Turn on the Backlight
+backlight = DigitalInOut(board.D26)
+backlight.switch_to_output()
+backlight.value = True
 
 # Create blank image for drawing.
 width = disp.width
@@ -85,27 +84,40 @@ except:
 
 try:
     while True:
-        # Check buttons and update display
-        up_fill = udlr_fill if not GPIO.input(BUTTON_PINS['U']) else 0
-        draw.polygon([(40, 40), (60, 4), (80, 40)], outline=udlr_outline, fill=up_fill)
+        up_fill = 0
+        if not button_U.value:  # up pressed
+            up_fill = udlr_fill
+        draw.polygon([(40, 40), (60, 4), (80, 40)], outline=udlr_outline, fill=up_fill)  # Up
 
-        down_fill = udlr_fill if not GPIO.input(BUTTON_PINS['D']) else 0
-        draw.polygon([(60, 120), (80, 84), (40, 84)], outline=udlr_outline, fill=down_fill)
+        down_fill = 0
+        if not button_D.value:  # down pressed
+            down_fill = udlr_fill
+        draw.polygon([(60, 120), (80, 84), (40, 84)], outline=udlr_outline, fill=down_fill)  # down
 
-        left_fill = udlr_fill if not GPIO.input(BUTTON_PINS['L']) else 0
-        draw.polygon([(0, 60), (36, 42), (36, 81)], outline=udlr_outline, fill=left_fill)
+        left_fill = 0
+        if not button_L.value:  # left pressed
+            left_fill = udlr_fill
+        draw.polygon([(0, 60), (36, 42), (36, 81)], outline=udlr_outline, fill=left_fill)  # left
 
-        right_fill = udlr_fill if not GPIO.input(BUTTON_PINS['R']) else 0
-        draw.polygon([(120, 60), (84, 42), (84, 82)], outline=udlr_outline, fill=right_fill)
+        right_fill = 0
+        if not button_R.value:  # right pressed
+            right_fill = udlr_fill
+        draw.polygon([(120, 60), (84, 42), (84, 82)], outline=udlr_outline, fill=right_fill)  # right
 
-        center_fill = button_fill if not GPIO.input(BUTTON_PINS['C']) else 0
-        draw.rectangle((40, 44, 80, 80), outline=button_outline, fill=center_fill)
+        center_fill = 0
+        if not button_C.value:  # center pressed
+            center_fill = button_fill
+        draw.rectangle((40, 44, 80, 80), outline=button_outline, fill=center_fill)  # center
 
-        A_fill = button_fill if not GPIO.input(BUTTON_PINS['A']) else 0
-        draw.ellipse((140, 80, 180, 120), outline=button_outline, fill=A_fill)
+        A_fill = 0
+        if not button_A.value:  # A pressed
+            A_fill = button_fill
+        draw.ellipse((140, 80, 180, 120), outline=button_outline, fill=A_fill)  # A button
 
-        B_fill = button_fill if not GPIO.input(BUTTON_PINS['B']) else 0
-        draw.ellipse((190, 40, 230, 80), outline=button_outline, fill=B_fill)
+        B_fill = 0
+        if not button_B.value:  # B pressed
+            B_fill = button_fill
+        draw.ellipse((190, 40, 230, 80), outline=button_outline, fill=B_fill)  # B button
 
         # Make random colored text
         rcolor = tuple(int(x * 255) for x in hsv_to_rgb(random.random(), 1, 1))
@@ -121,6 +133,8 @@ try:
 
 except KeyboardInterrupt:
     print("\nProgram stopped by user")
+except Exception as e:
+    print(f"Error occurred: {str(e)}")
 finally:
-    GPIO.cleanup()
-    print("GPIO cleanup completed") 
+    print("Cleaning up...")
+    # No GPIO cleanup needed when using digitalio 
