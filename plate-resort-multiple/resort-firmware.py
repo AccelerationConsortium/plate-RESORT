@@ -62,7 +62,7 @@ angles = [68.5, 159.0, 240.0]  # Available angles
 
 def init_display():
     """Initialize display"""
-    display.fill(st7789.BLACK)
+    display.fill((0, 0, 0))  # Use RGB tuple (0,0,0) for black
     display.init()
 
 def update_display():
