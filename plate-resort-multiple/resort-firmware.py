@@ -11,9 +11,9 @@ from adafruit_rgb_display import st7789
 import threading
 
 # Configuration for CS and DC pins:
-cs_pin = digitalio.DigitalInOut(board.CE0)
-dc_pin = digitalio.DigitalInOut(board.D25)
-reset_pin = None
+cs_pin = digitalio.DigitalInOut(board.D8)    # CE0 is GPIO8
+dc_pin = digitalio.DigitalInOut(board.D25)   # GPIO25
+reset_pin = digitalio.DigitalInOut(board.D24) # GPIO24
 BAUDRATE = 64000000
 
 # Setup SPI bus using hardware SPI
@@ -30,6 +30,7 @@ display = st7789.ST7789(
     height=240,
     x_offset=0,
     y_offset=80,
+    rotation=180,  # Adjust if display is upside down
 )
 
 # Button pins (TFT Bonnet)
