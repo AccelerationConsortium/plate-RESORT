@@ -90,50 +90,42 @@ class ServoController:
         # Ensure target angle is within physical limits
         target_angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, target_angle))
         
+        # Calculate target duty cycle
+        duty = self.angle_to_duty_cycle(target_angle)
+        
+        # Apply the control signal
+        self.pwm.ChangeDutyCycle(duty)
+        
         attempt = 0
-        last_angles = []  # Keep track of last few angles for stability check
+        stable_count = 0
         
         while attempt < max_attempts:
-            # Get current position from feedback with smoothing
-            current_voltage = self.get_smoothed_voltage()
+            # Get current position from feedback
+            current_voltage = self.adc.get_voltage()
             self.current_angle = self.adc.voltage_to_angle(current_voltage)
-            
-            # Check if we're within deadband
-            angle_error = abs(target_angle - self.current_angle)
-            if angle_error < self.ANGLE_DEADBAND:
-                if not last_angles:  # First time in deadband
-                    last_angles = [self.current_angle]
-                else:
-                    last_angles.append(self.current_angle)
-                    if len(last_angles) >= 3:
-                        # Check stability
-                        max_diff = max(abs(a - b) for a, b in zip(last_angles[:-1], last_angles[1:]))
-                        if max_diff < 1.0:  # Stable within 1 degree
-                            print("Target position reached and stable!")
-                            self.is_moving = False
-                            break
-                        last_angles.pop(0)
-            else:
-                last_angles = []  # Reset stability check if we're outside deadband
-            
-            # Calculate new duty cycle
-            target_duty = self.angle_to_duty_cycle(target_angle)
-            smoothed_duty = self.smooth_duty_cycle(target_duty)
-            
-            # Apply the control signal
-            self.pwm.ChangeDutyCycle(smoothed_duty)
             
             # Print diagnostic information
             print(f"Target: {target_angle:.1f}°, Current: {self.current_angle:.1f}°")
-            print(f"Voltage: {current_voltage:.2f}V, Duty: {smoothed_duty:.1f}%")
+            print(f"Voltage: {current_voltage:.2f}V, Duty: {duty:.1f}%")
             
-            # Longer delay between adjustments
-            time.sleep(0.2)  # 200ms control loop
+            # Check if we've reached the target (within tolerance)
+            if abs(target_angle - self.current_angle) < 3.0:
+                stable_count += 1
+                if stable_count >= 3:  # Require 3 consecutive stable readings
+                    print("Target position reached and stable!")
+                    self.is_moving = False
+                    self.pwm.ChangeDutyCycle(0)  # Stop sending PWM signals
+                    break
+            else:
+                stable_count = 0
+            
+            time.sleep(0.1)  # 100ms control loop
             attempt += 1
         
         if attempt >= max_attempts:
             print("Warning: Maximum attempts reached without achieving target position")
             self.is_moving = False
+            self.pwm.ChangeDutyCycle(0)  # Stop sending PWM signals even if we didn't reach target
 
     def cycle_angle(self):
         """Cycle through preset angles"""
