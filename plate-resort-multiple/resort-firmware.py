@@ -78,8 +78,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-# Servo angle constants
-self.MIN_ANGLE = 68.5   # 2.51V
-self.MID_ANGLE = 159.0  # 1.56V
-self.MAX_ANGLE = 240.0  # 0.58V
-self.angles = [self.MIN_ANGLE, self.MID_ANGLE, self.MAX_ANGLE]

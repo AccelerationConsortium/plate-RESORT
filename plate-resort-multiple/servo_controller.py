@@ -72,8 +72,8 @@ class ServoController:
         # Ensure minimum delay between movements
         current_time = time.time()
         time_since_last_move = current_time - self.last_movement_time
-        if time_since_last_move < 5.0:  # Increased from 3.0 to 5.0 seconds
-            time.sleep(5.0 - time_since_last_move)
+        if time_since_last_move < 10.0:  # Drastically increase to 10 seconds
+            time.sleep(10.0 - time_since_last_move)
 
         self.target_angle = target_angle
         self.is_moving = True
@@ -98,13 +98,13 @@ class ServoController:
                 break
             else:
                 current_time = time.time()
-                if current_time - last_correction_time >= 4.0:  # Increased from 2.0 to 4.0 seconds
+                if current_time - last_correction_time >= 8.0:  # Drastically increase to 8 seconds
                     self.is_moving = True
                     self.pwm.ChangeDutyCycle(duty)
-                    time.sleep(0.5)  # Increased pulse duration from 0.2 to 0.5 seconds
+                    time.sleep(1.5)  # Increase pulse duration to 1.5 seconds
                     self.pwm.ChangeDutyCycle(0)
                     last_correction_time = current_time
-            time.sleep(0.5)  # Increased from 0.2 to 0.5 seconds between checks
+            time.sleep(1.0)  # Increase sleep between checks to 1 second
             attempt += 1
         if attempt >= max_attempts:
             print("Warning: Maximum attempts reached without achieving target position")
