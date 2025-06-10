@@ -19,10 +19,10 @@ class ServoController:
         self.adc = adc_manager
         
         # Servo angle constants
-        self.MIN_ANGLE = 68.5   # 2.51V
-        self.MID_ANGLE = 159.0  # 1.56V
-        self.MAX_ANGLE = 240.0  # 0.58V
-        self.angles = [self.MIN_ANGLE, self.MID_ANGLE, self.MAX_ANGLE]
+        self.MIN_ANGLE = 0.0
+        self.MID_ANGLE = 135.0
+        self.MAX_ANGLE = 270.0
+        self.angles = [0.0, 90.0, 180.0, 270.0]
         
         # Initialize state
         self.current_angle = self.MID_ANGLE
