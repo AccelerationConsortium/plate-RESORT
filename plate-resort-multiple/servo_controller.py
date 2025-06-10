@@ -19,10 +19,10 @@ class ServoController:
         self.adc = adc_manager
         
         # Servo angle constants
-        self.MIN_ANGLE = 0.0
-        self.MID_ANGLE = 120.0  # midpoint for 0-240
-        self.MAX_ANGLE = 240.0
-        self.angles = [0, 60, 120, 180, 240]
+        self.MIN_ANGLE = 68.5   # 2.51V
+        self.MID_ANGLE = 159.0  # 1.56V
+        self.MAX_ANGLE = 240.0  # 0.58V
+        self.angles = [self.MIN_ANGLE, self.MID_ANGLE, self.MAX_ANGLE]
         
         # Initialize state
         self.current_angle = self.MID_ANGLE
@@ -83,27 +83,34 @@ class ServoController:
         target_angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, target_angle))
         duty = self.angle_to_duty_cycle(target_angle)
 
+        # If no ADC, just do open-loop PWM and return
+        if self.adc is None:
+            print(f"[Open Loop] Setting angle: {target_angle:.1f}°, Duty: {duty:.1f}%")
+            self.pwm.ChangeDutyCycle(duty)
+            time.sleep(1.5)
+            self.pwm.ChangeDutyCycle(0)
+            self.last_movement_time = time.time()
+            self.is_moving = False
+            self.current_angle = target_angle
+            return
+
         attempt = 0
         last_correction_time = time.time()
         while attempt < max_attempts:
             current_voltage = self.adc.get_voltage()
             self.current_angle = self.adc.voltage_to_angle(current_voltage)
-            error = self.target_angle - self.current_angle
-            print(f"[Closed Loop] Target: {self.target_angle:.1f}°, Current: {self.current_angle:.1f}°, Error: {error:.2f}")
-            if abs(error) < 2.0:
-                self.stable_count += 1
-                if self.stable_count >= 3:
-                    print("[Closed Loop] Target position reached and stable!")
-                    self.pwm.ChangeDutyCycle(0)
-                    self.last_movement_time = time.time()
-                    self.is_moving = False
-                    break
+            status = "MOVING" if self.is_moving else "STABLE"
+            print(f"Target: {target_angle:.1f}°, Current: {self.current_angle:.1f}° [{status}]")
+            print(f"Voltage: {current_voltage:.2f}V, Duty: {duty:.1f}%")
+            if self.update_movement_status():
+                print("Target position reached and stable!")
+                self.pwm.ChangeDutyCycle(0)
+                self.last_movement_time = time.time()
+                break
             else:
-                self.stable_count = 0
-                self.is_moving = True
-                # Apply correction pulse every 1.5 seconds
                 current_time = time.time()
-                if current_time - last_correction_time >= 1.5:
+                if current_time - last_correction_time >= 2.0:
+                    self.is_moving = True
                     self.pwm.ChangeDutyCycle(duty)
                     time.sleep(0.2)
                     self.pwm.ChangeDutyCycle(0)
@@ -111,7 +118,7 @@ class ServoController:
             time.sleep(0.2)
             attempt += 1
         if attempt >= max_attempts:
-            print("[Closed Loop] Warning: Maximum attempts reached without achieving target position")
+            print("Warning: Maximum attempts reached without achieving target position")
             self.is_moving = False
             self.pwm.ChangeDutyCycle(0)
             self.last_movement_time = time.time()
