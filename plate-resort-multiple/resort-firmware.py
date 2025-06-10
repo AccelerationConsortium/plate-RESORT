@@ -14,11 +14,9 @@ def main():
         display = DisplayManager(adc)
         servo = ServoController(adc)
         buttons = ButtonManager()
-        
-        # Start display and servo
+          # Start display
         display.init_display()
         display.start_display_thread()
-        servo.start()
         
         print("Starting servo control (Press A to cycle angles, B for Snake Game, Ctrl+C to exit)...")
         
