@@ -10,9 +10,10 @@ class ADCManager:
         # Setup I2C for ADS1115
         self.i2c = busio.I2C(board.SCL, board.SDA)
         self.ads = ADS.ADS1115(self.i2c)
-        self.adc_channel = AnalogIn(self.ads, ADS.P0)    def get_voltage(self):
-        """Get current voltage reading from ADC"""
-        return self.adc_channel.voltage
+        self.adc_channel = AnalogIn(self.ads, ADS.P0)           
+        def get_voltage(self):
+            """Get current voltage reading from ADC"""
+            return self.adc_channel.voltage
 
     def voltage_to_angle(self, voltage):
         """Convert feedback voltage to angle based on datasheet calibration:
