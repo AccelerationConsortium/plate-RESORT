@@ -6,7 +6,7 @@ from adc_manager import ADCManager
 from collections import deque
 
 class ServoController:
-    def __init__(self, adc_manager, Kp=0.01, Ki=0.0, Kd=0.1):
+    def __init__(self, adc_manager, Kp=0.005, Ki=0.0, Kd=0.01):
         # Setup GPIO
         GPIO.setmode(GPIO.BCM)
         self.SERVO_PIN = 18  # GPIO18 (PWM0)
@@ -22,7 +22,7 @@ class ServoController:
         self.MIN_ANGLE = 68.5   # 2.51V
         self.MID_ANGLE = 159.0  # 1.56V
         self.MAX_ANGLE = 240.0  # 0.58V
-        self.angles = [0, 90, 180, 270]
+        self.angles = [68.5, 90, 180, 240]
         
         # Initialize state
         self.current_angle = self.MID_ANGLE
