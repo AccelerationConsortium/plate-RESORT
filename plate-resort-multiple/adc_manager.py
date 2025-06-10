@@ -18,13 +18,11 @@ class ADCManager:
 
     def voltage_to_angle(self, voltage):
         """Convert feedback voltage to angle based on datasheet calibration:
-        2.60V = 900µs pulse = 0° start
-        1.66V = 1500µs pulse = 135° middle
-        0.72V = 2100µs pulse = 270° end
+        0.72V = 0° (min), 2.60V = 270° (max)
         """
         # Clamp voltage to valid range
         voltage = min(2.60, max(0.72, voltage))
-
-        # Map 2.60V (high) to 0° and 0.72V (low) to 270°
-        normalized_voltage = (2.60 - voltage) / (2.60 - 0.72)
-        return normalized_voltage * 270.0
+        normalized_voltage = (voltage - 0.72) / (2.60 - 0.72)
+        angle = normalized_voltage * 270.0
+        print(f"[ADC DEBUG] Voltage: {voltage:.3f} V -> Angle: {angle:.1f}°")
+        return angle
