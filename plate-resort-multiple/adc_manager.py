@@ -18,22 +18,22 @@ class ADCManager:
 
     def voltage_to_angle(self, voltage):
         """Convert feedback voltage to angle based on datasheet calibration:
-        2.60V ≈ 0° (900µs position)
-        1.66V ≈ 150° (1500µs neutral position) 
-        0.72V ≈ 300° (2100µs position)
+        2.60V = 0° (900µs position)
+        1.66V = 135° (1500µs neutral position)
+        0.72V = 270° (2100µs position)
         """
-        # Handle voltage limits
+        # Handle limits
         if voltage >= 2.60:
             return 0.0
         elif voltage <= 0.72:
-            return 300.0
+            return 270.0
         
-        # Linear interpolation between known points
+        # Linear interpolation between calibration points
         if voltage >= 1.66:
-            # Between 2.60V (0°) and 1.66V (150°)
+            # Between 2.60V (0°) and 1.66V (135°)
             ratio = (2.60 - voltage) / (2.60 - 1.66)
-            return 0.0 + ratio * (150.0 - 0.0)
+            return ratio * 135.0
         else:
-            # Between 1.66V (150°) and 0.72V (300°)
+            # Between 1.66V (135°) and 0.72V (270°)
             ratio = (1.66 - voltage) / (1.66 - 0.72)
-            return 150.0 + ratio * (300.0 - 150.0)
+            return 135.0 + ratio * (270.0 - 135.0)

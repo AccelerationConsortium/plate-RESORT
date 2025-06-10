@@ -44,15 +44,14 @@ class ServoController:
         GPIO.cleanup()
 
     def angle_to_duty_cycle(self, angle):
-        """Convert angle to duty cycle based on observed working ranges"""
+        """Convert angle to duty cycle based on datasheet calibration:
+        900µs (4.5% duty) = 0°
+        1500µs (7.5% duty) = 135°
+        2100µs (10.5% duty) = 270°
+        """
         angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, angle))
-        
-        if angle <= self.MID_ANGLE:
-            ratio = (angle - self.MIN_ANGLE) / (self.MID_ANGLE - self.MIN_ANGLE)
-            return 4.3 + ratio * (7.4 - 4.3)
-        else:
-            ratio = (angle - self.MID_ANGLE) / (self.MAX_ANGLE - self.MID_ANGLE)
-            return 7.4 + ratio * (10.5 - 7.4)
+        # Linear interpolation between 4.5% and 10.5% duty
+        return 4.5 + (angle * (10.5 - 4.5) / 270.0)
 
     def update_movement_status(self):
         """Update movement status based on current conditions"""
