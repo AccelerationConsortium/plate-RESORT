@@ -6,7 +6,7 @@ from adc_manager import ADCManager
 from collections import deque
 
 class ServoController:
-    def __init__(self, adc_manager, Kp=0.15, Ki=0.0, Kd=0.01):
+    def __init__(self, adc_manager, Kp=0.01, Ki=0.0, Kd=0.1):
         # Setup GPIO
         GPIO.setmode(GPIO.BCM)
         self.SERVO_PIN = 18  # GPIO18 (PWM0)
