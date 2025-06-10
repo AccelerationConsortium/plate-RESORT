@@ -14,26 +14,16 @@ class ADCManager:
 
     def get_voltage(self):
         """Get current voltage reading from ADC"""
-        return self.adc_channel.voltage
-
-    def voltage_to_angle(self, voltage):
+        return self.adc_channel.voltage    def voltage_to_angle(self, voltage):
         """Convert feedback voltage to angle based on datasheet calibration:
-        2.60V = 0° (900µs position)
-        1.66V = 135° (1500µs neutral position)
-        0.72V = 270° (2100µs position)
+        2.60V = 900µs pulse = 0° start
+        1.66V = 1500µs pulse = 135° middle
+        0.72V = 2100µs pulse = 270° end
         """
-        # Handle limits
-        if voltage >= 2.60:
-            return 0.0
-        elif voltage <= 0.72:
-            return 270.0
+        # Clamp voltage to valid range
+        voltage = min(2.60, max(0.72, voltage))
         
-        # Linear interpolation between calibration points
-        if voltage >= 1.66:
-            # Between 2.60V (0°) and 1.66V (135°)
-            ratio = (2.60 - voltage) / (2.60 - 1.66)
-            return ratio * 135.0
-        else:
-            # Between 1.66V (135°) and 0.72V (270°)
-            ratio = (1.66 - voltage) / (1.66 - 0.72)
-            return 135.0 + ratio * (270.0 - 135.0)
+        # Single linear interpolation for better accuracy
+        # Map 2.60V-0.72V to 0°-270°
+        ratio = (2.60 - voltage) / (2.60 - 0.72)
+        return ratio * 270.0

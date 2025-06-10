@@ -41,17 +41,19 @@ class ServoController:
     def stop(self):
         """Stop the servo"""
         self.pwm.stop()
-        GPIO.cleanup()
-
-    def angle_to_duty_cycle(self, angle):
-        """Convert angle to duty cycle based on datasheet calibration:
-        900µs (4.5% duty) = 0°
-        1500µs (7.5% duty) = 135°
-        2100µs (10.5% duty) = 270°
+        GPIO.cleanup()    def angle_to_duty_cycle(self, angle):
+        """Convert angle to duty cycle using standard servo timing:
+        500µs (2.5% duty) = 0° physical start
+        900µs (4.5% duty) = 0° usable start
+        1500µs (7.5% duty) = 135° middle
+        2100µs (10.5% duty) = 270° usable end
+        2500µs (12.5% duty) = 300° physical end
         """
         angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, angle))
-        # Linear interpolation between 4.5% and 10.5% duty
-        return 4.5 + (angle * (10.5 - 4.5) / 270.0)
+        # Map 0-270° to 900-2100µs (4.5-10.5% duty)
+        # Use a slightly wider range for better precision
+        duty = 4.3 + (angle * (10.7 - 4.3) / 270.0)
+        return duty
 
     def update_movement_status(self):
         """Update movement status based on current conditions"""
