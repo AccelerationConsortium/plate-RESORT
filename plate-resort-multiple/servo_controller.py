@@ -72,56 +72,51 @@ class ServoController:
         # Ensure minimum delay between movements
         current_time = time.time()
         time_since_last_move = current_time - self.last_movement_time
-        if time_since_last_move < 3.0:  # Increased from 1.0 to 3.0 seconds
+        if time_since_last_move < 3.0:
             time.sleep(3.0 - time_since_last_move)
-        
+
         self.target_angle = target_angle
         self.is_moving = True
-        self.stable_count = 0  # Reset stability counter
-        
+        self.stable_count = 0
+
         # Ensure target angle is within physical limits
         target_angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, target_angle))
-        
-        # Calculate duty cycle
         duty = self.angle_to_duty_cycle(target_angle)
-        
-        # Apply PWM signal
-        self.pwm.ChangeDutyCycle(duty)
-        time.sleep(1.5)  # Increased from 0.5 to 1.5 seconds for initial movement
-        self.pwm.ChangeDutyCycle(0)  # Stop signal after initial movement
-        
+
+        # If no ADC, just do open-loop PWM and return
+        if self.adc is None:
+            print(f"[Open Loop] Setting angle: {target_angle:.1f}°, Duty: {duty:.1f}%")
+            self.pwm.ChangeDutyCycle(duty)
+            time.sleep(1.5)
+            self.pwm.ChangeDutyCycle(0)
+            self.last_movement_time = time.time()
+            self.is_moving = False
+            self.current_angle = target_angle
+            return
+
         attempt = 0
         last_correction_time = time.time()
-        
         while attempt < max_attempts:
-            # Get current position from feedback
             current_voltage = self.adc.get_voltage()
             self.current_angle = self.adc.voltage_to_angle(current_voltage)
-            
-            # Print diagnostic information
             status = "MOVING" if self.is_moving else "STABLE"
             print(f"Target: {target_angle:.1f}°, Current: {self.current_angle:.1f}° [{status}]")
             print(f"Voltage: {current_voltage:.2f}V, Duty: {duty:.1f}%")
-            
-            # Update movement status
             if self.update_movement_status():
                 print("Target position reached and stable!")
-                self.pwm.ChangeDutyCycle(0)  # Stop active signals
+                self.pwm.ChangeDutyCycle(0)
                 self.last_movement_time = time.time()
                 break
             else:
-                # Only apply corrections every 2 seconds (increased from 0.5)
                 current_time = time.time()
                 if current_time - last_correction_time >= 2.0:
-                    self.is_moving = True  # Explicitly mark as moving during correction
+                    self.is_moving = True
                     self.pwm.ChangeDutyCycle(duty)
-                    time.sleep(0.2)  # Increased pulse duration from 0.1 to 0.2
-                    self.pwm.ChangeDutyCycle(0)  # Stop signal
+                    time.sleep(0.2)
+                    self.pwm.ChangeDutyCycle(0)
                     last_correction_time = current_time
-            
-            time.sleep(0.2)  # Increased from 0.1 to 0.2 seconds between checks
+            time.sleep(0.2)
             attempt += 1
-        
         if attempt >= max_attempts:
             print("Warning: Maximum attempts reached without achieving target position")
             self.is_moving = False
