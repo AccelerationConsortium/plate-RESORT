@@ -17,23 +17,23 @@ class ADCManager:
         return self.adc_channel.voltage
 
     def voltage_to_angle(self, voltage):
-        """Convert feedback voltage to angle based on observed readings:
-        2.51V ≈ 68.5° (minimum angle)
-        1.56V ≈ 159° (middle position)
-        0.58V ≈ 240° (maximum angle)
+        """Convert feedback voltage to angle based on datasheet calibration:
+        2.60V ≈ 0° (900µs position)
+        1.66V ≈ 150° (1500µs neutral position) 
+        0.72V ≈ 300° (2100µs position)
         """
-        # Handle limits
-        if voltage >= 2.51:
-            return 68.5
-        elif voltage <= 0.58:
-            return 240.0
+        # Handle voltage limits
+        if voltage >= 2.60:
+            return 0.0
+        elif voltage <= 0.72:
+            return 300.0
         
         # Linear interpolation between known points
-        if voltage >= 1.56:
-            # Between 2.51V (68.5°) and 1.56V (159°)
-            ratio = (2.51 - voltage) / (2.51 - 1.56)
-            return 68.5 + ratio * (159.0 - 68.5)
+        if voltage >= 1.66:
+            # Between 2.60V (0°) and 1.66V (150°)
+            ratio = (2.60 - voltage) / (2.60 - 1.66)
+            return 0.0 + ratio * (150.0 - 0.0)
         else:
-            # Between 1.56V (159°) and 0.58V (240°)
-            ratio = (1.56 - voltage) / (1.56 - 0.58)
-            return 159.0 + ratio * (240.0 - 159.0) 
+            # Between 1.66V (150°) and 0.72V (300°)
+            ratio = (1.66 - voltage) / (1.66 - 0.72)
+            return 150.0 + ratio * (300.0 - 150.0)
