@@ -72,8 +72,8 @@ class ServoController:
         # Ensure minimum delay between movements
         current_time = time.time()
         time_since_last_move = current_time - self.last_movement_time
-        if time_since_last_move < 3.0:
-            time.sleep(3.0 - time_since_last_move)
+        if time_since_last_move < 5.0:  # Increased from 3.0 to 5.0 seconds
+            time.sleep(5.0 - time_since_last_move)
 
         self.target_angle = target_angle
         self.is_moving = True
@@ -82,17 +82,6 @@ class ServoController:
         # Ensure target angle is within physical limits
         target_angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, target_angle))
         duty = self.angle_to_duty_cycle(target_angle)
-
-        # If no ADC, just do open-loop PWM and return
-        if self.adc is None:
-            print(f"[Open Loop] Setting angle: {target_angle:.1f}°, Duty: {duty:.1f}%")
-            self.pwm.ChangeDutyCycle(duty)
-            time.sleep(1.5)
-            self.pwm.ChangeDutyCycle(0)
-            self.last_movement_time = time.time()
-            self.is_moving = False
-            self.current_angle = target_angle
-            return
 
         attempt = 0
         last_correction_time = time.time()
@@ -109,13 +98,13 @@ class ServoController:
                 break
             else:
                 current_time = time.time()
-                if current_time - last_correction_time >= 2.0:
+                if current_time - last_correction_time >= 4.0:  # Increased from 2.0 to 4.0 seconds
                     self.is_moving = True
                     self.pwm.ChangeDutyCycle(duty)
-                    time.sleep(0.2)
+                    time.sleep(0.5)  # Increased pulse duration from 0.2 to 0.5 seconds
                     self.pwm.ChangeDutyCycle(0)
                     last_correction_time = current_time
-            time.sleep(0.2)
+            time.sleep(0.5)  # Increased from 0.2 to 0.5 seconds between checks
             attempt += 1
         if attempt >= max_attempts:
             print("Warning: Maximum attempts reached without achieving target position")
