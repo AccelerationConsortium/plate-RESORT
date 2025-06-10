@@ -6,7 +6,7 @@ from adc_manager import ADCManager
 from collections import deque
 
 class ServoController:
-    def __init__(self, adc_manager):
+    def __init__(self, adc_manager, Kp=0.15, Ki=0.0, Kd=0.01):
         # Setup GPIO
         GPIO.setmode(GPIO.BCM)
         self.SERVO_PIN = 18  # GPIO18 (PWM0)
@@ -22,7 +22,7 @@ class ServoController:
         self.MIN_ANGLE = 68.5   # 2.51V
         self.MID_ANGLE = 159.0  # 1.56V
         self.MAX_ANGLE = 240.0  # 0.58V
-        self.angles = [self.MIN_ANGLE, self.MID_ANGLE, self.MAX_ANGLE]
+        self.angles = [0, 90, 180, 270]
         
         # Initialize state
         self.current_angle = self.MID_ANGLE
@@ -31,6 +31,14 @@ class ServoController:
         self.is_moving = False
         self.last_movement_time = 0
         self.stable_count = 0  # Track stability across cycles
+
+        # PID parameters
+        self.Kp = Kp
+        self.Ki = Ki
+        self.Kd = Kd
+        self.pid_integral = 0.0
+        self.pid_last_error = 0.0
+        self.pid_last_time = None
 
     def start(self):
         """Start the servo at middle position"""
@@ -67,7 +75,7 @@ class ServoController:
             self.is_moving = True
         return False  # Not stable yet
 
-    def set_angle(self, target_angle, max_attempts=50):
+    def set_angle(self, target_angle, max_attempts=100):
         """Set servo to specified angle using minimal PWM signals"""
         # Ensure minimum delay between movements
         current_time = time.time()
@@ -94,31 +102,46 @@ class ServoController:
             self.current_angle = target_angle
             return
 
+        # PID control loop
         attempt = 0
-        last_correction_time = time.time()
+        self.pid_integral = 0.0
+        self.pid_last_error = 0.0
+        self.pid_last_time = time.time()
         while attempt < max_attempts:
             current_voltage = self.adc.get_voltage()
             self.current_angle = self.adc.voltage_to_angle(current_voltage)
-            status = "MOVING" if self.is_moving else "STABLE"
-            print(f"Target: {target_angle:.1f}°, Current: {self.current_angle:.1f}° [{status}]")
-            print(f"Voltage: {current_voltage:.2f}V, Duty: {duty:.1f}%")
-            if self.update_movement_status():
-                print("Target position reached and stable!")
-                self.pwm.ChangeDutyCycle(0)
-                self.last_movement_time = time.time()
-                break
-            else:
-                current_time = time.time()
-                if current_time - last_correction_time >= 2.0:
-                    self.is_moving = True
-                    self.pwm.ChangeDutyCycle(duty)
-                    time.sleep(0.2)
+            error = self.target_angle - self.current_angle
+            now = time.time()
+            dt = now - self.pid_last_time if self.pid_last_time else 0.1
+            self.pid_last_time = now
+            self.pid_integral += error * dt
+            derivative = (error - self.pid_last_error) / dt if dt > 0 else 0.0
+            self.pid_last_error = error
+            # PID output
+            pid_output = self.Kp * error + self.Ki * self.pid_integral + self.Kd * derivative
+            # Convert PID output to duty cycle adjustment
+            base_duty = self.angle_to_duty_cycle(self.current_angle)
+            duty = base_duty + pid_output
+            # Clamp duty cycle to safe range
+            duty = max(2.5, min(12.5, duty))
+            self.pwm.ChangeDutyCycle(duty)
+            status = "MOVING" if abs(error) > 2.0 else "STABLE"
+            print(f"[PID] Target: {self.target_angle:.1f}°, Current: {self.current_angle:.1f}°, Error: {error:.2f}, Duty: {duty:.2f}%, Status: {status}")
+            if abs(error) < 2.0:
+                self.stable_count += 1
+                if self.stable_count >= 5:
+                    print("[PID] Target position reached and stable!")
                     self.pwm.ChangeDutyCycle(0)
-                    last_correction_time = current_time
-            time.sleep(0.2)
+                    self.last_movement_time = time.time()
+                    self.is_moving = False
+                    break
+            else:
+                self.stable_count = 0
+                self.is_moving = True
+            time.sleep(0.1)
             attempt += 1
         if attempt >= max_attempts:
-            print("Warning: Maximum attempts reached without achieving target position")
+            print("[PID] Warning: Maximum attempts reached without achieving target position")
             self.is_moving = False
             self.pwm.ChangeDutyCycle(0)
             self.last_movement_time = time.time()
