@@ -8,15 +8,15 @@ import time
 def main():
     servo = ServoController(None)  # No ADC needed for open loop
     buttons = ButtonManager()
-    angles = [0, 180]  # Change these to your desired angles
+    angles = [0, 150, 300]  # Test full range: 0°, 150°, 300°
     idx = 0
 
-    print("Open-loop servo control: Press Button A to toggle angle. Ctrl+C to exit.")
+    print("Open-loop servo control: Press Button A to cycle through 0°, 150°, 300°. Ctrl+C to exit.")
 
     try:
         while True:
             if buttons.check_button_a():
-                idx = 1 - idx  # Toggle between 0 and 1
+                idx = (idx + 1) % len(angles)  # Cycle through all angles
                 print(f"Setting servo to {angles[idx]} degrees")
                 duty = servo.angle_to_duty_cycle(angles[idx])
                 servo.pwm.ChangeDutyCycle(duty)
