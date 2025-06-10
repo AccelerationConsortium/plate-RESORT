@@ -7,24 +7,23 @@ from collections import deque
 
 class ServoController:
     def __init__(self, adc_manager):
+        # Servo angle constants
+        self.MIN_ANGLE = 0.0
+        self.MID_ANGLE = 135.0
+        self.MAX_ANGLE = 270.0
+        self.angles = [0.0, 90.0, 180.0, 270.0]
         # Setup GPIO
         GPIO.setmode(GPIO.BCM)
         self.SERVO_PIN = 18  # GPIO18 (PWM0)
         GPIO.setup(self.SERVO_PIN, GPIO.OUT)
         # Create PWM instance and start at middle
         self.pwm = GPIO.PWM(self.SERVO_PIN, 50)  # 50Hz frequency
-        self.pwm.start(self.angle_to_duty_cycle(135.0))  # Start at middle position
+        self.pwm.start(self.angle_to_duty_cycle(self.MID_ANGLE))  # Start at middle position
         time.sleep(2)   # Wait longer for servo to initialize
         self.pwm.ChangeDutyCycle(0)  # Stop active signal
         
         # Store ADC manager
         self.adc = adc_manager
-        
-        # Servo angle constants
-        self.MIN_ANGLE = 0.0
-        self.MID_ANGLE = 135.0
-        self.MAX_ANGLE = 270.0
-        self.angles = [0.0, 90.0, 180.0, 270.0]
         
         # Initialize state
         self.current_angle = self.MID_ANGLE

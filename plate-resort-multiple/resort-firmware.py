@@ -8,6 +8,7 @@ from snake_game import SnakeGame
 import time
 
 def main():
+    in_snake_game = False  # Ensure this is always defined
     try:
         # Initialize components in correct order
         adc = ADCManager()
@@ -21,7 +22,6 @@ def main():
         print("Starting servo control (Press A to cycle angles, B for Snake Game, Ctrl+C to exit)...")
         
         # Initialize game state
-        in_snake_game = False
         snake = None
         
         while True:
