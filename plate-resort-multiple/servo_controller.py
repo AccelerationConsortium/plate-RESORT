@@ -30,13 +30,13 @@ class ServoController:
         self.angle_index = 0
         self.is_moving = False
         self.last_movement_time = 0
-        self.stable_count = 0  # Track stability across cycles
-
-    def start(self):
+        self.stable_count = 0  # Track stability across cycles    def start(self):
         """Start the servo at middle position"""
         self.pwm.start(7.4)  # Start at middle position
         time.sleep(2)   # Wait longer for servo to initialize
-        self.pwm.ChangeDutyCycle(0)  # Stop active signal    def stop(self):
+        self.pwm.ChangeDutyCycle(0)  # Stop active signal
+
+    def stop(self):
         """Stop the servo"""
         self.pwm.stop()
         GPIO.cleanup()
