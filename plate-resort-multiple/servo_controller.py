@@ -53,6 +53,20 @@ class ServoController:
             self.pwm.ChangeDutyCycle(duty)
             time.sleep(1)
         self.pwm.ChangeDutyCycle(0)
+        
+    def test_pwm_intermediate_points(self):
+        """Sweep 10 evenly spaced PWM duty cycles from min to max. Observe and record the physical servo position at each step for calibration."""
+        min_duty = 2.5
+        max_duty = 12.5
+        steps = 10
+        for i in range(steps + 1):
+            duty = min_duty + (max_duty - min_duty) * i / steps
+            expected_angle = 300 * (duty - min_duty) / (max_duty - min_duty)
+            print(f"Step {i}: Duty cycle = {duty:.2f}%, Expected angle = {expected_angle:.1f}°")
+            self.pwm.ChangeDutyCycle(duty)
+            time.sleep(1)
+        self.pwm.ChangeDutyCycle(0)
+        
     def update_movement_status(self):
         """Update movement status based on current conditions"""
         # Check if we're at target position
