@@ -67,17 +67,20 @@ class ServoController:
             self.is_moving = True
         return False  # Not stable yet
 
-    def set_angle(self, target_angle, step_size=1.0, step_delay=0.05, max_attempts=200):
-        """Gradually move servo to target angle in small steps, updating feedback and display live."""
-        # Ensure target angle is within physical limits
+    def set_angle(self, target_angle, step_size=1.0, step_delay=0.15, max_attempts=200):
+        """Gradually move servo to target angle in small steps, updating feedback and display live. Handles ADC errors."""
         target_angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, target_angle))
         self.target_angle = target_angle
         self.is_moving = True
         self.stable_count = 0
 
         # Get current position from feedback
-        current_voltage = self.adc.get_voltage()
-        self.current_angle = self.adc.voltage_to_angle(current_voltage)
+        try:
+            current_voltage = self.adc.get_voltage()
+            self.current_angle = self.adc.voltage_to_angle(current_voltage)
+        except Exception as e:
+            print(f"[Gradual] ADC read error at start: {e}")
+            return
         angle = self.current_angle
         attempt = 0
 
@@ -92,8 +95,12 @@ class ServoController:
             time.sleep(step_delay)
             self.pwm.ChangeDutyCycle(0)
             # Update feedback
-            current_voltage = self.adc.get_voltage()
-            self.current_angle = self.adc.voltage_to_angle(current_voltage)
+            try:
+                current_voltage = self.adc.get_voltage()
+                self.current_angle = self.adc.voltage_to_angle(current_voltage)
+            except Exception as e:
+                print(f"[Gradual] ADC read error: {e}")
+                break
             print(f"[Gradual] Target: {target_angle:.1f}°, Current: {self.current_angle:.1f}°, Step: {angle:.1f}")
             attempt += 1
         # Final correction to target
@@ -103,7 +110,10 @@ class ServoController:
         self.pwm.ChangeDutyCycle(0)
         self.last_movement_time = time.time()
         self.is_moving = False
-        self.current_angle = self.adc.voltage_to_angle(self.adc.get_voltage())
+        try:
+            self.current_angle = self.adc.voltage_to_angle(self.adc.get_voltage())
+        except Exception as e:
+            print(f"[Gradual] ADC read error at end: {e}")
         print("[Gradual] Target position reached or max attempts.")
 
     def get_next_angle(self):
