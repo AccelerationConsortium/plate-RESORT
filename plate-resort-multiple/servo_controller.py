@@ -36,12 +36,12 @@ class ServoController:
         """Start the servo at middle position"""
         self.pwm.start(7.4)  # Start at middle position
         time.sleep(2)   # Wait longer for servo to initialize
-        self.pwm.ChangeDutyCycle(0)  # Stop active signal
-
-    def stop(self):
+        self.pwm.ChangeDutyCycle(0)  # Stop active signal    def stop(self):
         """Stop the servo"""
         self.pwm.stop()
-        GPIO.cleanup()    def angle_to_duty_cycle(self, angle):
+        GPIO.cleanup()
+
+    def angle_to_duty_cycle(self, angle):
         """Convert angle to duty cycle using standard servo timing:
         500µs (2.5% duty) = 0° physical start
         900µs (4.5% duty) = 0° usable start
