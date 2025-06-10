@@ -39,10 +39,20 @@ class ServoController:
         GPIO.cleanup()
 
     def angle_to_duty_cycle(self, angle):
-        """Convert angle to duty cycle: 0°=2.5%, 300°=12.5% (500–2500µs) per datasheet"""
+        """Convert angle to duty cycle: 0°=2.5%, 300°=12.5% (500–2500µs) per datasheet.
+        If your servo does not reach full 300°, calibrate by finding the real min/max duty cycles.
+        Replace 2.5 and 12.5 below with your measured values if needed.
+        """
         angle = max(0, min(300, angle))
         return 2.5 + (angle * (12.5 - 2.5) / 300.0)
 
+    def test_pwm_endpoints(self):
+        """Sweep through duty cycles for calibration. Watch your servo and note the endpoints."""
+        for duty in [2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5]:
+            print(f"Testing duty cycle: {duty}%")
+            self.pwm.ChangeDutyCycle(duty)
+            time.sleep(1)
+        self.pwm.ChangeDutyCycle(0)
     def update_movement_status(self):
         """Update movement status based on current conditions"""
         # Check if we're at target position
