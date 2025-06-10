@@ -39,9 +39,9 @@ class ServoController:
         GPIO.cleanup()
 
     def angle_to_duty_cycle(self, angle):
-        """Convert angle to duty cycle using datasheet PWM range: 0°=4.5%, 270°=10.5%"""
-        angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, angle))
-        return 4.5 + (angle * (10.5 - 4.5) / 270.0)
+        """Convert angle to duty cycle: 0°=5.0%, 300°=10.0%"""
+        angle = max(0, min(300, angle))
+        return 5.0 + (angle * (10.0 - 5.0) / 300.0)
 
     def update_movement_status(self):
         """Update movement status based on current conditions"""
