@@ -5,7 +5,7 @@ from button_manager import ButtonManager
 import time
 
 def main():
-    servo = ServoController(adc=None)  # No ADC needed for open loop
+    servo = ServoController(None)  # No ADC needed for open loop
     buttons = ButtonManager()
     angles = [0, 180]  # Change these to your desired angles
     idx = 0
