@@ -67,50 +67,44 @@ class ServoController:
             self.is_moving = True
         return False  # Not stable yet
 
-    def set_angle(self, target_angle, max_attempts=50):
-        """Set servo to specified angle using minimal PWM signals"""
-        # Ensure minimum delay between movements
-        current_time = time.time()
-        time_since_last_move = current_time - self.last_movement_time
-        if time_since_last_move < 10.0:  # Drastically increase to 10 seconds
-            time.sleep(10.0 - time_since_last_move)
-
+    def set_angle(self, target_angle, step_size=1.0, step_delay=0.05, max_attempts=200):
+        """Gradually move servo to target angle in small steps, updating feedback and display live."""
+        # Ensure target angle is within physical limits
+        target_angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, target_angle))
         self.target_angle = target_angle
         self.is_moving = True
         self.stable_count = 0
 
-        # Ensure target angle is within physical limits
-        target_angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, target_angle))
-        duty = self.angle_to_duty_cycle(target_angle)
-
+        # Get current position from feedback
+        current_voltage = self.adc.get_voltage()
+        self.current_angle = self.adc.voltage_to_angle(current_voltage)
+        angle = self.current_angle
         attempt = 0
-        last_correction_time = time.time()
-        while attempt < max_attempts:
+
+        while abs(angle - target_angle) > 2.0 and attempt < max_attempts:
+            # Step toward target
+            if angle < target_angle:
+                angle = min(angle + step_size, target_angle)
+            else:
+                angle = max(angle - step_size, target_angle)
+            duty = self.angle_to_duty_cycle(angle)
+            self.pwm.ChangeDutyCycle(duty)
+            time.sleep(step_delay)
+            self.pwm.ChangeDutyCycle(0)
+            # Update feedback
             current_voltage = self.adc.get_voltage()
             self.current_angle = self.adc.voltage_to_angle(current_voltage)
-            status = "MOVING" if self.is_moving else "STABLE"
-            print(f"Target: {target_angle:.1f}°, Current: {self.current_angle:.1f}° [{status}]")
-            print(f"Voltage: {current_voltage:.2f}V, Duty: {duty:.1f}%")
-            if self.update_movement_status():
-                print("Target position reached and stable!")
-                self.pwm.ChangeDutyCycle(0)
-                self.last_movement_time = time.time()
-                break
-            else:
-                current_time = time.time()
-                if current_time - last_correction_time >= 8.0:  # Drastically increase to 8 seconds
-                    self.is_moving = True
-                    self.pwm.ChangeDutyCycle(duty)
-                    time.sleep(1.5)  # Increase pulse duration to 1.5 seconds
-                    self.pwm.ChangeDutyCycle(0)
-                    last_correction_time = current_time
-            time.sleep(1.0)  # Increase sleep between checks to 1 second
+            print(f"[Gradual] Target: {target_angle:.1f}°, Current: {self.current_angle:.1f}°, Step: {angle:.1f}")
             attempt += 1
-        if attempt >= max_attempts:
-            print("Warning: Maximum attempts reached without achieving target position")
-            self.is_moving = False
-            self.pwm.ChangeDutyCycle(0)
-            self.last_movement_time = time.time()
+        # Final correction to target
+        duty = self.angle_to_duty_cycle(target_angle)
+        self.pwm.ChangeDutyCycle(duty)
+        time.sleep(0.2)
+        self.pwm.ChangeDutyCycle(0)
+        self.last_movement_time = time.time()
+        self.is_moving = False
+        self.current_angle = self.adc.voltage_to_angle(self.adc.get_voltage())
+        print("[Gradual] Target position reached or max attempts.")
 
     def get_next_angle(self):
         """Get the next angle in the sequence without moving"""
