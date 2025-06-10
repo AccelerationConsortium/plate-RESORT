@@ -67,7 +67,7 @@ class ServoController:
             self.is_moving = True
         return False  # Not stable yet
 
-    def set_angle(self, target_angle, step_size=1.0, step_delay=0.15, max_attempts=200):
+    def set_angle(self, target_angle, step_size=5.0, step_delay=0.03, max_attempts=200):
         """Gradually move servo to target angle in small steps, updating feedback and display live. Handles ADC errors."""
         target_angle = max(self.MIN_ANGLE, min(self.MAX_ANGLE, target_angle))
         self.target_angle = target_angle
