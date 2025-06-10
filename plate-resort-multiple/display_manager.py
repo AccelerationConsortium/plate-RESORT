@@ -52,6 +52,7 @@ class DisplayManager:
         self.is_moving = False
         self.update_thread = None
         self.running = True
+        self.in_snake_game = False  # Add game state tracking
 
     def init_display(self):
         """Initialize display"""
@@ -107,12 +108,13 @@ class DisplayManager:
             )
             
             # Draw button guide
-            self.draw.text(
-                (10, 180),
-                "A: Cycle angles | B: Snake Game",
-                font=self.font,
-                fill=(128, 128, 255),
-            )
+            if not self.in_snake_game:  # Only show button guide when not in snake game
+                self.draw.text(
+                    (10, 180),
+                    "A: Cycle angles | B: Snake Game",
+                    font=self.font,
+                    fill=(128, 128, 255),
+                )
             
             # Display the image
             self.disp.image(self.image)
@@ -133,4 +135,8 @@ class DisplayManager:
     def update_state(self, target_angle, is_moving):
         """Update the display state"""
         self.target_angle = target_angle
-        self.is_moving = is_moving 
+        self.is_moving = is_moving
+
+    def set_game_state(self, in_game):
+        """Set the game state"""
+        self.in_snake_game = in_game
