@@ -2,38 +2,10 @@
 
 from adc_manager import ADCManager
 from servo_controller import ServoController
-from button_manager import ButtonManager
-import time
 import sys
 import termios
 import tty
-
-# Open-loop version: direct PWM, no feedback, no servo.start()
-def main():
-    servo = ServoController(None)  # No ADC needed for open loop
-    buttons = ButtonManager()
-    angles = [0, 150, 300]  # Test full range: 0°, 150°, 300°
-    idx = 0
-
-    print("Open-loop servo control: Press Button A to cycle through 0°, 150°, 300°. Ctrl+C to exit.")
-
-    try:
-        while True:
-            if buttons.check_button_a():
-                idx = (idx + 1) % len(angles)  # Cycle through all angles
-                print(f"Setting servo to {angles[idx]} degrees")
-                duty = servo.angle_to_duty_cycle(angles[idx])
-                servo.pwm.ChangeDutyCycle(duty)
-                time.sleep(0.5)
-                servo.pwm.ChangeDutyCycle(0)
-                # Debounce: wait for button release
-                while buttons.check_button_a():
-                    time.sleep(0.05)
-            time.sleep(0.01)
-    except KeyboardInterrupt:
-        print("\nExiting open-loop control.")
-    finally:
-        servo.stop()
+import time
 
 def get_key():
     """Get a single character from stdin without enter."""
@@ -49,13 +21,24 @@ def get_key():
 if __name__ == "__main__":
     adc = ADCManager()
     servo = ServoController(adc)
+    # Define the four positions
+    angles = [0.0, 90.0, 180.0, 270.0]
+    angle_index = 0
     try:
         print("\nPress 'a' to cycle to the next angle, 'q' to quit.")
+        # Move to the initial position
+        servo.pwm.ChangeDutyCycle(servo.angle_to_duty_cycle(angles[angle_index]))
+        print(f"Moved to angle: {angles[angle_index]}°")
+        time.sleep(1)
+        servo.pwm.ChangeDutyCycle(0)
         while True:
             key = get_key()
             if key == 'a':
-                servo.cycle_angle()
-                print(f"Moved to angle: {servo.angles[servo.angle_index]}°")
+                angle_index = (angle_index + 1) % len(angles)
+                servo.pwm.ChangeDutyCycle(servo.angle_to_duty_cycle(angles[angle_index]))
+                print(f"Moved to angle: {angles[angle_index]}°")
+                time.sleep(1)
+                servo.pwm.ChangeDutyCycle(0)
             elif key == 'q':
                 print("Exiting.")
                 break
