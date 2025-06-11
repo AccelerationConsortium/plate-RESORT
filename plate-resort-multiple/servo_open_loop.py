@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
+from adc_manager import ADCManager
 from servo_controller import ServoController
 from button_manager import ButtonManager
 import time
+import sys
+import termios
+import tty
 
 # Open-loop version: direct PWM, no feedback, no servo.start()
 def main():
@@ -31,5 +35,30 @@ def main():
     finally:
         servo.stop()
 
+def get_key():
+    """Get a single character from stdin without enter."""
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
 if __name__ == "__main__":
-    main()
+    adc = ADCManager()
+    servo = ServoController(adc)
+    try:
+        print("\nPress 'a' to cycle to the next angle, 'q' to quit.")
+        while True:
+            key = get_key()
+            if key == 'a':
+                servo.cycle_angle()
+                print(f"Moved to angle: {servo.angles[servo.angle_index]}°")
+            elif key == 'q':
+                print("Exiting.")
+                break
+    finally:
+        servo.stop()
+        print("\nServo test complete. GPIO cleaned up.")
