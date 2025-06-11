@@ -29,19 +29,16 @@ if __name__ == "__main__":
         # Move to the initial position
         servo.pwm.ChangeDutyCycle(servo.angle_to_duty_cycle(angles[angle_index]))
         print(f"Moved to angle: {angles[angle_index]}°")
-        time.sleep(1)
-        servo.pwm.ChangeDutyCycle(0)
         while True:
             key = get_key()
             if key == 'a':
                 angle_index = (angle_index + 1) % len(angles)
                 servo.pwm.ChangeDutyCycle(servo.angle_to_duty_cycle(angles[angle_index]))
                 print(f"Moved to angle: {angles[angle_index]}°")
-                time.sleep(1)
-                servo.pwm.ChangeDutyCycle(0)
             elif key == 'q':
                 print("Exiting.")
                 break
     finally:
+        servo.pwm.ChangeDutyCycle(0)
         servo.stop()
         print("\nServo test complete. GPIO cleaned up.")
