@@ -27,14 +27,20 @@ if __name__ == "__main__":
     try:
         print("\nPress 'a' to cycle to the next angle, 'q' to quit.")
         # Move to the initial position
-        servo.pwm.ChangeDutyCycle(servo.angle_to_duty_cycle(angles[angle_index]))
-        print(f"Moved to angle: {angles[angle_index]}°")
+        duty = servo.angle_to_duty_cycle(angles[angle_index])
+        servo.pwm.ChangeDutyCycle(duty)
+        print(f"Moved to angle: {angles[angle_index]}° (duty {duty:.2f}%)")
         while True:
             key = get_key()
             if key == 'a':
                 angle_index = (angle_index + 1) % len(angles)
-                servo.pwm.ChangeDutyCycle(servo.angle_to_duty_cycle(angles[angle_index]))
-                print(f"Moved to angle: {angles[angle_index]}°")
+                duty = servo.angle_to_duty_cycle(angles[angle_index])
+                # Hold PWM for longer to help with load
+                servo.pwm.ChangeDutyCycle(duty)
+                print(f"Moved to angle: {angles[angle_index]}° (duty {duty:.2f}%) - holding PWM for 2.5s")
+                time.sleep(2.5)
+                # Optionally keep PWM active, or set to 0 after move
+                servo.pwm.ChangeDutyCycle(0)
             elif key == 'q':
                 print("Exiting.")
                 break
