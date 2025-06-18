@@ -3,4 +3,5 @@ adafruit-circuitpython-ads1x15>=2.2.0
 board>=1.0
 adafruit-circuitpython-rgb-display>=3.11.0
 pillow>=9.0.0
-numpy>=1.21.0 
+numpy>=1.21.0
+dynamixel-sdk
