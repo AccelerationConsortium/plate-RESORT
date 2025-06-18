@@ -37,7 +37,7 @@ def poll_position(pkt, port, dxl_id, stop_event):
         pos, result, error = pkt.read4ByteTxRx(port, dxl_id, ADDR_PRESENT_POSITION)
         if result == 0 and error == 0:
             actual_deg = pos * MAX_ANGLE / MAX_POSITION
-            print(f"[POLL] Present pos: {pos} (~{actual_deg:.1f}°)")
+            print(f"\n[POLL] Present pos: {pos} (~{actual_deg:.1f}°)")
         else:
             print("[POLL] Read error.")
         stop_event.wait(2)
