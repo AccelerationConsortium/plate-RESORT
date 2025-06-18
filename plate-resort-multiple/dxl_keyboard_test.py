@@ -49,6 +49,7 @@ if __name__ == "__main__":
     parser.add_argument("--baud", type=int, default=57600)
     parser.add_argument("--protocol", type=float, default=2.0)
     parser.add_argument("--id", type=int, default=1)
+    parser.add_argument("--speed", type=int, default=0, help="Profile velocity (0=max, >0=slower)")
     args = parser.parse_args()
 
     port = PortHandler(args.device)
@@ -62,6 +63,11 @@ if __name__ == "__main__":
 
     # Enable torque
     pkt.write1ByteTxRx(port, args.id, ADDR_TORQUE_ENABLE, 1)
+
+    # Set profile velocity (speed)
+    PROFILE_VELOCITY_ADDR = 112
+    pkt.write4ByteTxRx(port, args.id, PROFILE_VELOCITY_ADDR, args.speed)
+    print(f"[INIT] Set profile velocity to {args.speed} (0=max speed)")
 
     # Get initial position
     pos, result, error = pkt.read4ByteTxRx(port, args.id, ADDR_PRESENT_POSITION)
