@@ -23,7 +23,7 @@ ERROR_BITS = [
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--device", default="/dev/ttyUSB0")
-    parser.add_argument("--baud", type=int, default=1000000)
+    parser.add_argument("--baud", type=int, default=57600)
     parser.add_argument("--protocol", type=float, default=2.0)
     parser.add_argument("--id", type=int, default=1)
     args = parser.parse_args()
