@@ -3,8 +3,10 @@
 dxl_keyboard_test.py
 
 Test script for Robotis XC330 Dynamixel motor.
-- Press 'a' to move 90° clockwise
-- Press 'z' to move 90° counterclockwise
+- Press 'a' to move to 90°
+- Press 'z' to move to 0°
+- Press 's' to move to 180°
+- Press 'x' to move to 270°
 - Position is polled and printed every 2 seconds
 """
 import sys
@@ -81,17 +83,27 @@ if __name__ == "__main__":
     poll_thread = threading.Thread(target=poll_position, args=(pkt, port, args.id, stop_event), daemon=True)
     poll_thread.start()
 
-    print("\nPress 'a' to move +90°, 'z' to move -90°, 'q' to quit.")
+    print("\nPress 'a' to move to 90°, 'z' to move to 0°, 's' to move to 180°, 'x' to move to 270°, 'q' to quit.")
     try:
         while True:
             key = get_key()
             if key == 'a':
-                current_angle = min(current_angle + 90, 360)
+                current_angle = 90
                 goal_pos = int(current_angle * MAX_POSITION / MAX_ANGLE)
                 pkt.write4ByteTxRx(port, args.id, ADDR_GOAL_POSITION, goal_pos)
                 print(f"[CMD] Move to {current_angle:.1f}° (pos {goal_pos})")
             elif key == 'z':
-                current_angle = max(current_angle - 90, 0)
+                current_angle = 0
+                goal_pos = int(current_angle * MAX_POSITION / MAX_ANGLE)
+                pkt.write4ByteTxRx(port, args.id, ADDR_GOAL_POSITION, goal_pos)
+                print(f"[CMD] Move to {current_angle:.1f}° (pos {goal_pos})")
+            elif key == 's':
+                current_angle = 180
+                goal_pos = int(current_angle * MAX_POSITION / MAX_ANGLE)
+                pkt.write4ByteTxRx(port, args.id, ADDR_GOAL_POSITION, goal_pos)
+                print(f"[CMD] Move to {current_angle:.1f}° (pos {goal_pos})")
+            elif key == 'x':
+                current_angle = 270
                 goal_pos = int(current_angle * MAX_POSITION / MAX_ANGLE)
                 pkt.write4ByteTxRx(port, args.id, ADDR_GOAL_POSITION, goal_pos)
                 print(f"[CMD] Move to {current_angle:.1f}° (pos {goal_pos})")
