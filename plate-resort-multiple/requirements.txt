@@ -1,2 +1,4 @@
 dynamixel-sdk
 pyyaml
+flask
+tkinter

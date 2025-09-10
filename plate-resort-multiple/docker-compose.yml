@@ -1,15 +1,18 @@
 version: '3.8'
 
 services:
-  dynamixel-controller:
+  plate-resort-app:
     build: .
-    container_name: plate-resort-dynamixel
+    container_name: plate-resort-app
     volumes:
       - .:/app
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0  # USB to Serial adapter
     privileged: true  # Needed for hardware access
-    stdin_open: true
-    tty: true
+    ports:
+      - "5000:5000"  # Web interface
     working_dir: /app
-    command: bash
+    environment:
+      - DISPLAY=${DISPLAY}  # For GUI support
+    network_mode: host  # For accessing Pi's network interfaces
+    command: python app.py --host 0.0.0.0 --port 5000

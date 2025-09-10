@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plate Resort Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .status-panel {
+            background: rgba(52, 73, 94, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 2px solid #34495e;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .control-section {
+            background: rgba(44, 62, 80, 0.8);
+            border-radius: 10px;
+            padding: 25px;
+            border: 2px solid #2c3e50;
+        }
+        
+        .control-section h2 {
+            margin-bottom: 20px;
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .hotel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-hotel {
+            background: #9b59b6;
+            color: white;
+            padding: 20px;
+            font-size: 18px;
+        }
+        
+        .btn-hotel:hover {
+            background: #8e44ad;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+        }
+        
+        .btn-hotel.active {
+            background: #27ae60;
+            box-shadow: 0 0 20px rgba(39, 174, 96, 0.6);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .status-display {
+            background: #1a1a1a;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            min-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #444;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .status-value {
+            color: #3498db;
+            font-weight: bold;
+        }
+        
+        .health-warning {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .health-good {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .speed-control {
+            margin-top: 20px;
+        }
+        
+        .speed-slider {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #444;
+            outline: none;
+            margin: 10px 0;
+        }
+        
+        .speed-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+        
+        .speed-slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .hotel-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+        
+        .log-entry.error {
+            color: #e74c3c;
+        }
+        
+        .log-entry.warning {
+            color: #f39c12;
+        }
+        
+        .log-entry.success {
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 PLATE RESORT CONTROL</h1>
+        
+        <div class="status-panel">
+            <h2>System Status</h2>
+            <div class="status-display" id="statusDisplay">
+                <div class="status-item">
+                    <span>Connection:</span>
+                    <span class="status-value" id="connectionStatus">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span>Active Hotel:</span>
+                    <span class="status-value" id="activeHotel">None</span>
+                </div>
+                <div class="status-item">
+                    <span>Position:</span>
+                    <span class="status-value" id="position">0.0°</span>
+                </div>
+                <div class="status-item">
+                    <span>Temperature:</span>
+                    <span class="status-value" id="temperature">-</span>
+                </div>
+                <div class="status-item">
+                    <span>Current:</span>
+                    <span class="status-value" id="current">-</span>
+                </div>
+                <div class="status-item">
+                    <span>Voltage:</span>
+                    <span class="status-value" id="voltage">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-section">
+                <h2>System Control</h2>
+                <button class="btn btn-primary" id="connectBtn" onclick="toggleConnection()">
+                    CONNECT TO MOTOR
+                </button>
+                <button class="btn btn-danger" onclick="emergencyStop()" style="margin-left: 10px;">
+                    EMERGENCY STOP
+                </button>
+                
+                <div class="speed-control">
+                    <label for="speedSlider">Motor Speed:</label>
+                    <input type="range" id="speedSlider" class="speed-slider" 
+                           min="10" max="200" value="50" onchange="setSpeed(this.value)">
+                    <div>Speed: <span id="speedValue">50</span></div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h2>Activity Log</h2>
+                <div class="status-display" id="activityLog" style="height: 200px;">
+                    <div class="log-entry">System initialized</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-section">
+            <h2>Hotel Selection</h2>
+            <div class="hotel-grid">
+                {% for hotel in hotels %}
+                <button class="btn btn-hotel" id="hotel{{ hotel }}" 
+                        onclick="activateHotel('{{ hotel }}')" disabled>
+                    HOTEL {{ hotel }}
+                    <br><small>{{ rooms }} rooms</small>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let connected = false;
+        let currentHotel = null;
+        
+        // Update status every 2 seconds
+        setInterval(updateStatus, 2000);
+        
+        function updateStatus() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    // Update connection status
+                    const connStatus = document.getElementById('connectionStatus');
+                    connStatus.textContent = data.connected ? 'Connected' : 'Disconnected';
+                    connStatus.className = data.connected ? 'status-value health-good' : 'status-value health-warning';
+                    
+                    // Update active hotel
+                    document.getElementById('activeHotel').textContent = data.active_hotel || 'None';
+                    
+                    // Update position
+                    document.getElementById('position').textContent = data.position.toFixed(1) + '°';
+                    
+                    // Update health data
+                    if (data.health) {
+                        const health = data.health;
+                        document.getElementById('temperature').textContent = 
+                            health.temperature ? health.temperature + '°C' : '-';
+                        document.getElementById('current').textContent = 
+                            health.current ? Math.round(health.current) + 'mA' : '-';
+                        document.getElementById('voltage').textContent = 
+                            health.voltage ? health.voltage.toFixed(1) + 'V' : '-';
+                        
+                        // Show warnings
+                        if (health.warnings && health.warnings.length > 0) {
+                            health.warnings.forEach(warning => {
+                                addLogEntry(warning, 'warning');
+                            });
+                        }
+                    }
+                    
+                    // Update hotel button states
+                    {% for hotel in hotels %}
+                    const hotelBtn = document.getElementById('hotel{{ hotel }}');
+                    if (data.active_hotel === '{{ hotel }}') {
+                        hotelBtn.classList.add('active');
+                    } else {
+                        hotelBtn.classList.remove('active');
+                    }
+                    {% endfor %}
+                    
+                    connected = data.connected;
+                })
+                .catch(error => {
+                    addLogEntry('Status update failed: ' + error, 'error');
+                });
+        }
+        
+        function toggleConnection() {
+            const btn = document.getElementById('connectBtn');
+            const endpoint = connected ? '/api/disconnect' : '/api/connect';
+            
+            btn.disabled = true;
+            btn.textContent = connected ? 'DISCONNECTING...' : 'CONNECTING...';
+            
+            fetch(endpoint, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        connected = !connected;
+                        btn.textContent = connected ? 'DISCONNECT' : 'CONNECT TO MOTOR';
+                        btn.className = connected ? 'btn btn-danger' : 'btn btn-primary';
+                        
+                        // Enable/disable hotel buttons
+                        {% for hotel in hotels %}
+                        document.getElementById('hotel{{ hotel }}').disabled = !connected;
+                        {% endfor %}
+                        
+                        addLogEntry(data.message, 'success');
+                    } else {
+                        addLogEntry('Error: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    addLogEntry('Connection failed: ' + error, 'error');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                });
+        }
+        
+        function activateHotel(hotel) {
+            if (!connected) {
+                addLogEntry('Not connected to motor', 'error');
+                return;
+            }
+            
+            // Disable all hotel buttons during movement
+            {% for hotel in hotels %}
+            document.getElementById('hotel{{ hotel }}').disabled = true;
+            {% endfor %}
+            
+            addLogEntry('Moving to hotel ' + hotel + '...', 'info');
+            
+            fetch(`/api/hotel/${hotel}/activate`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        addLogEntry(data.message, 'success');
+                        currentHotel = hotel;
+                    } else {
+                        addLogEntry('Error: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    addLogEntry('Movement failed: ' + error, 'error');
+                })
+                .finally(() => {
+                    // Re-enable hotel buttons
+                    {% for hotel in hotels %}
+                    document.getElementById('hotel{{ hotel }}').disabled = !connected;
+                    {% endfor %}
+                });
+        }
+        
+        function emergencyStop() {
+            fetch('/api/emergency_stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        addLogEntry('EMERGENCY STOP EXECUTED', 'warning');
+                        connected = false;
+                        document.getElementById('connectBtn').textContent = 'CONNECT TO MOTOR';
+                        document.getElementById('connectBtn').className = 'btn btn-primary';
+                        
+                        // Disable hotel buttons
+                        {% for hotel in hotels %}
+                        document.getElementById('hotel{{ hotel }}').disabled = true;
+                        document.getElementById('hotel{{ hotel }}').classList.remove('active');
+                        {% endfor %}
+                    } else {
+                        addLogEntry('Emergency stop failed: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    addLogEntry('Emergency stop failed: ' + error, 'error');
+                });
+        }
+        
+        function setSpeed(value) {
+            document.getElementById('speedValue').textContent = value;
+            
+            if (connected) {
+                fetch('/api/speed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ speed: parseInt(value) })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        addLogEntry(data.message, 'success');
+                    } else {
+                        addLogEntry('Speed change failed: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    addLogEntry('Speed change failed: ' + error, 'error');
+                });
+            }
+        }
+        
+        function addLogEntry(message, type = 'info') {
+            const log = document.getElementById('activityLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            
+            // Keep only last 50 entries
+            while (log.children.length > 50) {
+                log.removeChild(log.firstChild);
+            }
+        }
+        
+        // Initial status update
+        updateStatus();
+        addLogEntry('Web interface loaded');
+    </script>
+</body>
+</html>
