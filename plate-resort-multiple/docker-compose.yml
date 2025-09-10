@@ -6,6 +6,7 @@ services:
     container_name: plate-resort-app
     volumes:
       - .:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0  # USB to Serial adapter
     privileged: true  # Needed for hardware access
@@ -13,6 +14,23 @@ services:
       - "5000:5000"  # Web interface
     working_dir: /app
     environment:
-      - DISPLAY=${DISPLAY}  # For GUI support
+      - DISPLAY=:0
+      - PYTHONUNBUFFERED=1
     network_mode: host  # For accessing Pi's network interfaces
     command: python app.py --host 0.0.0.0 --port 5000
+    
+  plate-resort-gui:
+    build: .
+    container_name: plate-resort-gui
+    volumes:
+      - .:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    privileged: true
+    working_dir: /app
+    environment:
+      - DISPLAY=:0
+      - PYTHONUNBUFFERED=1
+    network_mode: host
+    command: python touchscreen_app.py

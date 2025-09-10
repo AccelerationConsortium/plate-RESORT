@@ -1,8 +1,18 @@
 FROM python:3.9-slim
 
-# Install system dependencies
+# Install system dependencies including GUI support
 RUN apt-get update && apt-get install -y \
     build-essential \
+    python3-tk \
+    python3-dev \
+    libx11-dev \
+    libxext-dev \
+    libxrender-dev \
+    libxtst6 \
+    libfontconfig1 \
+    libxrandr2 \
+    libasound2-dev \
+    udev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -17,8 +27,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Make sure the USB device can be accessed
-RUN apt-get update && apt-get install -y udev
+# Set environment variables for GUI
+ENV DISPLAY=:0
+ENV PYTHONUNBUFFERED=1
 
 # Default command
 CMD ["bash"]
