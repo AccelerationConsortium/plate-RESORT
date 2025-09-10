@@ -1,8 +1,8 @@
 #!/bin/bash
-"""
-Auto-startup script for Plate Resort System
-Place this in /etc/systemd/system/ for automatic startup
-"""
+#
+# Auto-startup script for Plate Resort System
+# Place this in /etc/systemd/system/ for automatic startup
+#
 
 # This is a systemd service file
 # To install:
@@ -21,7 +21,7 @@ Type=simple
 User=pi
 Group=pi
 WorkingDirectory=/home/pi/plate-RESORT/plate-resort-multiple
-ExecStart=/usr/bin/python3 /home/pi/plate-RESORT/plate-resort-multiple/touchscreen_app.py
+ExecStart=/home/pi/plate-RESORT/plate-resort-multiple/start-gui-docker.sh
 Restart=always
 RestartSec=5
 Environment=DISPLAY=:0
