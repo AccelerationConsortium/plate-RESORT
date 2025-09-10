@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Plate Resort Control
+Comment=Launch Plate Resort System
+Exec=/home/pi/plate-RESORT/plate-resort-multiple/launch.sh
+Icon=/home/pi/plate-RESORT/plate-resort-multiple/plate-resort-icon.png
+Terminal=true
+StartupNotify=false
+Categories=Science;Engineering;
+Keywords=plate;resort;dynamixel;laboratory;automation;
