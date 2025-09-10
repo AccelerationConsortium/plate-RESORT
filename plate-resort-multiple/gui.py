@@ -137,14 +137,17 @@ class PlateResortGUI:
         self.connect_btn.grid(row=0, column=0, padx=10, pady=5)
         
         # Position buttons
-        ttk.Button(button_frame, text="Go to Position 1", 
-                  command=lambda: self.move_to_position(1), style='Action.TButton').grid(row=1, column=0, padx=10, pady=5)
+        ttk.Button(button_frame, text="Go to Hotel A", 
+                  command=lambda: self.move_to_hotel("A"), style='Action.TButton').grid(row=1, column=0, padx=10, pady=5)
         
-        ttk.Button(button_frame, text="Go to Position 2", 
-                  command=lambda: self.move_to_position(2), style='Action.TButton').grid(row=1, column=1, padx=10, pady=5)
+        ttk.Button(button_frame, text="Go to Hotel B", 
+                  command=lambda: self.move_to_hotel("B"), style='Action.TButton').grid(row=1, column=1, padx=10, pady=5)
         
-        ttk.Button(button_frame, text="Go to Position 3", 
-                  command=lambda: self.move_to_position(3), style='Action.TButton').grid(row=1, column=2, padx=10, pady=5)
+        ttk.Button(button_frame, text="Go to Hotel C", 
+                  command=lambda: self.move_to_hotel("C"), style='Action.TButton').grid(row=1, column=2, padx=10, pady=5)
+        
+        ttk.Button(button_frame, text="Go to Hotel D", 
+                  command=lambda: self.move_to_hotel("D"), style='Action.TButton').grid(row=2, column=0, padx=10, pady=5)
         
         # Home and emergency buttons
         ttk.Button(button_frame, text="🏠 Home", 
@@ -289,8 +292,47 @@ class PlateResortGUI:
             except Exception as e:
                 self.log_debug(f"⚠️ Disconnect error: {e}")
                 
+    def move_to_hotel(self, hotel):
+        """Move to specified hotel in background thread"""
+        if self.resort is None:
+            messagebox.showwarning("Not Connected", "Please connect to motor first")
+            return
+            
+        def move_thread():
+            try:
+                self.log_debug(f"🔄 Moving to hotel {hotel}...")
+                print(f"DEBUG: Starting movement to hotel {hotel}")  # Terminal debug
+                print(f"DEBUG: Available methods: {[m for m in dir(self.resort) if not m.startswith('_')]}")
+                
+                # Use the correct method name: activate_hotel
+                success = self.resort.activate_hotel(hotel)
+                
+                if success:
+                    self.log_debug(f"✅ Successfully moved to hotel {hotel}")
+                    print(f"✅ Successfully moved to hotel {hotel}")  # Terminal debug
+                else:
+                    self.log_debug(f"⚠️ Movement to hotel {hotel} timed out or failed")
+                    print(f"⚠️ Movement to hotel {hotel} timed out or failed")  # Terminal debug
+                
+                # Update position display on main thread
+                self.root.after(0, self.update_position_display)
+                
+            except AttributeError as e:
+                error_msg = f"❌ Method error: {e} - Available methods: {[m for m in dir(self.resort) if 'hotel' in m.lower()]}"
+                self.root.after(0, lambda: messagebox.showerror("Method Error", error_msg))
+                self.root.after(0, lambda: self.log_debug(error_msg))
+                print(error_msg)  # Terminal debug
+            except Exception as e:
+                error_msg = f"❌ Movement to hotel {hotel} failed: {e}"
+                self.root.after(0, lambda: messagebox.showerror("Movement Error", f"Failed to move to hotel {hotel}: {e}"))
+                self.root.after(0, lambda: self.log_debug(error_msg))
+                print(error_msg)  # Terminal debug
+        
+        # Start movement in background thread to prevent GUI freezing
+        threading.Thread(target=move_thread, daemon=True).start()
+            
     def move_to_position(self, position):
-        """Move to specified position"""
+        """Move to specified position (deprecated - use move_to_hotel)"""
         if self.resort is None:
             messagebox.showwarning("Not Connected", "Please connect to motor first")
             return
@@ -306,20 +348,37 @@ class PlateResortGUI:
             self.log_debug(f"❌ Movement failed: {e}")
             
     def go_home(self):
-        """Return to home position"""
+        """Return to home position in background thread"""
         if self.resort is None:
             messagebox.showwarning("Not Connected", "Please connect to motor first")
             return
             
-        try:
-            self.log_debug("🏠 Returning to home...")
-            self.resort.go_home()
-            self.log_debug("✅ Returned to home")
-            self.update_position_display()
-            
-        except Exception as e:
-            messagebox.showerror("Home Error", f"Failed to go home: {e}")
-            self.log_debug(f"❌ Home failed: {e}")
+        def home_thread():
+            try:
+                self.log_debug("🏠 Returning to home...")
+                print("🏠 DEBUG: Starting home movement...")  # Terminal debug
+                
+                # Use the correct method name: go_home (now added to PlateResort)
+                success = self.resort.go_home()
+                
+                if success:
+                    self.log_debug("✅ Returned to home")
+                    print("✅ Successfully returned to home")  # Terminal debug
+                else:
+                    self.log_debug("⚠️ Home movement timed out or failed")
+                    print("⚠️ Home movement timed out or failed")  # Terminal debug
+                    
+                # Update position display on main thread
+                self.root.after(0, self.update_position_display)
+                
+            except Exception as e:
+                error_msg = f"❌ Home failed: {e}"
+                self.root.after(0, lambda: messagebox.showerror("Home Error", f"Failed to go home: {e}"))
+                self.root.after(0, lambda: self.log_debug(error_msg))
+                print(error_msg)  # Terminal debug
+        
+        # Start movement in background thread
+        threading.Thread(target=home_thread, daemon=True).start()
             
     def emergency_stop(self):
         """Emergency stop"""
@@ -328,11 +387,19 @@ class PlateResortGUI:
             
         try:
             self.log_debug("⚠️ EMERGENCY STOP")
-            self.resort.emergency_stop()
-            self.log_debug("🛑 Motor stopped")
+            print("🛑 DEBUG: Emergency stop activated")  # Terminal debug
+            success = self.resort.emergency_stop()
+            if success:
+                self.log_debug("🛑 Motor stopped")
+                print("🛑 Motor torque disabled")  # Terminal debug
+            else:
+                self.log_debug("⚠️ Emergency stop may have failed")
+                print("⚠️ Emergency stop may have failed")  # Terminal debug
             
         except Exception as e:
-            self.log_debug(f"❌ Emergency stop failed: {e}")
+            error_msg = f"❌ Emergency stop failed: {e}"
+            self.log_debug(error_msg)
+            print(error_msg)  # Terminal debug
             
     def update_position_display(self):
         """Update position information"""
@@ -364,22 +431,21 @@ class PlateResortGUI:
             
         height = 60
         
-        # Draw scale
-        for i in range(1, 4):
-            x = (width - 40) * (i / 3) + 20
+        # Draw scale for hotels
+        hotels = ["A", "B", "C", "D"]
+        for i, hotel in enumerate(hotels):
+            x = (width - 40) * ((i + 1) / (len(hotels) + 1)) + 20
             self.position_canvas.create_line(x, 20, x, 40, fill=self.colors['secondary'], width=2)
-            self.position_canvas.create_text(x, 50, text=f"Pos {i}", fill=self.colors['fg'], font=('Arial', 8))
+            self.position_canvas.create_text(x, 50, text=f"Hotel {hotel}", fill=self.colors['fg'], font=('Arial', 8))
         
         # Draw current position indicator
-        if self.resort and hasattr(self.resort, 'config'):
+        if self.resort and hasattr(self.resort, 'current_hotel') and self.resort.current_hotel:
             try:
-                positions = [self.resort.config['positions'][f'position_{i}'] for i in range(1, 4)]
-                if position in positions:
-                    pos_index = positions.index(position) + 1
-                    x = (width - 40) * (pos_index / 3) + 20
-                    self.position_canvas.create_oval(x-8, 22, x+8, 38, fill=self.colors['success'], outline=self.colors['fg'])
-            except KeyError as e:
-                print(f"Position config missing: {e}")  # Debug log
+                hotel_index = hotels.index(self.resort.current_hotel)
+                x = (width - 40) * ((hotel_index + 1) / (len(hotels) + 1)) + 20
+                self.position_canvas.create_oval(x-8, 22, x+8, 38, fill=self.colors['success'], outline=self.colors['fg'])
+            except (ValueError, AttributeError) as e:
+                print(f"Hotel indicator error: {e}")  # Debug log
                 
     def toggle_debug(self):
         """Start/stop debug data collection"""

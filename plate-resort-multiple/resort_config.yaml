@@ -13,12 +13,8 @@ resort:
   offset_angle: 11.0  # Base offset angle in degrees
   rotation_direction: 1  # 1 for clockwise, -1 for counter-clockwise
   
-  # Specific positions (in motor units, 0-4095 for 360°)
-  positions:
-    position_1: 1024    # Position 1 (90°)
-    position_2: 2048    # Position 2 (180°) 
-    position_3: 3072    # Position 3 (270°)
-    home: 0             # Home position (0°)
+  # Hotel positions (calculated from offset_angle and hotels)
+  # Hotels A,B,C,D are at 90° intervals starting from offset_angle
   
   # Movement settings
   default_speed: 50  # Profile velocity (50 = ~5% speed)

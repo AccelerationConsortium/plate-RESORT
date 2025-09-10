@@ -137,6 +137,43 @@ class PlateResort:
         print(f"✗ Timeout waiting for hotel {hotel}. Current: {self.get_current_position():.1f}°, Min error achieved: {min_error:.2f}°")
         return False
         
+    def go_home(self):
+        """Go to home position (0 degrees)"""
+        if self.port is None:
+            raise Exception("Not connected. Call connect() first.")
+            
+        print("Moving to home position (0°)")
+        self.packet_handler.write4ByteTxRx(self.port, self.motor_id, self.ADDR_GOAL_POSITION, 0)
+        
+        # Wait for position to be reached
+        import time
+        start_time = time.time()
+        timeout = self.config.get('movement_timeout', 20)
+        tolerance = self.config.get('position_tolerance', 0.5)
+        
+        while time.time() - start_time < timeout:
+            current_pos = self.get_current_position()
+            error = abs(current_pos)
+            
+            if error <= tolerance:
+                self.current_hotel = None
+                print(f"✓ Home position reached! Position: {current_pos:.1f}°")
+                return True
+                
+            time.sleep(0.1)
+            
+        print(f"✗ Timeout waiting for home position. Current: {self.get_current_position():.1f}°")
+        return False
+        
+    def emergency_stop(self):
+        """Emergency stop - disable torque immediately"""
+        if self.port is None:
+            raise Exception("Not connected. Call connect() first.")
+            
+        print("🛑 EMERGENCY STOP - Disabling torque")
+        self.packet_handler.write1ByteTxRx(self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 0)
+        return True
+        
     def get_active_hotel(self):
         """
         Get the currently active hotel based on motor position
