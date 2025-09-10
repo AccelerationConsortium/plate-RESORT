@@ -1,16 +1,16 @@
 # Plate Resort Control System
 
-A complete plate storage automation system with network control and touchscreen interface for laboratory well plate management.
+A complete plate storage automation system with web interface for laboratory well plate management.
 
 ## Features
 
-- **🔄 Automated Plate Rotation**: Precise motor control for hotel-based storage
-- **🌐 Network Control**: Web-based interface accessible from any device
-- **🖥️ Touchscreen GUI**: Local 7" touchscreen interface optimized for lab use
-- **📊 Health Monitoring**: Real-time motor health and diagnostics
-- **⚙️ YAML Configuration**: Easy setup and customization
-- **🐳 Docker Support**: Consistent deployment across environments
-- **🔒 Safety Features**: Emergency stop and error handling
+- **Automated Plate Rotation**: Precise Dynamixel motor control for hotel-based storage
+- **Web Interface**: Modern Bootstrap-based GUI optimized for 7" touchscreen
+- **Health Monitoring**: Real-time motor health and diagnostics
+- **YAML Configuration**: Easy setup and customization
+- **Docker Deployment**: Consistent deployment with docker-compose
+- **Safety Features**: Emergency stop with disconnect/reconnect recovery
+- **Network Access**: Control from any device on the network
 
 ## Quick Start
 
@@ -21,33 +21,23 @@ git pull origin main
 
 ### 2. Docker Deployment (Recommended)
 ```bash
-# Start web service only
-docker-compose up --build
+# Start web service
+./start-web-gui.sh
+
+# Or manually:
+docker-compose up --build -d
 
 # Access web interface at: http://your-pi-ip:5000
 ```
 
-### 3. Touchscreen Mode
-```bash
-# Build container
-docker-compose build
-
-# Run with GUI (requires X11 forwarding)
-docker-compose run --rm plate-resort-app python touchscreen_app.py
-```
-
-### 4. Manual Installation
+### 3. Local Development
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Web service only
-python app.py
-
-# Touchscreen GUI
-python touchscreen_app.py
-
-# Manual control
+# Run web GUI locally
+python web_gui.py
+```
 python dxl_keyboard_test.py
 ```
 
@@ -154,23 +144,27 @@ python test_scripts/test_dxl_ping.py
 
 ### File Structure
 ```
-├── app.py                 # Main Flask application
-├── gui.py                 # Touchscreen GUI
-├── touchscreen_app.py     # Combined launcher
-├── plate_resort.py        # Core motor control
-├── resort_config.yaml     # Configuration
+├── web_gui.py             # Main Flask web application
+├── plate_resort.py        # Core motor control class
+├── resort_config.yaml     # YAML configuration
 ├── templates/
-│   └── index.html         # Web interface
-├── test_scripts/          # Test utilities
-└── docker-compose.yml     # Container setup
+│   └── web_gui.html       # Bootstrap web interface
+├── test_scripts/          # Test utilities and mock tests
+├── mechanical/            # Hardware documentation
+├── docker-compose.yml     # Container deployment
+├── Dockerfile            # Container definition
+├── start-web-gui.sh      # Startup script
+├── PI_DEPLOYMENT.md      # Raspberry Pi setup guide
+├── CHANGELOG.md          # Version history
+└── requirements.txt      # Python dependencies
 ```
 
 ### Adding Features
 1. Update `plate_resort.py` for new motor functions
-2. Add API endpoints in `app.py`
-3. Update GUI in `gui.py` 
-4. Modify web interface in `templates/index.html`
-5. Test with provided test scripts
+2. Add API endpoints in `web_gui.py`
+3. Update web interface in `templates/web_gui.html`
+4. Test with scripts in `test_scripts/`
+5. Document changes in `CHANGELOG.md`
 
 ## License
 
