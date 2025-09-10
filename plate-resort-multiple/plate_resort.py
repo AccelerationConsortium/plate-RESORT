@@ -6,7 +6,7 @@ from dynamixel_sdk import PortHandler, PacketHandler
 
 class PlateResort:
     def __init__(self, device="/dev/ttyUSB0", baud=57600, motor_id=1, 
-                 hotels=['A', 'B', 'C', 'D'], rooms=20, hotel_angles=None):
+                 hotels=['A', 'B', 'C', 'D'], rooms=20, hotel_angles=None, speed=50):
         """
         Initialize plate resort system
         
@@ -16,21 +16,23 @@ class PlateResort:
             motor_id: Dynamixel motor ID
             hotels: List of hotel names (default ['A','B','C','D'])
             rooms: Number of rooms per hotel (1-20)
-            hotel_angles: Dict mapping hotel to angle (default A:0, B:90, C:180, D:270)
+            hotel_angles: Dict mapping hotel to angle (default A:22.5, B:112.5, C:202.5, D:292.5)
+            speed: Profile velocity (50 = ~5% speed)
         """
         self.device = device
         self.baud = baud
         self.motor_id = motor_id
         self.hotels = hotels
         self.rooms = rooms
+        self.speed = speed
         
-        # Default hotel positions
+        # Default hotel positions with 22.5° offset
         if hotel_angles is None:
             self.hotel_angles = {
-                'A': 0,
-                'B': 90, 
-                'C': 180,
-                'D': 270
+                'A': 22.5,
+                'B': 112.5, 
+                'C': 202.5,
+                'D': 292.5
             }
         else:
             self.hotel_angles = hotel_angles
@@ -61,6 +63,9 @@ class PlateResort:
         self.packet_handler.write1ByteTxRx(self.port, self.motor_id, 11, 3)  # Position control mode
         self.packet_handler.write1ByteTxRx(self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 1)
         
+        # Set profile velocity (speed)
+        self.packet_handler.write4ByteTxRx(self.port, self.motor_id, 112, self.speed)
+        
     def activate_hotel(self, hotel):
         """
         Rotate resort to activate specified hotel
@@ -82,6 +87,12 @@ class PlateResort:
         
         print(f"Activating hotel {hotel} at {target_angle}° (position {goal_pos})")
         
+    def set_speed(self, speed):
+        """Set motor speed (profile velocity)"""
+        self.speed = speed
+        if self.port:
+            self.packet_handler.write4ByteTxRx(self.port, self.motor_id, 112, speed)
+            
     def get_current_position(self):
         """Get current motor position in degrees"""
         if self.port is None:

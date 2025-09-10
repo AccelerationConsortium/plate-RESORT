@@ -9,13 +9,14 @@ from plate_resort import PlateResort
 import time
 
 def main():
-    # Initialize resort
-    resort = PlateResort()
+    # Initialize resort with 5% speed
+    resort = PlateResort(speed=50)
     
     try:
         # Connect to motor
         resort.connect()
         print("Connected to PlateResort")
+        print(f"Hotel angles: {resort.hotel_angles}")
         
         # Test hotel activation
         for hotel in ['A', 'B', 'C', 'D']:
@@ -23,9 +24,10 @@ def main():
             resort.activate_hotel(hotel)
             
             # Wait for movement and check position
-            time.sleep(2)
+            time.sleep(3)
             current_pos = resort.get_current_position()
-            print(f"Current position: {current_pos:.1f}°")
+            target_pos = resort.hotel_angles[hotel]
+            print(f"Target: {target_pos}°, Current: {current_pos:.1f}°")
             
     except Exception as e:
         print(f"Error: {e}")
