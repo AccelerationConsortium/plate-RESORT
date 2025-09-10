@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  dynamixel-controller:
+    build: .
+    container_name: plate-resort-dynamixel
+    volumes:
+      - .:/app
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0  # USB to Serial adapter
+    privileged: true  # Needed for hardware access
+    stdin_open: true
+    tty: true
+    working_dir: /app
+    command: bash
