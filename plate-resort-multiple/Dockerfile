@@ -25,7 +25,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create user with same UID as pi user (1000) and add to dialout group
-RUN groupadd -g 20 dialout && \
+# Check if dialout group exists, if not create it, then add user
+RUN (getent group dialout || groupadd -g 20 dialout) && \
     useradd -u 1000 -g 1000 -G dialout -s /bin/bash -m pi
 
 # Copy application code
