@@ -1,8 +1,8 @@
 #!/bin/bash
-"""
-Plate Resort Application Launcher for Raspberry Pi
-Provides easy startup options for different modes
-"""
+#
+# Plate Resort Application Launcher for Raspberry Pi
+# Provides easy startup options for different modes
+#
 
 # Colors for output
 RED='\033[0;31m'

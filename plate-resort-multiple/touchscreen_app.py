@@ -35,7 +35,7 @@ def main():
     print("🖥️  Launching touchscreen GUI...")
     # Launch GUI (this blocks until GUI is closed)
     try:
-        gui = PlateResortGUI(app.resort)
+        gui = PlateResortGUI()
         gui.run()
     except KeyboardInterrupt:
         print("\n👋 Shutting down...")
