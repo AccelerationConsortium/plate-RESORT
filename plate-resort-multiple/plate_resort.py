@@ -291,9 +291,24 @@ class PlateResort:
         else:
             raise Exception("Failed to read position")
             
+    def is_connected(self):
+        """Check if connected to motor"""
+        return self.port is not None and self.port.is_open
+        
     def disconnect(self):
         """Disconnect from motor"""
         if self.port:
             self.packet_handler.write1ByteTxRx(self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 0)
             self.port.closePort()
             self.port = None
+            
+    def is_connected(self):
+        """Check if connected to motor"""
+        if self.port is None:
+            return False
+        try:
+            # Try to read a simple value to test connection
+            _, result, _ = self.packet_handler.read1ByteTxRx(self.port, self.motor_id, self.ADDR_TORQUE_ENABLE)
+            return result == 0
+        except:
+            return False

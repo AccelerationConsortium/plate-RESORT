@@ -169,6 +169,31 @@ def move_motor():
         if action == 'emergency_stop':
             result = resort.emergency_stop()
             print(f"Emergency stop result: {result}")
+        elif action == 'disconnect':
+            resort.disconnect()
+            print("Disconnected from motor")
+            return jsonify({
+                'success': True,
+                'action': 'disconnect',
+                'message': 'Disconnected successfully',
+                'timestamp': datetime.now().isoformat()
+            })
+        elif action == 'reconnect':
+            result = resort.connect()
+            print(f"Reconnect result: {result}")
+            if result:
+                return jsonify({
+                    'success': True,
+                    'action': 'reconnect', 
+                    'message': 'Reconnected successfully',
+                    'timestamp': datetime.now().isoformat()
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to reconnect',
+                    'timestamp': datetime.now().isoformat()
+                })
         elif action.startswith('hotel_'):
             hotel_letter = action.split('_')[1]  # Extract A, B, C, or D
             if hotel_letter in ['A', 'B', 'C', 'D']:
