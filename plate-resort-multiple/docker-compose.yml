@@ -10,43 +10,8 @@ services:
       - /dev:/dev:rw  # Full device access for USB
     privileged: true  # Needed for hardware access
     ports:
-      - "5000:5000"  # Web interface - optimized for 7" touchscreen
+      - "5000:5000"  # Web interface
     working_dir: /app
     environment:
       - PYTHONUNBUFFERED=1
-    network_mode: host  # For accessing Pi's network interfaces
     command: python web_gui.py
-    
-  # Legacy GUI options (disabled by default)
-  plate-resort-tkinter:
-    build: .
-    container_name: plate-resort-tkinter
-    restart: "no"  # Disabled by default
-    volumes:
-      - .:/app:rw
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /dev:/dev:rw
-    privileged: true
-    working_dir: /app
-    environment:
-      - DISPLAY=:0
-      - PYTHONUNBUFFERED=1
-      - QT_X11_NO_MITSHM=1
-    network_mode: host
-    command: python gui.py
-
-  plate-resort-flask:
-    build: .
-    container_name: plate-resort-flask
-    restart: "no"  # Disabled by default
-    volumes:
-      - .:/app:rw
-      - /dev:/dev:rw
-    privileged: true
-    ports:
-      - "8080:5000"  # Alternative port
-    working_dir: /app
-    environment:
-      - PYTHONUNBUFFERED=1
-    network_mode: host
-    command: python app.py --host 0.0.0.0 --port 5000

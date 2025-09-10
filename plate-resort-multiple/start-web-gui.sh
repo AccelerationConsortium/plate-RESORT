@@ -4,9 +4,9 @@
 echo "Starting Plate Resort Web GUI"
 echo "Optimized for 7 inch touchscreen"
 
-# Stop any existing containers
+# Stop any existing containers and remove orphans
 echo "Stopping existing containers..."
-docker-compose down 2>/dev/null
+docker-compose down --remove-orphans 2>/dev/null
 
 # Start the web GUI
 echo "Starting web interface..."
