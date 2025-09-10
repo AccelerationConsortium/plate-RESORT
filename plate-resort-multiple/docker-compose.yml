@@ -17,7 +17,6 @@ services:
       - DISPLAY=:0
       - PYTHONUNBUFFERED=1
     network_mode: host  # For accessing Pi's network interfaces
-    user: "1000:1000"  # Run as pi user
     command: python app.py --host 0.0.0.0 --port 5000
     
   plate-resort-gui:
@@ -35,5 +34,4 @@ services:
       - PYTHONUNBUFFERED=1
       - QT_X11_NO_MITSHM=1  # Fix for some GUI issues
     network_mode: host
-    user: "1000:1000"  # Run as pi user
     command: python touchscreen_app.py
