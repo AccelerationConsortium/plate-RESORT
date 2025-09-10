@@ -38,6 +38,7 @@ case $choice in
         echo "Setting up X11 for GUI..."
         xhost +local:docker >/dev/null 2>&1
         echo "Starting touchscreen interface..."
+        echo "Debug logs will appear below. Press Ctrl+C to stop."
         docker-compose up --build plate-resort-gui
         ;;
     2)

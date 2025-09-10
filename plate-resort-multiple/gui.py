@@ -345,9 +345,12 @@ class PlateResortGUI:
             
             # Update visual position indicator
             self.draw_position_indicator(current_pos)
+            print(f"Position updated: {current_pos}")  # Debug log to terminal
             
         except Exception as e:
-            self.log_debug(f"⚠️ Position update failed: {e}")
+            error_msg = f"⚠️ Position update failed: {e}"
+            self.log_debug(error_msg)
+            print(error_msg)  # Also log to terminal
             
     def draw_position_indicator(self, position):
         """Draw visual position indicator"""
@@ -369,11 +372,14 @@ class PlateResortGUI:
         
         # Draw current position indicator
         if self.resort and hasattr(self.resort, 'config'):
-            positions = [self.resort.config['positions'][f'position_{i}'] for i in range(1, 4)]
-            if position in positions:
-                pos_index = positions.index(position) + 1
-                x = (width - 40) * (pos_index / 3) + 20
-                self.position_canvas.create_oval(x-8, 22, x+8, 38, fill=self.colors['success'], outline=self.colors['fg'])
+            try:
+                positions = [self.resort.config['positions'][f'position_{i}'] for i in range(1, 4)]
+                if position in positions:
+                    pos_index = positions.index(position) + 1
+                    x = (width - 40) * (pos_index / 3) + 20
+                    self.position_canvas.create_oval(x-8, 22, x+8, 38, fill=self.colors['success'], outline=self.colors['fg'])
+            except KeyError as e:
+                print(f"Position config missing: {e}")  # Debug log
                 
     def toggle_debug(self):
         """Start/stop debug data collection"""
