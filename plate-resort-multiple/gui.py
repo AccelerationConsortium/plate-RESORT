@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 import time
+from datetime import datetime
 import yaml
 from plate_resort import PlateResort
 import os
@@ -19,6 +20,16 @@ class PlateResortGUI:
         self.resort = None
         self.running = False
         self.debug_thread = None
+        self.debug_running = False
+        
+        # Motor status labels for live updates
+        self.temp_label = None
+        self.voltage_label = None
+        self.current_label = None
+        self.load_label = None
+        self.debug_position_label = None
+        self.velocity_label = None
+        self.debug_toggle_btn = None
         
         # Configure main window
         self.setup_window()
@@ -30,68 +41,94 @@ class PlateResortGUI:
         """Configure the main window for 7" touchscreen"""
         self.root.title("Plate Resort Control")
         
-        # Fullscreen for 7" display (800x480)
-        self.root.geometry("800x480")
-        self.root.configure(bg='#2c3e50')
-        
-        # Remove window decorations for kiosk mode
-        self.root.overrideredirect(True)
+        # True fullscreen for 7" display
+        self.root.attributes('-fullscreen', True)
+        self.root.state('zoomed')  # Maximize window
+        self.root.configure(bg='#ffffff')  # Clean white background
         
         # Bind escape key to exit fullscreen
         self.root.bind('<Escape>', self.toggle_fullscreen)
         self.root.bind('<F11>', self.toggle_fullscreen)
         
+        # Handle window closing properly
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
     def setup_styles(self):
-        """Configure modern styling"""
+        """Configure modern Bootstrap-style styling"""
         self.style = ttk.Style()
         self.style.theme_use('clam')
         
-        # Modern color scheme
+        # Modern Bootstrap-inspired color scheme
         self.colors = {
-            'bg': '#2c3e50',
-            'fg': '#ecf0f1',
-            'primary': '#3498db',
-            'success': '#27ae60',
-            'warning': '#f39c12',
-            'danger': '#e74c3c',
-            'secondary': '#95a5a6'
+            'bg': '#ffffff',          # Clean white background
+            'fg': '#212529',          # Dark text
+            'primary': '#007bff',     # Bootstrap blue
+            'success': '#28a745',     # Bootstrap green
+            'warning': '#ffc107',     # Bootstrap yellow
+            'danger': '#dc3545',      # Bootstrap red
+            'secondary': '#6c757d',   # Bootstrap gray
+            'light': '#f8f9fa',       # Light gray
+            'border': '#dee2e6'       # Light border
         }
         
-        # Configure ttk styles
+        # Configure ttk styles with modern look
         self.style.configure('Title.TLabel', 
-                           font=('Arial', 16, 'bold'),
+                           font=('Segoe UI', 18, 'bold'),
                            background=self.colors['bg'],
                            foreground=self.colors['fg'])
         
         self.style.configure('Header.TLabel',
-                           font=('Arial', 12, 'bold'),
+                           font=('Segoe UI', 12, 'bold'),
                            background=self.colors['bg'],
                            foreground=self.colors['primary'])
         
         self.style.configure('Status.TLabel',
-                           font=('Arial', 10),
+                           font=('Segoe UI', 10),
                            background=self.colors['bg'],
                            foreground=self.colors['fg'])
         
         self.style.configure('Success.TLabel',
-                           font=('Arial', 10, 'bold'),
+                           font=('Segoe UI', 10, 'bold'),
                            background=self.colors['bg'],
                            foreground=self.colors['success'])
         
         self.style.configure('Warning.TLabel',
-                           font=('Arial', 10, 'bold'),
+                           font=('Segoe UI', 10, 'bold'),
                            background=self.colors['bg'],
                            foreground=self.colors['warning'])
         
         self.style.configure('Danger.TLabel',
-                           font=('Arial', 10, 'bold'),
+                           font=('Segoe UI', 10, 'bold'),
                            background=self.colors['bg'],
                            foreground=self.colors['danger'])
         
-        # Configure button styles
-        self.style.configure('Action.TButton',
-                           font=('Arial', 12, 'bold'),
-                           padding=(20, 10))
+        # Modern button styles
+        self.style.configure('Primary.TButton',
+                           font=('Segoe UI', 11, 'bold'),
+                           padding=(20, 12),
+                           relief='flat')
+        
+        self.style.map('Primary.TButton',
+                      background=[('active', '#0056b3'), ('!active', self.colors['primary'])],
+                      foreground=[('active', 'white'), ('!active', 'white')])
+        
+        self.style.configure('Success.TButton',
+                           font=('Segoe UI', 11, 'bold'),
+                           padding=(20, 12),
+                           relief='flat')
+        
+        self.style.map('Success.TButton',
+                      background=[('active', '#1e7e34'), ('!active', self.colors['success'])],
+                      foreground=[('active', 'white'), ('!active', 'white')])
+        
+        self.style.configure('Danger.TButton',
+                           font=('Segoe UI', 11, 'bold'),
+                           padding=(20, 12),
+                           relief='flat')
+        
+        self.style.map('Danger.TButton',
+                      background=[('active', '#bd2130'), ('!active', self.colors['danger'])],
+                      foreground=[('active', 'white'), ('!active', 'white')])
         
     def create_widgets(self):
         """Create the main interface"""
@@ -108,120 +145,152 @@ class PlateResortGUI:
         """Main control interface"""
         control_frame = ttk.Frame(self.notebook)
         self.notebook.add(control_frame, text="Control")
+        control_frame.configure(style='White.TFrame')
+        
+        # Add padding and structure
+        main_container = ttk.Frame(control_frame, padding="20")
+        main_container.pack(fill='both', expand=True)
         
         # Title
-        title_label = ttk.Label(control_frame, text="🍽️ Plate Resort Control", style='Title.TLabel')
-        title_label.pack(pady=20)
+        title_label = ttk.Label(main_container, text="Plate Resort Control", style='Title.TLabel')
+        title_label.pack(pady=(0, 20))
         
-        # Status display
-        status_frame = ttk.LabelFrame(control_frame, text="System Status", padding=10)
-        status_frame.pack(fill='x', padx=20, pady=10)
+        # Status display with modern card-like design
+        status_frame = ttk.LabelFrame(main_container, text="System Status", padding="15")
+        status_frame.pack(fill='x', pady=(0, 20))
         
-        self.status_label = ttk.Label(status_frame, text="Disconnected", style='Warning.TLabel')
-        self.status_label.pack()
+        status_grid = ttk.Frame(status_frame)
+        status_grid.pack()
         
-        self.position_label = ttk.Label(status_frame, text="Position: Unknown", style='Status.TLabel')
-        self.position_label.pack()
+        ttk.Label(status_grid, text="Connection:", style='Header.TLabel').grid(row=0, column=0, sticky='w', padx=(0, 10))
+        self.status_label = ttk.Label(status_grid, text="Disconnected", style='Warning.TLabel')
+        self.status_label.grid(row=0, column=1, sticky='w')
+        
+        ttk.Label(status_grid, text="Position:", style='Header.TLabel').grid(row=1, column=0, sticky='w', padx=(0, 10), pady=(5, 0))
+        self.position_label = ttk.Label(status_grid, text="Unknown", style='Status.TLabel')
+        self.position_label.grid(row=1, column=1, sticky='w', pady=(5, 0))
         
         # Visual position indicator
-        self.position_canvas = tk.Canvas(status_frame, height=60, bg=self.colors['bg'])
-        self.position_canvas.pack(fill='x', pady=10)
+        self.position_canvas = tk.Canvas(status_frame, height=60, bg=self.colors['light'], highlightthickness=1, highlightbackground=self.colors['border'])
+        self.position_canvas.pack(fill='x', pady=(10, 0))
         
-        # Control buttons
-        button_frame = ttk.Frame(control_frame)
-        button_frame.pack(pady=20)
+        # Control buttons in organized grid
+        button_frame = ttk.LabelFrame(main_container, text="Controls", padding="15")
+        button_frame.pack(fill='x', pady=(0, 20))
         
-        # Connect/Disconnect
+        # Connection control
+        ttk.Label(button_frame, text="Connection", style='Header.TLabel').grid(row=0, column=0, columnspan=4, sticky='w', pady=(0, 10))
+        
         self.connect_btn = ttk.Button(button_frame, text="Connect", 
-                                    command=self.toggle_connection, style='Action.TButton')
-        self.connect_btn.grid(row=0, column=0, padx=10, pady=5)
+                                    command=self.toggle_connection, style='Primary.TButton')
+        self.connect_btn.grid(row=1, column=0, padx=(0, 10), pady=(0, 15), sticky='ew')
         
-        # Position buttons
-        ttk.Button(button_frame, text="Go to Hotel A", 
-                  command=lambda: self.move_to_hotel("A"), style='Action.TButton').grid(row=1, column=0, padx=10, pady=5)
+        # Hotel navigation
+        ttk.Label(button_frame, text="Hotel Selection", style='Header.TLabel').grid(row=2, column=0, columnspan=4, sticky='w', pady=(0, 10))
         
-        ttk.Button(button_frame, text="Go to Hotel B", 
-                  command=lambda: self.move_to_hotel("B"), style='Action.TButton').grid(row=1, column=1, padx=10, pady=5)
+        ttk.Button(button_frame, text="Hotel A", 
+                  command=lambda: self.move_to_hotel("A"), style='Success.TButton').grid(row=3, column=0, padx=(0, 10), pady=(0, 10), sticky='ew')
         
-        ttk.Button(button_frame, text="Go to Hotel C", 
-                  command=lambda: self.move_to_hotel("C"), style='Action.TButton').grid(row=1, column=2, padx=10, pady=5)
+        ttk.Button(button_frame, text="Hotel B", 
+                  command=lambda: self.move_to_hotel("B"), style='Success.TButton').grid(row=3, column=1, padx=(0, 10), pady=(0, 10), sticky='ew')
         
-        ttk.Button(button_frame, text="Go to Hotel D", 
-                  command=lambda: self.move_to_hotel("D"), style='Action.TButton').grid(row=2, column=0, padx=10, pady=5)
+        ttk.Button(button_frame, text="Hotel C", 
+                  command=lambda: self.move_to_hotel("C"), style='Success.TButton').grid(row=3, column=2, padx=(0, 10), pady=(0, 10), sticky='ew')
         
-        # Home and emergency buttons
-        ttk.Button(button_frame, text="🏠 Home", 
-                  command=self.go_home, style='Action.TButton').grid(row=2, column=0, padx=10, pady=5)
+        ttk.Button(button_frame, text="Hotel D", 
+                  command=lambda: self.move_to_hotel("D"), style='Success.TButton').grid(row=3, column=3, pady=(0, 10), sticky='ew')
         
-        ttk.Button(button_frame, text="⚠️ Emergency Stop", 
-                  command=self.emergency_stop, style='Action.TButton').grid(row=2, column=1, padx=10, pady=5)
+        # System controls
+        ttk.Label(button_frame, text="System Controls", style='Header.TLabel').grid(row=4, column=0, columnspan=4, sticky='w', pady=(15, 10))
         
-        ttk.Button(button_frame, text="❌ Exit", 
-                  command=self.quit_app, style='Action.TButton').grid(row=2, column=2, padx=10, pady=5)
+        ttk.Button(button_frame, text="Home", 
+                  command=self.go_home, style='Primary.TButton').grid(row=5, column=0, padx=(0, 10), pady=(0, 10), sticky='ew')
+        
+        ttk.Button(button_frame, text="Emergency Stop", 
+                  command=self.emergency_stop, style='Danger.TButton').grid(row=5, column=1, padx=(0, 10), pady=(0, 10), sticky='ew')
+        
+        ttk.Button(button_frame, text="Exit", 
+                  command=self.quit_app, style='Danger.TButton').grid(row=5, column=2, pady=(0, 10), sticky='ew')
+        
+        # Configure grid weights for responsive design
+        for i in range(4):
+            button_frame.columnconfigure(i, weight=1)
         
     def create_debug_tab(self):
         """Live debug data interface"""
         debug_frame = ttk.Frame(self.notebook)
         self.notebook.add(debug_frame, text="Debug")
         
-        # Title
-        ttk.Label(debug_frame, text="🔧 Live Debug Data", style='Title.TLabel').pack(pady=10)
+        # Add padding and structure
+        main_container = ttk.Frame(debug_frame, padding="20")
+        main_container.pack(fill='both', expand=True)
         
-        # Motor health display
-        health_frame = ttk.LabelFrame(debug_frame, text="Motor Health", padding=10)
-        health_frame.pack(fill='x', padx=20, pady=10)
+        # Title
+        ttk.Label(main_container, text="Live Debug Data", style='Title.TLabel').pack(pady=(0, 20))
+        
+        # Motor health display with modern card design
+        health_frame = ttk.LabelFrame(main_container, text="Motor Health Monitor", padding="15")
+        health_frame.pack(fill='x', pady=(0, 20))
         
         health_grid = ttk.Frame(health_frame)
         health_grid.pack()
         
-        # Health indicators
-        ttk.Label(health_grid, text="Temperature:", style='Header.TLabel').grid(row=0, column=0, sticky='w', padx=5)
-        self.temp_label = ttk.Label(health_grid, text="-- °C", style='Status.TLabel')
-        self.temp_label.grid(row=0, column=1, sticky='w', padx=5)
+        # Health indicators in organized grid
+        # Row 1
+        ttk.Label(health_grid, text="Temperature:", style='Header.TLabel').grid(row=0, column=0, sticky='w', padx=(0, 10))
+        self.temp_label = ttk.Label(health_grid, text="-- C", style='Status.TLabel')
+        self.temp_label.grid(row=0, column=1, sticky='w', padx=(0, 30))
         
-        ttk.Label(health_grid, text="Voltage:", style='Header.TLabel').grid(row=1, column=0, sticky='w', padx=5)
+        ttk.Label(health_grid, text="Voltage:", style='Header.TLabel').grid(row=0, column=2, sticky='w', padx=(0, 10))
         self.voltage_label = ttk.Label(health_grid, text="-- V", style='Status.TLabel')
-        self.voltage_label.grid(row=1, column=1, sticky='w', padx=5)
+        self.voltage_label.grid(row=0, column=3, sticky='w')
         
-        ttk.Label(health_grid, text="Current:", style='Header.TLabel').grid(row=2, column=0, sticky='w', padx=5)
+        # Row 2
+        ttk.Label(health_grid, text="Current:", style='Header.TLabel').grid(row=1, column=0, sticky='w', padx=(0, 10), pady=(10, 0))
         self.current_label = ttk.Label(health_grid, text="-- mA", style='Status.TLabel')
-        self.current_label.grid(row=2, column=1, sticky='w', padx=5)
+        self.current_label.grid(row=1, column=1, sticky='w', padx=(0, 30), pady=(10, 0))
         
-        ttk.Label(health_grid, text="Position:", style='Header.TLabel').grid(row=0, column=2, sticky='w', padx=5)
-        self.debug_position_label = ttk.Label(health_grid, text="-- steps", style='Status.TLabel')
-        self.debug_position_label.grid(row=0, column=3, sticky='w', padx=5)
-        
-        ttk.Label(health_grid, text="Velocity:", style='Header.TLabel').grid(row=1, column=2, sticky='w', padx=5)
-        self.velocity_label = ttk.Label(health_grid, text="-- rpm", style='Status.TLabel')
-        self.velocity_label.grid(row=1, column=3, sticky='w', padx=5)
-        
-        ttk.Label(health_grid, text="Load:", style='Header.TLabel').grid(row=2, column=2, sticky='w', padx=5)
+        ttk.Label(health_grid, text="Load:", style='Header.TLabel').grid(row=1, column=2, sticky='w', padx=(0, 10), pady=(10, 0))
         self.load_label = ttk.Label(health_grid, text="-- %", style='Status.TLabel')
-        self.load_label.grid(row=2, column=3, sticky='w', padx=5)
+        self.load_label.grid(row=1, column=3, sticky='w', pady=(10, 0))
         
-        # Raw data display
-        data_frame = ttk.LabelFrame(debug_frame, text="Raw Motor Data", padding=10)
-        data_frame.pack(fill='both', expand=True, padx=20, pady=10)
+        # Row 3
+        ttk.Label(health_grid, text="Position:", style='Header.TLabel').grid(row=2, column=0, sticky='w', padx=(0, 10), pady=(10, 0))
+        self.debug_position_label = ttk.Label(health_grid, text="-- deg", style='Status.TLabel')
+        self.debug_position_label.grid(row=2, column=1, sticky='w', padx=(0, 30), pady=(10, 0))
         
-        self.debug_text = tk.Text(data_frame, height=10, font=('Courier', 9),
-                                bg='#34495e', fg='#ecf0f1', insertbackground='#ecf0f1')
-        self.debug_text.pack(fill='both', expand=True)
-        
-        # Scrollbar for debug text
-        scrollbar = ttk.Scrollbar(data_frame, orient='vertical', command=self.debug_text.yview)
-        scrollbar.pack(side='right', fill='y')
-        self.debug_text.configure(yscrollcommand=scrollbar.set)
+        ttk.Label(health_grid, text="Velocity:", style='Header.TLabel').grid(row=2, column=2, sticky='w', padx=(0, 10), pady=(10, 0))
+        self.velocity_label = ttk.Label(health_grid, text="-- rpm", style='Status.TLabel')
+        self.velocity_label.grid(row=2, column=3, sticky='w', pady=(10, 0))
         
         # Control buttons
-        debug_controls = ttk.Frame(debug_frame)
-        debug_controls.pack(pady=10)
+        debug_controls = ttk.Frame(health_frame)
+        debug_controls.pack(pady=(15, 0))
         
-        self.debug_toggle_btn = ttk.Button(debug_controls, text="Start Debug", 
-                                         command=self.toggle_debug, style='Action.TButton')
-        self.debug_toggle_btn.pack(side='left', padx=10)
+        self.debug_toggle_btn = ttk.Button(debug_controls, text="Start Monitoring", 
+                                         command=self.toggle_debug, style='Primary.TButton')
+        self.debug_toggle_btn.pack(side='left', padx=(0, 10))
         
         ttk.Button(debug_controls, text="Clear Log", 
-                  command=self.clear_debug, style='Action.TButton').pack(side='left', padx=10)
+                  command=self.clear_debug, style='Primary.TButton').pack(side='left')
+        
+        # Raw data display
+        data_frame = ttk.LabelFrame(main_container, text="Debug Log", padding="15")
+        data_frame.pack(fill='both', expand=True)
+        
+        # Text widget with scrollbar
+        text_container = ttk.Frame(data_frame)
+        text_container.pack(fill='both', expand=True)
+        
+        self.debug_text = tk.Text(text_container, height=15, font=('Courier New', 9),
+                                bg='#f8f9fa', fg='#212529', insertbackground='#212529',
+                                relief='solid', borderwidth=1)
+        self.debug_text.pack(side='left', fill='both', expand=True)
+        
+        # Scrollbar for debug text
+        scrollbar = ttk.Scrollbar(text_container, orient='vertical', command=self.debug_text.yview)
+        scrollbar.pack(side='right', fill='y')
+        self.debug_text.configure(yscrollcommand=scrollbar.set)
         
     def create_config_tab(self):
         """Configuration interface"""
@@ -584,6 +653,110 @@ class PlateResortGUI:
         self.root.overrideredirect(not current)
         if not current:
             self.root.geometry("800x480")
+    
+    def toggle_debug(self):
+        """Toggle debug monitoring"""
+        if self.debug_running:
+            self.stop_debug()
+        else:
+            self.start_debug()
+    
+    def start_debug(self):
+        """Start live debug monitoring"""
+        if not self.resort:
+            self.log_debug("Error: PlateResort not initialized")
+            return
+            
+        self.debug_running = True
+        self.debug_toggle_btn.configure(text="Stop Monitoring")
+        
+        def debug_worker():
+            while self.debug_running:
+                try:
+                    if self.resort and self.resort.portHandler:
+                        # Read motor parameters
+                        health_data = self.resort.get_motor_health()
+                        
+                        # Update GUI on main thread
+                        self.root.after(0, self.update_debug_display, health_data)
+                        
+                        # Log raw data
+                        position = self.resort.get_current_position()
+                        velocity = self.resort.packetHandler.read2ByteTxRx(
+                            self.resort.portHandler, self.resort.motor_id, 128)[0] if self.resort.portHandler else 0
+                        
+                        debug_info = f"Position: {position}°, Temp: {health_data.get('temperature', 'N/A')}°C, " \
+                                   f"Voltage: {health_data.get('voltage', 'N/A')}V, " \
+                                   f"Current: {health_data.get('current', 'N/A')}mA"
+                        
+                        self.root.after(0, self.log_debug, debug_info)
+                        
+                except Exception as e:
+                    self.root.after(0, self.log_debug, f"Debug error: {e}")
+                
+                time.sleep(1)  # Update every second
+        
+        self.debug_thread = threading.Thread(target=debug_worker, daemon=True)
+        self.debug_thread.start()
+        self.log_debug("Debug monitoring started")
+    
+    def stop_debug(self):
+        """Stop debug monitoring"""
+        self.debug_running = False
+        if self.debug_toggle_btn:
+            self.debug_toggle_btn.configure(text="Start Monitoring")
+        self.log_debug("Debug monitoring stopped")
+    
+    def update_debug_display(self, health_data):
+        """Update the debug display with motor health data"""
+        if self.temp_label:
+            temp = health_data.get('temperature', '--')
+            self.temp_label.configure(text=f"{temp}°C" if temp != '--' else "-- °C")
+        
+        if self.voltage_label:
+            voltage = health_data.get('voltage', '--')
+            self.voltage_label.configure(text=f"{voltage:.1f}V" if voltage != '--' else "-- V")
+        
+        if self.current_label:
+            current = health_data.get('current', '--')
+            self.current_label.configure(text=f"{current}mA" if current != '--' else "-- mA")
+        
+        if self.load_label:
+            load = health_data.get('load', '--')
+            self.load_label.configure(text=f"{load}%" if load != '--' else "-- %")
+        
+        if self.debug_position_label:
+            position = self.resort.get_current_position() if self.resort else '--'
+            self.debug_position_label.configure(text=f"{position:.1f}°" if position != '--' else "-- °")
+        
+        if self.velocity_label:
+            try:
+                velocity = self.resort.packetHandler.read2ByteTxRx(
+                    self.resort.portHandler, self.resort.motor_id, 128)[0] if self.resort and self.resort.portHandler else '--'
+                self.velocity_label.configure(text=f"{velocity} rpm" if velocity != '--' else "-- rpm")
+            except:
+                self.velocity_label.configure(text="-- rpm")
+    
+    def clear_debug(self):
+        """Clear debug log"""
+        if self.debug_text:
+            self.debug_text.delete(1.0, tk.END)
+            self.log_debug("Debug log cleared")
+    
+    def log_debug(self, message):
+        """Log debug message with timestamp"""
+        if self.debug_text:
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            self.debug_text.insert(tk.END, f"[{timestamp}] {message}\n")
+            self.debug_text.see(tk.END)
+        
+        # Also log to console
+        print(f"DEBUG: {message}")
+    
+    def on_closing(self):
+        """Handle window closing"""
+        self.stop_debug()
+        self.quit_app()
         
     def quit_app(self):
         """Quit application"""

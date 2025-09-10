@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Plate Resort Control
+Comment=Modern web interface for Plate Resort system
+Exec=/bin/bash -c "cd /home/pi/plate-resort && ./start-web-gui.sh && sleep 2 && chromium-browser --start-fullscreen http://localhost:5000"
+Icon=/home/pi/plate-resort/icon.png
+Terminal=false
+Categories=Science;Education;
