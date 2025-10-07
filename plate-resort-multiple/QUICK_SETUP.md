@@ -7,7 +7,7 @@ A streamlined Plate Resort control system for Raspberry Pi with one-line install
 On a fresh Raspberry Pi with Raspberry Pi OS, run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install.sh | bash
 ```
 
 This will:
@@ -26,6 +26,14 @@ cd ~/plate-resort
 ./run_server.sh
 ```
 
+Or manually activate the environment:
+
+```bash
+cd ~/plate-resort
+source venv/bin/activate
+python plate_resort.py
+```
+
 ## Core Components
 
 - `plate_resort.py` - Main motor control class
@@ -37,17 +45,20 @@ cd ~/plate-resort
 
 ### Test Motor Connection
 ```bash
-python3 test_scripts/test_dxl_ping.py --device /dev/ttyUSB0 --id 1
+source venv/bin/activate
+python test_scripts/test_dxl_ping.py --device /dev/ttyUSB0 --id 1
 ```
 
 ### Run Core Control System
 ```bash
-python3 plate_resort.py
+source venv/bin/activate
+python plate_resort.py
 ```
 
 ### Check Motor Health
 ```bash
-python3 test_scripts/test_motor_health.py
+source venv/bin/activate
+python test_scripts/test_motor_health.py
 ```
 
 ## Configuration

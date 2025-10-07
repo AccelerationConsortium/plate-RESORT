@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Plate Resort Server - One-line setup for Raspberry Pi
-# Usage: curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install.sh | bash
 #
 
 set -e
@@ -51,6 +51,7 @@ sudo apt install -y \
     python3-pip \
     python3-dev \
     python3-yaml \
+    python3-venv \
     git \
     build-essential \
     udev
@@ -58,9 +59,15 @@ sudo apt install -y \
 # Add user to dialout group for USB access
 sudo usermod -aG dialout $USER
 
-# Install Python dependencies
-echo -e "${YELLOW}🐍 Installing Python packages...${NC}"
-pip3 install --user -r requirements.txt
+# Create and activate virtual environment
+echo -e "${YELLOW}🐍 Setting up Python virtual environment...${NC}"
+python3 -m venv venv
+source venv/bin/activate
+
+# Install Python dependencies in venv
+echo -e "${YELLOW}� Installing Python packages in virtual environment...${NC}"
+pip install --upgrade pip
+pip install -r requirements.txt
 
 # Set up USB permissions for Dynamixel
 echo -e "${YELLOW}🔌 Setting up USB device permissions...${NC}"
@@ -82,8 +89,12 @@ cat > run_server.sh << 'EOF'
 # Plate Resort Server Runner
 cd "$(dirname "$0")"
 
+# Activate virtual environment
+source venv/bin/activate
+
 echo "🚀 Starting Plate Resort Server..."
 echo "Project directory: $(pwd)"
+echo "Python environment: $(which python)"
 echo ""
 
 # Check USB devices
@@ -96,9 +107,8 @@ fi
 
 echo ""
 echo "Available commands:"
-echo "  python3 plate_resort.py          # Run core control system"
-echo "  python3 web_gui.py               # Run web interface (if needed)"
-echo "  python3 test_scripts/test_dxl_ping.py  # Test motor connection"
+echo "  python plate_resort.py          # Run core control system"
+echo "  python test_scripts/test_dxl_ping.py  # Test motor connection"
 echo ""
 
 # Default action - you can modify this
@@ -109,7 +119,8 @@ chmod +x run_server.sh
 
 # Test Python dependencies
 echo -e "${YELLOW}🧪 Testing Python dependencies...${NC}"
-python3 -c "
+source venv/bin/activate
+python -c "
 import sys
 required = ['dynamixel_sdk', 'yaml']
 missing = []
@@ -141,7 +152,8 @@ echo "3. 🚀 After reboot, run: cd $PROJECT_DIR && ./run_server.sh"
 echo ""
 echo "Quick test commands:"
 echo "  cd $PROJECT_DIR"
-echo "  python3 test_scripts/test_dxl_ping.py --device /dev/ttyUSB0"
+echo "  source venv/bin/activate"
+echo "  python test_scripts/test_dxl_ping.py --device /dev/ttyUSB0"
 echo ""
 echo -e "${BLUE}📖 For documentation, see README.md${NC}"
 

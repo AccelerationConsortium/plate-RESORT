@@ -7,7 +7,7 @@ A complete plate storage automation system for laboratory well plate management.
 For a fresh Raspberry Pi, use the one-line installer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install.sh | bash
 ```
 
 See [QUICK_SETUP.md](QUICK_SETUP.md) for details.
