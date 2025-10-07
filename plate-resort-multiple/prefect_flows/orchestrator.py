@@ -18,14 +18,9 @@ def disconnect():
     return run_deployment(name="disconnect/plate-resort-disconnect")
 
 
-def get_status():
-    """Get system status"""
-    return run_deployment(name="status/plate-resort-status")
-
-
 def get_health():
     """Get motor health"""
-    return run_deployment(name="health/plate-resort-health")
+    return run_deployment(name="get-motor-health/plate-resort-health")
 
 
 def activate_hotel(hotel: str):
@@ -62,22 +57,7 @@ def emergency_stop():
     return run_deployment(name="emergency-stop/plate-resort-emergency-stop")
 
 
-def get_hotels():
-    """Get available hotels"""
-    return run_deployment(name="get-hotels/plate-resort-get-hotels")
-
-
 def get_position():
     """Get current position"""
     return run_deployment(name="get-position/plate-resort-get-position")
 
-
-if __name__ == "__main__":
-    print("Example usage:")
-    print("\n# Connect to motor")
-    print("from orchestrator import connect, activate_hotel, get_status")
-    print('connect(device="/dev/ttyUSB0")')
-    print("\n# Activate hotel A")
-    print('activate_hotel("A")')
-    print("\n# Get status")
-    print("get_status()")

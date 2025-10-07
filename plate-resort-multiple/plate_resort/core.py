@@ -6,6 +6,15 @@ from dynamixel_sdk import PortHandler, PacketHandler
 import yaml
 import os
 
+try:
+    from prefect import flow
+    PREFECT_AVAILABLE = True
+except ImportError:
+    PREFECT_AVAILABLE = False
+    def flow(func):
+        """Dummy decorator when Prefect is not installed"""
+        return func
+
 class PlateResort:
     def __init__(self, config_file="resort_config.yaml", **overrides):
         """
@@ -66,6 +75,7 @@ class PlateResort:
             
         return config['resort']
         
+    @flow(name="connect")
     def connect(self):
         """Connect to Dynamixel motor"""
         self.port = PortHandler(self.device)
@@ -89,6 +99,7 @@ class PlateResort:
         # Set profile velocity (speed)
         self.packet_handler.write4ByteTxRx(self.port, self.motor_id, 112, self.speed)
         
+    @flow(name="activate-hotel")
     def activate_hotel(self, hotel, tolerance=None, timeout=None):
         """
         Rotate resort to activate specified hotel
@@ -137,6 +148,7 @@ class PlateResort:
         print(f"✗ Timeout waiting for hotel {hotel}. Current: {self.get_current_position():.1f}°, Min error achieved: {min_error:.2f}°")
         return False
         
+    @flow(name="go-home")
     def go_home(self):
         """Go to home position (0 degrees)"""
         if self.port is None:
@@ -165,6 +177,7 @@ class PlateResort:
         print(f"✗ Timeout waiting for home position. Current: {self.get_current_position():.1f}°")
         return False
         
+    @flow(name="move-to-angle")
     def move_to_angle(self, angle):
         """Move to specific angle in degrees"""
         if self.port is None:
@@ -195,6 +208,7 @@ class PlateResort:
         print(f"✗ Timeout waiting for target position. Current: {self.get_current_position():.1f}°")
         return False
         
+    @flow(name="emergency-stop")
     def emergency_stop(self):
         """Emergency stop - disable torque immediately"""
         if self.port is None:
@@ -232,6 +246,7 @@ class PlateResort:
         else:
             return None
             
+    @flow(name="get-motor-health")
     def get_motor_health(self):
         """
         Get comprehensive motor health status
@@ -303,12 +318,14 @@ class PlateResort:
         else:
             print("✓ All parameters within normal range")
             
+    @flow(name="set-speed")
     def set_speed(self, speed):
         """Set motor speed (profile velocity)"""
         self.speed = speed
         if self.port:
             self.packet_handler.write4ByteTxRx(self.port, self.motor_id, 112, speed)
             
+    @flow(name="get-position")
     def get_current_position(self):
         """Get current motor position in degrees"""
         if self.port is None:
@@ -325,6 +342,7 @@ class PlateResort:
         """Check if connected to motor"""
         return self.port is not None and self.port.is_open
         
+    @flow(name="disconnect")
     def disconnect(self):
         """Disconnect from motor"""
         if self.port:

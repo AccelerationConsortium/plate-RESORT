@@ -4,10 +4,11 @@ This directory contains Prefect v3 flows for controlling the Plate Resort device
 
 ## Overview
 
-The Prefect implementation replaces the REST API with a more robust workflow orchestration system:
+The Prefect implementation uses flow decorators directly on the PlateResort class methods:
 
-- **device.py**: Contains Prefect flows that run on the device (Raspberry Pi) with physical motor access
+- **PlateResort class methods** (in `plate_resort/core.py`): Decorated with @flow for direct Prefect orchestration
 - **orchestrator.py**: Functions for submitting flow runs from a remote machine
+- **deploy_flows.py**: Helper script to deploy all flows to a work pool
 
 ## Setup Instructions
 
@@ -64,25 +65,7 @@ Or specify a custom work pool name:
 python deploy_flows.py my-custom-pool
 ```
 
-Alternatively, deploy manually:
-
-```bash
-python -c "
-from device import *
-
-connect_flow.deploy(name='plate-resort-connect', work_pool_name='plate-resort-pool')
-disconnect_flow.deploy(name='plate-resort-disconnect', work_pool_name='plate-resort-pool')
-status_flow.deploy(name='plate-resort-status', work_pool_name='plate-resort-pool')
-health_flow.deploy(name='plate-resort-health', work_pool_name='plate-resort-pool')
-activate_hotel_flow.deploy(name='plate-resort-activate-hotel', work_pool_name='plate-resort-pool')
-go_home_flow.deploy(name='plate-resort-go-home', work_pool_name='plate-resort-pool')
-move_to_angle_flow.deploy(name='plate-resort-move-to-angle', work_pool_name='plate-resort-pool')
-set_speed_flow.deploy(name='plate-resort-set-speed', work_pool_name='plate-resort-pool')
-emergency_stop_flow.deploy(name='plate-resort-emergency-stop', work_pool_name='plate-resort-pool')
-get_hotels_flow.deploy(name='plate-resort-get-hotels', work_pool_name='plate-resort-pool')
-get_position_flow.deploy(name='plate-resort-get-position', work_pool_name='plate-resort-pool')
-"
-```
+Note: The deployment script uses a simple top-level approach without CLI argument parsing for simplicity.
 
 ### 5. Start Worker on Device
 
@@ -103,7 +86,7 @@ The worker will continuously poll the work pool for new flow runs to execute.
 From any machine with Prefect configured (pointing to the same server/cloud):
 
 ```python
-from orchestrator import connect, activate_hotel, get_status
+from orchestrator import connect, activate_hotel, get_health
 
 # Connect to motor
 result = connect(device="/dev/ttyUSB0", baudrate=57600, motor_id=1)
@@ -111,8 +94,8 @@ result = connect(device="/dev/ttyUSB0", baudrate=57600, motor_id=1)
 # Activate hotel A
 result = activate_hotel("A")
 
-# Get status
-status = get_status()
+# Get health
+health = get_health()
 ```
 
 Or use the Prefect CLI:
@@ -126,8 +109,8 @@ prefect deployment run connect/plate-resort-connect --param device=/dev/ttyUSB0
 ```
 Remote Machine                    Raspberry Pi (Device)
 ┌─────────────────┐              ┌──────────────────────┐
-│  orchestrator.py│              │     device.py        │
-│  (submit jobs)  │              │  (Prefect flows)     │
+│  orchestrator.py│              │  PlateResort class   │
+│  (submit jobs)  │              │  (@flow decorated)   │
 └────────┬────────┘              └─────────┬────────────┘
          │                                  │
          │                                  │
