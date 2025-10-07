@@ -1,156 +1,233 @@
 # Plate Resort Control System
 
-A complete plate storage automation system for laboratory well plate management.
+**Professional laboratory plate management system with REST API server-client architecture.**
 
-## 🚀 Quick Setup (New Pi)
+## 🚀 Quick Setup
 
-For a fresh Raspberry Pi, use the one-line installer:
+### Server Setup (Raspberry Pi)
 
-# Plate Resort Control System
+**One command installs everything and starts the server:**
 
-A complete plate storage automation system for laboratory well plate management with REST API server-client architecture.
-
-## 🚀 Installation
-
-### One-Line Installation (Server + Client)
 ```bash
-# Installs both server and client tools with automatic setup
-curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install-pip.sh | bash
+curl -sSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install-pip.sh | bash
 ```
 
-### Manual Installation
+**That's it!** The installer:
+- ✅ Installs the package and dependencies
+- ✅ Configures system permissions 
+- ✅ Generates a secure API key
+- ✅ **Automatically starts the server**
+- ✅ Sets up systemd service for auto-start
+
+**Your API key will be displayed during installation - save it for client access!**
+
+### Client Setup (Any Machine)
+
 ```bash
-# Install the package (works on any machine - Pi server or client)
+# Install client tools
 pip install git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
 
-# Run setup (only needed on Pi server)
-plate-resort-setup
+# Use your API key from server installation
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
 ```
 
 ## 🎯 Usage
 
-### On Raspberry Pi (Server)
-```bash
-# Start the server
-plate-resort-server
+### 📡 Server (Runs automatically on Pi)
 
-# Generate API key
-plate-resort-keygen --generate --update-config
+```bash
+# Server auto-starts after installation
+# Manual control if needed:
+plate-resort-server                    # Start server
+sudo systemctl stop plate-resort       # Stop service
+sudo systemctl start plate-resort      # Start service
 ```
 
-### On Any Machine (Client)
+**Server automatically available at:** `http://YOUR_PI_IP:8000`
+**API Documentation:** `http://YOUR_PI_IP:8000/docs`
+### 💻 Client Commands
+
 ```bash
-# Control the server remotely
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_KEY status
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_KEY connect
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_KEY activate A
+# Check server status
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
+
+# Connect to motor
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY connect
+
+# Activate hotel position
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY activate A
+
+# Move to specific angle
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY move 90.0
+
+# Get current position
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY position
+
+# Disconnect motor
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY disconnect
 ```
 
-### Python API (Any Machine)
+### 🐍 Python API
+
 ```python
 from plate_resort.client import PlateResortClient
 
+# Initialize client with your API key
 client = PlateResortClient("http://YOUR_PI_IP:8000", "YOUR_API_KEY")
+
+# Use the system
 status = client.status()
 client.connect()
 client.activate_hotel("A")
+position = client.get_position()
+client.disconnect()
 ```
 
-## 📚 API Documentation
+## � API Key Management
 
-Visit `http://YOUR_PI_IP:8000/docs` for interactive API documentation.
+**Your API key is generated during installation and shown on screen.**
 
-## 🔧 Core Components
-
-- **`plate_resort/`** - Professional Python package
-  - `core.py` - Motor control logic (unchanged from v1.x)
-  - `server/` - FastAPI REST API server
-  - `client/` - Client library and CLI tools
-  - `setup.py` - Automated system configuration
-- **`test_scripts/`** - Hardware testing utilities  
-- **`resort_config.yaml`** - Configuration template
-- **`pyproject.toml`** - Modern Python packaging
-
-## 🧪 Testing
-
+To regenerate or view your API key:
 ```bash
-# Test motor connection
-source venv/bin/activate
-python test_scripts/test_dxl_ping.py --device /dev/ttyUSB0
+# On the Pi server
+plate-resort-keygen --generate --update-config
+```
 
-# Test core functionality  
-python test_scripts/test_plate_resort.py
+## 📚 Documentation
 
-# Test motor health monitoring
-python test_scripts/test_motor_health.py
+- **Interactive API Docs:** `http://YOUR_PI_IP:8000/docs`
+- **REST API:** 9 endpoints for complete motor control
+- **Client Library:** Python package for easy integration
+
+## 🧪 Testing & Development
+
+### Test Scripts
+```bash
+# Test motor connection and functionality
+cd test_scripts
+python test_plate_resort.py      # Main functionality test
+python test_motor_health.py      # Health monitoring
+python test_dxl_ping.py          # Low-level motor test
+```
+
+### Development Installation
+```bash
+# For development work
+git clone https://github.com/AccelerationConsortium/plate-RESORT.git
+cd plate-RESORT/plate-resort-multiple
+pip install -e .                 # Install in development mode
 ```
 
 ## ⚙️ Configuration
 
-Edit `resort_config.yaml` to configure:
-- Motor settings and positions
-- Hotel configurations
-- Safety parameters
-- Communication settings
-- **Server IP and port**
+The system uses `resort_config.yaml` for motor and hotel configuration. The default configuration works with most setups, but you can customize:
 
-### 🔐 API Key Setup
+- Motor communication settings (port, baud rate, ID)
+- Hotel positions and angles  
+- Safety limits and timeouts
+- Server settings
 
-Generate a secure API key:
-```bash
-# Generate and update config file
-python generate_api_key.py --generate --update-config
+## 🔒 Security Features
 
-# Or set via environment variable
-export PLATE_API_KEY="your-secure-key-here"
-```
-- Hotel configurations
-- Safety parameters
-- Communication settings
+- **API Key Authentication:** All endpoints protected with secure keys
+- **Request Validation:** Input sanitization and validation
+- **Error Handling:** Graceful error responses
+- **Rate Limiting:** Built-in FastAPI protections
 
-## 🔒 Security
+## 📋 System Requirements
 
-The API uses API key authentication via the `X-API-Key` header. You can:
+### Raspberry Pi (Server)
+- Raspberry Pi 3B+ or newer
+- Raspberry Pi OS (modern version)
+- USB port for Dynamixel adapter
+- Network connection
 
-1. **Generate secure keys**: Use `generate_api_key.py` 
-2. **Environment override**: Set `PLATE_API_KEY` environment variable
-3. **Config file**: Update `api_key` in `resort_config.yaml`
+### Client Machine  
+- Python 3.8+
+- Network access to Pi server
+- API key from server installation
 
-⚠️ **Never commit real API keys to git!** The `.env` file is ignored by default.
+### Hardware
+- Dynamixel motor (XC330 or compatible)
+- USB-to-RS485 adapter (U2D2 or FTDI)
+- 12V power supply for motors
 
-## 📋 Hardware Requirements
-
-- Raspberry Pi (3B+ or newer recommended)
-- Dynamixel motors and controller
-- USB-to-serial adapter for Dynamixel communication
-- Power supply for motors
-
-## 🗂️ Directory Structure
+## 🗂️ Package Structure
 
 ```
-plate-resort-multiple/
-├── server/              # FastAPI server
-├── client/              # Python client library
-├── test_scripts/        # Testing utilities
-├── archived/           # Deprecated files
-├── mechanical/         # Hardware documentation
-├── plate_resort.py     # Core control class
-├── install.sh          # One-line installer
-└── update.sh           # Quick update script
+plate_resort/              # Professional Python package
+├── core.py               # Motor control (unchanged from v1.x)
+├── server/               # FastAPI REST API server  
+│   ├── main.py          # Server application
+│   └── wrapper.py       # Motor interface wrapper
+├── client/              # Client library and CLI
+│   ├── __init__.py      # Python client library
+│   └── cli.py           # Command-line interface
+├── setup.py             # Automated system setup
+└── keygen.py            # API key generation
+
+test_scripts/            # Hardware testing utilities
+archived/                # Legacy components (v1.x)  
+mechanical/              # Hardware documentation
+install-pip.sh           # One-line installer
 ```
 
 ## 🐛 Troubleshooting
 
-### USB Permission Issues
+### Server Issues
 ```bash
-sudo usermod -aG dialout $USER
-sudo reboot
+# Check if server is running
+curl http://localhost:8000/health
+
+# View server logs  
+sudo journalctl -u plate-resort -f
+
+# Restart server service
+sudo systemctl restart plate-resort
 ```
 
-### Motor Not Responding
+### Client Connection Issues
 ```bash
-python test_scripts/test_dxl_ping.py --device /dev/ttyUSB0 --scan
+# Test network connectivity
+ping YOUR_PI_IP
+
+# Test API access (replace with your IP and key)
+curl -H "X-API-Key: YOUR_API_KEY" http://YOUR_PI_IP:8000/status
 ```
+
+### Motor Issues
+```bash
+# Check USB connection
+ls /dev/ttyUSB*
+
+# Test motor communication
+cd test_scripts
+python test_dxl_ping.py --device /dev/ttyUSB0 --id 1
+```
+
+## 🔄 Updates
+
+To update the system:
+```bash
+# On the Pi server
+pip install --upgrade git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
+sudo systemctl restart plate-resort
+```
+
+## 📝 Version History
+
+- **v2.0**: Professional pip package with server-client architecture  
+- **v1.x**: Direct script-based approach (archived)
+
+---
+
+## 💡 Key Improvement: Complete Automation
+
+**Before (v1.x):** Complex manual setup with multiple scripts, Docker, and manual configuration.
+
+**Now (v2.0):** One command installs everything and starts the server automatically. Just copy the API key to your client!
+
+**Perfect for:** Laboratory automation, remote plate handling, integration with existing Python workflows.
 
 ### Server Won't Start
 - Check if port 8000 is already in use
