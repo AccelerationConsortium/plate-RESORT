@@ -1,6 +1,15 @@
 # Plate Resort Control System
 
-**Professional laboratory plate management system with REST API server-client architecture.**
+**Professional laboratory plate management system with REST API and Prefect workflow orchestration.**
+
+## 🎯 Control Options
+
+This system offers two ways to control the Plate Resort:
+
+1. **REST API** (Traditional) - Simple HTTP endpoints for basic operations
+2. **Prefect Workflows** (Recommended) - Robust workflow orchestration with retry logic, observability, and async execution
+
+See [`prefect_flows/README.md`](prefect_flows/README.md) for Prefect setup and usage.
 
 ## 🚀 Quick Setup
 
@@ -226,7 +235,35 @@ The system uses `resort_config.yaml` for motor and hotel configuration. The defa
 - USB-to-RS485 adapter (U2D2 or FTDI)
 - 12V power supply for motors
 
-## � API Endpoints
+## 🌊 Prefect Workflow Orchestration (Recommended)
+
+For production use, Prefect provides superior reliability and observability:
+
+```bash
+# Install with Prefect support
+pip install git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
+
+# Setup work pool
+prefect work-pool create plate-resort-pool --type process
+
+# Deploy flows
+cd prefect_flows
+python deploy_flows.py
+
+# Start worker on device
+prefect worker start --pool plate-resort-pool
+```
+
+**Benefits over REST API:**
+- Automatic retry on failure
+- Built-in observability and monitoring
+- Async execution with better performance
+- No exposed HTTP endpoints needed
+- Workflow scheduling capabilities
+
+See [`prefect_flows/README.md`](prefect_flows/README.md) for complete setup guide.
+
+## 🌐 API Endpoints
 
 The REST API provides complete motor control:
 
