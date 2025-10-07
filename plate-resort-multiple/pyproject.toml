@@ -28,6 +28,7 @@ requires-python = ">=3.8"
 dependencies = [
     "dynamixel-sdk>=3.7.51",
     "pyyaml>=6.0",
+    "prefect>=3.0.0",
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
     "requests>=2.31.0",
