@@ -21,6 +21,7 @@ This will:
 
 After installation and reboot:
 
+## Local Usage
 ```bash
 cd ~/plate-resort/plate-resort-multiple
 ./run_server.sh
@@ -34,6 +35,17 @@ source venv/bin/activate
 python plate_resort.py
 ```
 
+## Server Mode (Remote Access)
+```bash
+cd ~/plate-resort/plate-resort-multiple
+source venv/bin/activate
+./server/run_server.sh
+```
+
+Access from any device on the network:
+- API: `http://your-pi-ip:8000`
+- Documentation: `http://your-pi-ip:8000/docs`
+
 ## Core Components
 
 - `plate_resort.py` - Main motor control class
@@ -43,22 +55,19 @@ python plate_resort.py
 
 ## Basic Usage
 
-### Test Motor Connection
+### Local Control
 ```bash
 source venv/bin/activate
 python test_scripts/test_dxl_ping.py --device /dev/ttyUSB0 --id 1
+python example_usage.py
 ```
 
-### Run Core Control System
+### Remote Control (Client)
 ```bash
-source venv/bin/activate
-python plate_resort.py
-```
-
-### Check Motor Health
-```bash
-source venv/bin/activate
-python test_scripts/test_motor_health.py
+# From any machine on the network
+python client/client.py connect
+python client/client.py activate A
+python client/client.py status
 ```
 
 ## Configuration

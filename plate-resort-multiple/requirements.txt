@@ -1,2 +1,5 @@
 dynamixel-sdk
 pyyaml
+fastapi
+uvicorn[standard]
+requests

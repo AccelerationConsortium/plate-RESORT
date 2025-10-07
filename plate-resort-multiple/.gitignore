@@ -55,6 +55,14 @@ run_server.sh
 venv/
 .venv/
 
+# API keys and secrets
+.env
+*.key
+
+# Server logs
+server/*.log
+uvicorn.log
+
 # Logs
 *.log
 logs/
