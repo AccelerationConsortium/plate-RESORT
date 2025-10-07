@@ -165,6 +165,36 @@ class PlateResort:
         print(f"✗ Timeout waiting for home position. Current: {self.get_current_position():.1f}°")
         return False
         
+    def move_to_angle(self, angle):
+        """Move to specific angle in degrees"""
+        if self.port is None:
+            raise Exception("Not connected. Call connect() first.")
+            
+        # Convert angle to motor position
+        goal_pos = int(angle * self.MAX_POSITION / self.MAX_ANGLE)
+        
+        print(f"Moving to {angle}°")
+        self.packet_handler.write4ByteTxRx(self.port, self.motor_id, self.ADDR_GOAL_POSITION, goal_pos)
+        
+        # Wait for position to be reached
+        import time
+        start_time = time.time()
+        timeout = self.config.get('movement_timeout', 20)
+        tolerance = self.config.get('position_tolerance', 0.5)
+        
+        while time.time() - start_time < timeout:
+            current_pos = self.get_current_position()
+            error = abs(current_pos - angle)
+            
+            if error <= tolerance:
+                print(f"✓ Target position reached! Position: {current_pos:.1f}°")
+                return True
+                
+            time.sleep(0.1)
+            
+        print(f"✗ Timeout waiting for target position. Current: {self.get_current_position():.1f}°")
+        return False
+        
     def emergency_stop(self):
         """Emergency stop - disable torque immediately"""
         if self.port is None:

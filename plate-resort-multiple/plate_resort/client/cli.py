@@ -70,6 +70,14 @@ class PlateResortClient:
     def get_hotels(self) -> Dict[str, Any]:
         """Get available hotels"""
         return self._request("GET", "/hotels")
+    
+    def get_position(self) -> Dict[str, Any]:
+        """Get current motor position"""
+        return self._request("GET", "/position")
+    
+    def move_to_angle(self, angle: float) -> Dict[str, Any]:
+        """Move to specific angle in degrees"""
+        return self._request("POST", "/move_to_angle", {"angle": angle})
 
 
 def main():
@@ -83,7 +91,8 @@ def main():
                         help="API key for authentication")
     parser.add_argument("command", 
                         choices=["connect", "disconnect", "status", "health", 
-                                "activate", "home", "speed", "stop", "hotels"],
+                                 "activate", "home", "speed", "stop", "hotels", 
+                                 "position", "move"],
                         help="Command to execute")
     parser.add_argument("args", nargs="*", 
                         help="Additional arguments for command")
@@ -136,6 +145,16 @@ def main():
         
         elif command == "hotels":
             result = client.get_hotels()
+        
+        elif command == "position":
+            result = client.get_position()
+        
+        elif command == "move":
+            if len(args.args) < 1:
+                print("Error: Angle required (e.g., move 90)")
+                return
+            angle = float(args.args[0])
+            result = client.move_to_angle(angle)
         
         print(result)
         

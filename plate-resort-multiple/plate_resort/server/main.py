@@ -50,6 +50,10 @@ class SpeedRequest(BaseModel):
     speed: int
 
 
+class AngleRequest(BaseModel):
+    angle: float
+
+
 @app.get("/")
 def root():
     """API status and info"""
@@ -110,6 +114,16 @@ def go_home(x_api_key: str = Depends(require_api_key)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/move_to_angle")
+def move_to_angle(req: AngleRequest, x_api_key: str = Depends(require_api_key)):
+    """Move to specific angle in degrees"""
+    try:
+        wrapper.move_to_angle(req.angle)
+        return {"status": "moving", "angle": req.angle}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/set_speed")
 def set_speed(req: SpeedRequest, x_api_key: str = Depends(require_api_key)):
     """Set motor movement speed"""
@@ -134,6 +148,16 @@ def emergency_stop(x_api_key: str = Depends(require_api_key)):
 def hotels(x_api_key: str = Depends(require_api_key)):
     """Get available hotels and their angles"""
     return wrapper.get_hotels()
+
+
+@app.get("/position")
+def get_position(x_api_key: str = Depends(require_api_key)):
+    """Get current motor position"""
+    try:
+        position = wrapper.get_current_position()
+        return {"position": position}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def run_server():
