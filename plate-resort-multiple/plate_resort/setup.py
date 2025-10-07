@@ -133,12 +133,14 @@ def setup_configuration():
         package_dir = Path(pkg_resources.resource_filename("plate_resort", ""))
     except:
         # Fall back to current directory
-        package_dir = Path(__file__).parent.parent
+        package_dir = Path(__file__).parent
 
     config_file = package_dir / "resort_config.yaml"
-    secrets_file = Path("secrets.ini")
+    
+    # Create secrets file in the same directory as the package
+    secrets_file = package_dir / "secrets.ini"
 
-    # Copy default config if it doesn't exist
+    # Copy default config to current directory if it doesn't exist
     if not Path("resort_config.yaml").exists() and config_file.exists():
         import shutil
 
