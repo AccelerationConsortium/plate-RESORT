@@ -9,7 +9,7 @@ description = "Plate Resort Control System - Server-Client Architecture for Labo
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Acceleration Consortium", email = "info@acceleration.utoronto.ca"}
+    {name = "Kelvin Chow", email = "kth.chow@utoronto.ca"}
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

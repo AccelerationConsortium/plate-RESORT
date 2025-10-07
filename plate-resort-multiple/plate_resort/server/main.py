@@ -14,10 +14,10 @@ def load_config():
     """Load configuration from YAML file"""
     config_file = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "resort_config.yaml"
+        "resort_config.yaml",
     )
     try:
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             return yaml.safe_load(f)
     except Exception as e:
         print(f"Warning: Could not load config file {config_file}: {e}")
@@ -25,13 +25,13 @@ def load_config():
 
 
 config = load_config()
-server_config = config.get('server', {})
+server_config = config.get("server", {})
 
 app = FastAPI(
     title="Plate Resort API",
     version="2.0.0",
     description="REST API for Plate Resort Control System",
-    docs_url="/docs" if server_config.get('docs_enabled', True) else None
+    docs_url="/docs" if server_config.get("docs_enabled", True) else None,
 )
 wrapper = PlateResortWrapper()
 
@@ -57,7 +57,7 @@ def root():
         "name": "Plate Resort API",
         "version": "1.0.0",
         "status": "running",
-        "docs": "/docs"
+        "docs": "/docs",
     }
 
 
@@ -139,15 +139,16 @@ def hotels(x_api_key: str = Depends(require_api_key)):
 def run_server():
     """Entry point for the plate-resort-server command"""
     import uvicorn
-    host = server_config.get('host', '0.0.0.0')
-    port = server_config.get('port', 8000)
-    reload = server_config.get('reload', True)
-    
+
+    host = server_config.get("host", "0.0.0.0")
+    port = server_config.get("port", 8000)
+    reload = server_config.get("reload", True)
+
     print(f"🚀 Starting Plate Resort Server")
     print(f"📡 Server: http://{host}:{port}")
     print(f"📖 API Docs: http://{host}:{port}/docs")
     print(f"🔑 API Key: {load_api_key()}")
-    
+
     uvicorn.run(app, host=host, port=port, reload=reload)
 
 
