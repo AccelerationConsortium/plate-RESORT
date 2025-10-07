@@ -10,7 +10,7 @@ resort:
   rooms_per_hotel: 20
   
   # Positioning
-  offset_angle: 11.0  # Base offset angle in degrees
+  offset_angle: 0  # Base offset angle in degrees
   rotation_direction: 1  # 1 for clockwise, -1 for counter-clockwise
   
   # Hotel positions (calculated from offset_angle and hotels)
