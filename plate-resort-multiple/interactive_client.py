@@ -1,40 +1,58 @@
 #!/usr/bin/env python3
 """
 Interactive Plate Resort Client
-Command-line interface for controlling the P            elif cmd == "position":
-                if not self.connected:
-                    print("⚠️  Motor not connected. Use 'connect' first.")
-                else:
-                    result = self.client.get_position()
-                    print(f"📍 Current Position: {result}")
-                    
-            elif cmd == "move":
-                if len(args) < 1:
-                    print("❌ Please specify an angle (e.g., move 90)")
-                elif not self.connected:
-                    print("⚠️  Motor not connected. Use 'connect' first.")
-                else:
-                    try:
-                        angle = float(args[0])
-                        print(f"🔄 Moving to {angle}°...")
-                        result = self.client.move_to_angle(angle)
-                        print(f"   Result: {result}")
-                    except ValueError:
-                        print("❌ Invalid angle. Please provide a number.")
-                        
-            elif cmd == "stop":ver
+Command-line interface for controlling the Plate Resort server
 """
 
 import sys
+import os
+import configparser
 import requests
 from plate_resort.client import PlateResortClient
 
 
+def load_client_config():
+    """Load client configuration from secrets.ini or environment variables"""
+    config = {
+        'host': '100.83.140.57',  # Default fallback
+        'port': 8000,
+        'api_key': None
+    }
+    
+    # Try to load from secrets.ini
+    secrets_file = 'secrets.ini'
+    if os.path.exists(secrets_file):
+        try:
+            parser = configparser.ConfigParser()
+            parser.read(secrets_file)
+            
+            if 'client' in parser:
+                config['host'] = parser.get('client', 'default_host', fallback=config['host'])
+                config['port'] = parser.getint('client', 'default_port', fallback=config['port'])
+            
+            # Get API key from server section (shared with server)
+            if 'server' in parser:
+                api_key = parser.get('server', 'api_key', fallback=None)
+                if api_key and api_key not in ['changeme', 'change_me', 'default']:
+                    config['api_key'] = api_key
+                    
+        except Exception as e:
+            print(f"⚠️  Warning: Could not read secrets.ini: {e}")
+    
+    # Environment variables override file settings
+    config['host'] = os.getenv('PLATE_HOST', config['host'])
+    config['port'] = int(os.getenv('PLATE_PORT', config['port']))
+    config['api_key'] = os.getenv('PLATE_API_KEY', config['api_key'])
+    
+    return config
+
+
 class InteractivePlateResort:
-    def __init__(self, host, api_key):
+    def __init__(self, host, port, api_key):
         self.host = host
+        self.port = port
         self.api_key = api_key
-        self.server_url = f"http://{host}:8000"
+        self.server_url = f"http://{host}:{port}"
         self.client = PlateResortClient(self.server_url, api_key)
         self.connected = False
         
@@ -43,7 +61,7 @@ class InteractivePlateResort:
         print("🚀 Interactive Plate Resort Client")
         print("=" * 50)
         print(f"Server: {self.server_url}")
-        print(f"API Key: {self.api_key}")
+        print(f"API Key: {'*' * (len(self.api_key) - 4) + self.api_key[-4:] if self.api_key else 'None'}")
         print("=" * 50)
         print("Type 'help' for available commands, 'quit' to exit")
         print()
@@ -123,12 +141,12 @@ class InteractivePlateResort:
                 if not self.connected:
                     print("⚠️  Motor not connected. Use 'connect' first.")
                 else:
-                    position = self.client.get_position()
-                    print(f"📍 Current position: {position}°")
+                    result = self.client.get_position()
+                    print(f"📍 Current Position: {result}")
                     
             elif cmd == "move":
-                if not args:
-                    print("❌ Usage: move <angle> (e.g., move 90)")
+                if len(args) < 1:
+                    print("❌ Please specify an angle (e.g., move 90)")
                 elif not self.connected:
                     print("⚠️  Motor not connected. Use 'connect' first.")
                 else:
@@ -147,8 +165,8 @@ class InteractivePlateResort:
                 
             # Hotel commands
             elif cmd == "activate":
-                if not args:
-                    print("❌ Usage: activate <hotel> (e.g., activate A)")
+                if len(args) < 1:
+                    print("❌ Please specify a hotel (e.g., activate A)")
                 elif not self.connected:
                     print("⚠️  Motor not connected. Use 'connect' first.")
                 else:
@@ -169,7 +187,8 @@ class InteractivePlateResort:
                     print(f"   Result: {result}")
                     
             elif cmd == "hotels":
-                print("🏨 Available hotels: A, B, C, D")
+                result = self.client.get_hotels()
+                print(f"🏨 Available hotels: {result}")
                 
             # Utility commands
             elif cmd == "clear":
@@ -227,18 +246,34 @@ class InteractivePlateResort:
 
 
 def main():
-    # Configuration
-    PI_HOST = "100.83.140.57"
-    API_KEY = "PZIFj85Bh2oP64yVkuaWZehG9Wc1YXiM"
+    # Load configuration from secrets.ini or environment
+    config = load_client_config()
     
-    # Allow command line override
+    # Allow command line overrides
     if len(sys.argv) > 1:
-        PI_HOST = sys.argv[1]
+        config['host'] = sys.argv[1]
     if len(sys.argv) > 2:
-        API_KEY = sys.argv[2]
+        config['api_key'] = sys.argv[2]
+    
+    # Validate that we have an API key
+    if not config['api_key']:
+        print("❌ No API key found!")
+        print("\n💡 Options to fix this:")
+        print("1. Create a secrets.ini file:")
+        print("   [server]")
+        print("   api_key = YOUR_API_KEY_HERE")
+        print("   [client]")
+        print("   default_host = YOUR_PI_IP")
+        print("   default_port = 8000")
+        print("\n2. Set environment variable:")
+        print("   export PLATE_API_KEY=YOUR_API_KEY")
+        print("\n3. Pass as command line argument:")
+        print("   python interactive_client.py YOUR_PI_IP YOUR_API_KEY")
+        print(f"\n📝 Copy secrets template: cp plate_resort/secrets.ini.template secrets.ini")
+        sys.exit(1)
     
     # Start interactive session
-    interactive = InteractivePlateResort(PI_HOST, API_KEY)
+    interactive = InteractivePlateResort(config['host'], config['port'], config['api_key'])
     interactive.run()
 
 

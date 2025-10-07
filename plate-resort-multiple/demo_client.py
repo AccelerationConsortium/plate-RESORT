@@ -4,14 +4,50 @@ Plate Resort Client Demo Script
 Demonstrates all available client operations in Python
 """
 
+import os
+import sys
 import time
+import configparser
 import requests
 from plate_resort.client import PlateResortClient
 
-# Configuration
-PI_HOST = "100.83.140.57"
-API_KEY = "PZIFj85Bh2oP64yVkuaWZehG9Wc1YXiM"
-SERVER_URL = f"http://{PI_HOST}:8000"
+
+def load_client_config():
+    """Load client configuration from secrets.ini or environment variables"""
+    config = {
+        'host': '100.83.140.57',  # Default fallback
+        'port': 8000,
+        'api_key': None
+    }
+    
+    # Try to load from secrets.ini
+    secrets_file = 'secrets.ini'
+    if os.path.exists(secrets_file):
+        try:
+            parser = configparser.ConfigParser()
+            parser.read(secrets_file)
+            
+            if 'client' in parser:
+                config['host'] = parser.get('client', 'default_host', 
+                                          fallback=config['host'])
+                config['port'] = parser.getint('client', 'default_port', 
+                                             fallback=config['port'])
+            
+            # Get API key from server section (shared with server)
+            if 'server' in parser:
+                api_key = parser.get('server', 'api_key', fallback=None)
+                if api_key and api_key not in ['changeme', 'change_me', 'default']:
+                    config['api_key'] = api_key
+                    
+        except Exception as e:
+            print(f"⚠️  Warning: Could not read secrets.ini: {e}")
+    
+    # Environment variables override file settings
+    config['host'] = os.getenv('PLATE_HOST', config['host'])
+    config['port'] = int(os.getenv('PLATE_PORT', config['port']))
+    config['api_key'] = os.getenv('PLATE_API_KEY', config['api_key'])
+    
+    return config
 
 def print_section(title):
     """Print a formatted section header"""
@@ -30,17 +66,35 @@ def wait_for_input(message="Press Enter to continue..."):
     input(f"⏸️  {message}")
 
 def main():
-    print("🚀 Plate Resort Python Client Demo")
-    print(f"Server: {SERVER_URL}")
-    print(f"API Key: {API_KEY}")
+    """Main demo function"""
+    # Load configuration
+    config = load_client_config()
+    
+    # Allow command line override
+    if len(sys.argv) > 1:
+        config['host'] = sys.argv[1]
+    if len(sys.argv) > 2:
+        config['api_key'] = sys.argv[2]
+    
+    # Validate API key
+    if not config['api_key']:
+        print("❌ No API key found!")
+        print("� Create secrets.ini file or set PLATE_API_KEY environment variable")
+        sys.exit(1)
+    
+    server_url = f"http://{config['host']}:{config['port']}"
+    
+    print("�🚀 Plate Resort Python Client Demo")
+    print(f"Server: {server_url}")
+    print(f"API Key: {'*' * (len(config['api_key']) - 4) + config['api_key'][-4:]}")
     
     # Initialize client
-    client = PlateResortClient(SERVER_URL, API_KEY)
+    client = PlateResortClient(server_url, config['api_key'])
     
     try:
-        # 1. Test server health (no auth required)
+        # 1. Test server health
         print_section("Server Health Check")
-        health = requests.get(f"{SERVER_URL}/health").json()
+        health = client.health()
         print_result("Health Check", health)
         wait_for_input()
         

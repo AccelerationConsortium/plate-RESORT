@@ -27,8 +27,41 @@ curl -sSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/
 # Install client tools
 pip install git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
 
-# Use your API key from server installation
+# Configure client credentials (recommended)
+cp secrets.ini.template secrets.ini
+# Edit secrets.ini with your Pi IP and API key
+
+# Or use command line directly
 plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
+```
+
+### 🔐 Client Configuration
+
+**Option 1: secrets.ini file (recommended)**
+```bash
+# Copy and edit the template
+cp secrets.ini.template secrets.ini
+
+# Edit secrets.ini:
+[server]
+api_key = YOUR_API_KEY_FROM_PI_INSTALLATION
+
+[client]  
+default_host = YOUR_PI_IP
+default_port = 8000
+```
+
+**Option 2: Environment variables**
+```bash
+export PLATE_API_KEY=YOUR_API_KEY
+export PLATE_HOST=YOUR_PI_IP
+export PLATE_PORT=8000
+```
+
+**Option 3: Command line arguments**
+```bash
+python interactive_client.py YOUR_PI_IP YOUR_API_KEY
+python demo_client.py YOUR_PI_IP YOUR_API_KEY
 ```
 
 ## 🎯 Usage
