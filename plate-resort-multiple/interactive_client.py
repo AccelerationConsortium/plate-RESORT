@@ -135,7 +135,7 @@ class InteractivePlateResort:
                     try:
                         angle = float(args[0])
                         print(f"🔄 Moving to {angle}°...")
-                        result = self.client.move_to_position(angle)
+                        result = self.client.move_to_angle(angle)
                         print(f"   Result: {result}")
                     except ValueError:
                         print("❌ Invalid angle. Please provide a number.")

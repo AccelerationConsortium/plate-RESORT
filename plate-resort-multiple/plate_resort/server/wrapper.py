@@ -158,6 +158,28 @@ class PlateResortWrapper:
             
             return self.resort.go_home()
 
+    def move_to_angle(self, angle: float):
+        """Move to specific angle in degrees"""
+        with self.lock:
+            if not self.connected:
+                raise RuntimeError("Not connected to motor")
+            
+            if not self.resort:
+                raise RuntimeError("Resort not initialized")
+            
+            return self.resort.move_to_angle(angle)
+
+    def get_current_position(self):
+        """Get current motor position in degrees"""
+        with self.lock:
+            if not self.connected:
+                raise RuntimeError("Not connected to motor")
+            
+            if not self.resort:
+                raise RuntimeError("Resort not initialized")
+            
+            return self.resort.get_current_position()
+
     def set_speed(self, speed: int):
         """Set motor movement speed"""
         with self.lock:
