@@ -52,6 +52,7 @@ plate-resort-server = "plate_resort.server.main:run_server"
 plate-resort-client = "plate_resort.client.cli:main"
 plate-resort-setup = "plate_resort.setup:setup_system"
 plate-resort-keygen = "plate_resort.keygen:main"
+plate-resort-update = "plate_resort.update:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
