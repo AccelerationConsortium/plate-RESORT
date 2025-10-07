@@ -20,22 +20,34 @@ fi
 PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 echo "🐍 Python version: $PYTHON_VERSION"
 
-# Install pip if not available
+# Install pip and venv if not available
 if ! command -v pip3 &> /dev/null; then
-    echo "📦 Installing pip..."
+    echo "📦 Installing pip and venv..."
     sudo apt update
-    sudo apt install -y python3-pip
+    sudo apt install -y python3-pip python3-venv python3-full
 fi
+
+# Create virtual environment
+VENV_DIR="$HOME/plate-resort-env"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "🐍 Creating virtual environment..."
+    python3 -m venv "$VENV_DIR"
+fi
+
+# Activate virtual environment
+echo "🔄 Activating virtual environment..."
+source "$VENV_DIR/bin/activate"
 
 # Install/upgrade plate-resort
 echo "📦 Installing Plate Resort..."
-pip3 install --user --upgrade git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
+pip install --upgrade git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
 
-# Add local bin to PATH if not already there
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    echo "🔧 Adding ~/.local/bin to PATH..."
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-    export PATH="$HOME/.local/bin:$PATH"
+# Add virtual environment bin to PATH if not already there
+VENV_BIN="$VENV_DIR/bin"
+if [[ ":$PATH:" != *":$VENV_BIN:"* ]]; then
+    echo "🔧 Adding virtual environment to PATH..."
+    echo "export PATH=\"$VENV_BIN:\$PATH\"" >> ~/.bashrc
+    export PATH="$VENV_BIN:$PATH"
 fi
 
 # Run setup
