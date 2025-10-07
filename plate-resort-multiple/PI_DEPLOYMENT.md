@@ -65,19 +65,20 @@ The interface is accessible from any device on your network:
 - **Network**: http://[pi-ip]:5000
 - **Mobile/Tablet**: Full responsive design
 
-### 🔧 Docker Integration:
+### 🔧 System Deployment:
 
-The system runs in Docker for clean dependency management:
+The system runs directly with Python for simplicity:
 
 ```bash
 # Start optimized web GUI
-docker-compose up -d plate-resort-web
+./start-web-gui.sh
 
-# View logs
-docker-compose logs -f plate-resort-web
+# Or manually:
+pip3 install -r requirements.txt
+python3 web_gui.py
 
 # Stop system
-docker-compose down
+pkill -f web_gui.py
 ```
 
 ### 📋 File Structure:
@@ -88,7 +89,7 @@ plate-resort/
 ├── templates/
 │   └── web_gui.html        # Touchscreen optimized interface
 ├── start-web-gui.sh        # Simple launcher script
-├── docker-compose.yml      # Updated for web GUI
+├── start-web-gui.sh        # Web GUI launcher
 ├── test_scripts/
 │   └── test_pi_gui.py      # Local testing script
 └── plate-resort-pi.desktop # Desktop shortcut
@@ -113,7 +114,7 @@ The new web interface replaces the tkinter GUI with significant improvements:
 | Limited touch support | Touch-optimized |
 | Desktop only | Network accessible |
 | Scrolling issues | Perfect fit for 7" screen |
-| System dependencies | Dockerized |
+| System dependencies | Python requirements.txt |
 
 ### 🚀 Auto-Start Setup:
 
@@ -131,14 +132,14 @@ The new web interface replaces the tkinter GUI with significant improvements:
 
 ### 🔍 Troubleshooting:
 
-- **GUI not loading**: Check `docker-compose logs plate-resort-web`
+- **GUI not loading**: Check terminal output or `ps aux | grep web_gui`
 - **Hardware issues**: Verify USB device permissions and connections
 - **Network access**: Ensure port 5000 is not blocked
 - **Touch problems**: Verify touchscreen calibration
 
 ### 🎯 Performance:
 
-- **Startup Time**: ~3-5 seconds in Docker
+- **Startup Time**: ~2-3 seconds direct Python
 - **Response Time**: <200ms for button presses
 - **Memory Usage**: ~50MB container footprint
 - **CPU Usage**: <5% on Pi 4

@@ -4,13 +4,17 @@
 echo "Starting Plate Resort Web GUI"
 echo "Optimized for 7 inch touchscreen"
 
-# Stop any existing containers and remove orphans
-echo "Stopping existing containers..."
-docker-compose down --remove-orphans 2>/dev/null
+# Install dependencies if needed
+echo "Checking Python dependencies..."
+pip3 install -r requirements.txt --quiet
 
-# Start the web GUI
+# Start the web GUI directly with Python
 echo "Starting web interface..."
-docker-compose up --build -d plate-resort-web
+python3 web_gui.py &
+
+# Store the process ID
+WEB_PID=$!
+echo $WEB_PID > web_gui.pid
 
 # Wait a moment for startup
 sleep 3
@@ -20,6 +24,7 @@ PI_IP=$(hostname -I | awk '{print $1}')
 
 echo ""
 echo "Plate Resort Web GUI is running!"
+echo "Process ID: $WEB_PID"
 echo "Access the interface at:"
 echo "  Local: http://localhost:5000"
 echo "  Network: http://${PI_IP}:5000"
@@ -29,5 +34,4 @@ echo "  1. Open Chromium browser"
 echo "  2. Navigate to http://localhost:5000"
 echo "  3. Press F11 for fullscreen"
 echo ""
-echo "To view logs: docker-compose logs -f plate-resort-web"
-echo "To stop: docker-compose down"
+echo "To stop: kill $WEB_PID or pkill -f web_gui.py"

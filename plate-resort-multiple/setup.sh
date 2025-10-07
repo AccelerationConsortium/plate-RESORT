@@ -32,12 +32,8 @@ sudo apt upgrade -y
 # Install required system packages
 echo -e "${YELLOW}📦 Installing required packages...${NC}"
 sudo apt install -y python3-pip python3-tk python3-dev python3-yaml \
-    python3-flask git docker.io docker-compose build-essential \
+    python3-flask git build-essential \
     udev x11-xserver-utils
-
-# Add user to docker group
-echo -e "${YELLOW}👤 Adding user to docker group...${NC}"
-sudo usermod -aG docker $USER
 sudo usermod -aG dialout $USER
 
 # Install Python packages

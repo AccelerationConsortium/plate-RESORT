@@ -1,3 +1,2 @@
 dynamixel-sdk
 pyyaml
-flask

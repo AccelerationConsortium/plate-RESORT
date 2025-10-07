@@ -45,8 +45,11 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# Docker
-.dockerignore
+# Process ID files
+*.pid
+
+# Generated runtime scripts
+run_server.sh
 
 # Logs
 *.log

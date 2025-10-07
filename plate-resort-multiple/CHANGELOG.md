@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-10-07
+
+### Removed
+- Raspberry Pi deployment scripts
+- Docker references from documentation and scripts
+
+### Changed
+- Simplified deployment with automated dependency management
+- Updated start-web-gui.sh to run Python directly
+- Modified documentation to reflect direct deployment approach
+
 ## [1.2.1] - 2025-09-10
 
 ### Added
@@ -13,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Redundant GUI implementations (gui.py, touchscreen_app.py, app.py)
-- Redundant launcher scripts (docker-launch.sh, launch.sh, start-gui-docker.sh)
+- Redundant launcher scripts and duplicate implementations
 - Duplicate test file from root directory (dxl_keyboard_test.py)
 - Python cache directories (__pycache__)
 
@@ -42,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fullscreen support optimized for 7" touchscreen (800x480)
 - Live motor health monitoring with real-time updates
 - Debug panel with live data logging
-- Docker-first deployment with docker-compose
+- Simplified deployment with automated dependency management
 - Automated startup scripts and desktop integration
 - Clean repo structure with organized test files
 
@@ -65,5 +76,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hotel position management (A, B, C, D)
 - Emergency stop functionality
 - Basic motor health reporting
-- Docker containerization
+- Raspberry Pi deployment scripts
 - Raspberry Pi deployment scripts
