@@ -51,15 +51,25 @@ prefect work-pool ls
 
 ### 4. Deploy Flows
 
-From the `prefect_flows` directory, deploy the flows:
+From the `prefect_flows` directory, deploy the flows using the helper script:
 
 ```bash
 cd prefect_flows
+python deploy_flows.py
+```
+
+Or specify a custom work pool name:
+
+```bash
+python deploy_flows.py my-custom-pool
+```
+
+Alternatively, deploy manually:
+
+```bash
 python -c "
 from device import *
-import prefect
 
-# Deploy all flows to work pool
 connect_flow.deploy(name='plate-resort-connect', work_pool_name='plate-resort-pool')
 disconnect_flow.deploy(name='plate-resort-disconnect', work_pool_name='plate-resort-pool')
 status_flow.deploy(name='plate-resort-status', work_pool_name='plate-resort-pool')
@@ -71,7 +81,6 @@ set_speed_flow.deploy(name='plate-resort-set-speed', work_pool_name='plate-resor
 emergency_stop_flow.deploy(name='plate-resort-emergency-stop', work_pool_name='plate-resort-pool')
 get_hotels_flow.deploy(name='plate-resort-get-hotels', work_pool_name='plate-resort-pool')
 get_position_flow.deploy(name='plate-resort-get-position', work_pool_name='plate-resort-pool')
-print('Deployments created successfully')
 "
 ```
 
