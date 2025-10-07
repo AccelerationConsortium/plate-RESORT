@@ -1,14 +1,45 @@
 import os
 import threading
+import yaml
 from typing import Dict, Any, Optional
 from fastapi import Header, HTTPException
 
 
+def load_api_key():
+    """Load API key from environment or config file"""
+    # First check environment variable
+    env_key = os.getenv("PLATE_API_KEY")
+    if env_key:
+        return env_key
+    
+    # Fall back to config file
+    try:
+        config_file = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "resort_config.yaml"
+        )
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+            api_key = config.get('server', {}).get('api_key', 'changeme')
+            
+            # Warn if using default key
+            if api_key in ['changeme', 'change_me', 'default']:
+                print("⚠️  WARNING: Using default API key! Generate secure key with:")
+                print("   python generate_api_key.py --generate --update-config")
+            
+            return api_key
+    except Exception:
+        return 'changeme'
+
+
 def require_api_key(x_api_key: str = Header(None)):
     """Validate API key from header"""
-    expected = os.getenv("PLATE_API_KEY", "changeme")
+    expected = load_api_key()
     if x_api_key != expected:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise HTTPException(
+            status_code=401, 
+            detail="Invalid API key. Use X-API-Key header."
+        )
     return x_api_key
 
 

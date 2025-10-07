@@ -2,13 +2,37 @@ from fastapi import FastAPI, HTTPException, Depends, Header
 from pydantic import BaseModel
 import sys
 import os
+import yaml
 
 # Add parent directory to path to import plate_resort
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from server.wrapper import PlateResortWrapper, require_api_key
 
-app = FastAPI(title="Plate Resort API", version="1.0.0", description="REST API for Plate Resort Control System")
+
+def load_config():
+    """Load configuration from YAML file"""
+    config_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "resort_config.yaml"
+    )
+    try:
+        with open(config_file, 'r') as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        print(f"Warning: Could not load config file {config_file}: {e}")
+        return {}
+
+
+config = load_config()
+server_config = config.get('server', {})
+
+app = FastAPI(
+    title="Plate Resort API",
+    version="2.0.0",
+    description="REST API for Plate Resort Control System",
+    docs_url="/docs" if server_config.get('docs_enabled', True) else None
+)
 wrapper = PlateResortWrapper()
 
 
@@ -114,4 +138,7 @@ def hotels(x_api_key: str = Depends(require_api_key)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    host = server_config.get('host', '0.0.0.0')
+    port = server_config.get('port', 8000)
+    reload = server_config.get('reload', True)
+    uvicorn.run(app, host=host, port=port, reload=reload)

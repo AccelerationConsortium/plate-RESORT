@@ -48,8 +48,8 @@ Thumbs.db
 # Process ID files
 *.pid
 
-# Generated runtime scripts
-run_server.sh
+# Generated runtime scripts (but not templates)
+# run_server.sh - commented out to include starter scripts
 
 # Virtual environment
 venv/
@@ -58,6 +58,7 @@ venv/
 # API keys and secrets
 .env
 *.key
+.api_key
 
 # Server logs
 server/*.log

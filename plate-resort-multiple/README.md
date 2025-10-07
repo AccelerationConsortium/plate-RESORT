@@ -81,10 +81,31 @@ Edit `resort_config.yaml` to configure:
 - Hotel configurations
 - Safety parameters
 - Communication settings
+- **Server IP and port**
+
+### 🔐 API Key Setup
+
+Generate a secure API key:
+```bash
+# Generate and update config file
+python generate_api_key.py --generate --update-config
+
+# Or set via environment variable
+export PLATE_API_KEY="your-secure-key-here"
+```
+- Hotel configurations
+- Safety parameters
+- Communication settings
 
 ## 🔒 Security
 
-The API uses API key authentication. Set your API key in the server configuration or environment variables.
+The API uses API key authentication via the `X-API-Key` header. You can:
+
+1. **Generate secure keys**: Use `generate_api_key.py` 
+2. **Environment override**: Set `PLATE_API_KEY` environment variable
+3. **Config file**: Update `api_key` in `resort_config.yaml`
+
+⚠️ **Never commit real API keys to git!** The `.env` file is ignored by default.
 
 ## 📋 Hardware Requirements
 
