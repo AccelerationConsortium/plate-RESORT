@@ -1,22 +1,37 @@
 # Test Scripts
 
-These scripts test various aspects of the Plate Resort system and are compatible with both the installed package and development setups.
+Essential testing scripts for the Plate Resort system hardware and motor diagnostics.
 
 ## Prerequisites
 
-For the scripts to work, you need either:
-
-1. **Installed package** (recommended):
-   ```bash
-   pip install -e .  # From the root directory
-   ```
-
-2. **Development setup** with dependencies:
-   ```bash
-   pip install dynamixel-sdk pyyaml
-   ```
+Install the plate-resort package:
+```bash
+pip install -e .  # From the root directory
+```
 
 ## Available Tests
+
+### Hardware Tests
+- **`test_dxl_ping.py`** - Test basic Dynamixel communication
+- **`test_motor_health.py`** - Check motor health and diagnostics
+- **`test_plate_resort.py`** - Complete system functionality test
+
+### Interactive Tests  
+- **`test_dxl_keyboard.py`** - Manual motor control with keyboard
+
+## Usage
+
+Run any test directly:
+```bash
+python test_scripts/test_dxl_ping.py
+python test_scripts/test_motor_health.py
+```
+
+For interactive client testing, use the main client tools:
+```bash
+python interactive_client.py    # Interactive CLI
+python demo_client.py          # Automated demo
+```
 
 ### 🔧 `test_plate_resort.py`
 Tests the main PlateResort functionality:

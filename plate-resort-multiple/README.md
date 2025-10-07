@@ -33,38 +33,50 @@ plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
 
 ## 🎯 Usage
 
-### 📡 Server (Runs automatically on Pi)
+### 📡 Server Management
 
 ```bash
 # Server auto-starts after installation
-# Manual control if needed:
-plate-resort-server                    # Start server
-sudo systemctl stop plate-resort       # Stop service
-sudo systemctl start plate-resort      # Start service
+plate-resort-update                    # Update to latest version
+sudo systemctl status plate-resort-server  # Check status
+sudo systemctl restart plate-resort-server # Restart service
 ```
 
-**Server automatically available at:** `http://YOUR_PI_IP:8000`
+**Server automatically available at:** `http://YOUR_PI_IP:8000`  
 **API Documentation:** `http://YOUR_PI_IP:8000/docs`
-### 💻 Client Commands
 
+### 💻 Client Tools
+
+#### Command Line Interface
 ```bash
-# Check server status
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
-
-# Connect to motor
+# Motor control
 plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY connect
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY health
 
-# Activate hotel position
+# Movement commands
 plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY activate A
-
-# Move to specific angle
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY move 90.0
-
-# Get current position
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY move 90
 plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY position
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY home
 
-# Disconnect motor
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY disconnect
+# Emergency stop
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY stop
+```
+
+#### Interactive Client
+```bash
+# Start interactive session
+python interactive_client.py
+
+# Then use commands like:
+# connect, status, move 90, position, activate A, home, stop, quit
+```
+
+#### Demo Client
+```bash
+# Run automated demonstration
+python demo_client.py
 ```
 
 ### 🐍 Python API
@@ -75,11 +87,19 @@ from plate_resort.client import PlateResortClient
 # Initialize client with your API key
 client = PlateResortClient("http://YOUR_PI_IP:8000", "YOUR_API_KEY")
 
-# Use the system
-status = client.status()
+# Motor control
 client.connect()
-client.activate_hotel("A")
-position = client.get_position()
+status = client.status()
+health = client.health()
+
+# Movement
+client.activate_hotel("A")          # Move to hotel A, B, C, or D
+client.move_to_angle(90.0)         # Move to specific angle
+position = client.get_position()    # Get current position
+client.go_home()                    # Return to home position
+
+# Safety
+client.emergency_stop()
 client.disconnect()
 ```
 
@@ -93,21 +113,40 @@ To regenerate or view your API key:
 plate-resort-keygen --generate --update-config
 ```
 
-## 📚 Documentation
+## � Project Structure
 
-- **Interactive API Docs:** `http://YOUR_PI_IP:8000/docs`
-- **REST API:** 9 endpoints for complete motor control
-- **Client Library:** Python package for easy integration
+```
+plate-resort-multiple/
+├── 📦 plate_resort/           # Main package
+│   ├── core.py               # Motor control logic
+│   ├── client/               # Client tools
+│   ├── server/               # REST API server
+│   ├── setup.py              # System configuration
+│   ├── keygen.py             # API key management
+│   └── update.py             # Update utilities
+├── 🎮 interactive_client.py   # Interactive CLI tool
+├── 📊 demo_client.py          # Automated demo
+├── 🔧 test_scripts/           # Hardware testing
+├── 🏗️ install-pip.sh          # One-line installer
+├── 📚 README.md               # This file
+└── ⚙️ pyproject.toml          # Package configuration
+```
 
 ## 🧪 Testing & Development
 
 ### Test Scripts
 ```bash
-# Test motor connection and functionality
+# Test motor connection and functionality  
 cd test_scripts
 python test_plate_resort.py      # Main functionality test
 python test_motor_health.py      # Health monitoring
 python test_dxl_ping.py          # Low-level motor test
+```
+
+### Interactive Tools
+```bash
+python interactive_client.py     # Interactive command line
+python demo_client.py           # Automated demonstration
 ```
 
 ### Development Installation
@@ -127,18 +166,20 @@ The system uses `resort_config.yaml` for motor and hotel configuration. The defa
 - Safety limits and timeouts
 - Server settings
 
-## 🔒 Security Features
+## 🔒 Security & Features
 
-- **API Key Authentication:** All endpoints protected with secure keys
-- **Request Validation:** Input sanitization and validation
-- **Error Handling:** Graceful error responses
-- **Rate Limiting:** Built-in FastAPI protections
+- **🔐 API Key Authentication:** All endpoints protected with secure keys
+- **✅ Request Validation:** Input sanitization and validation  
+- **🛡️ Error Handling:** Graceful error responses
+- **🌐 REST API:** 9 endpoints for complete motor control
+- **📚 Auto-Documentation:** Interactive API docs at `/docs`
+- **🔄 One-Command Updates:** `plate-resort-update`
 
 ## 📋 System Requirements
 
 ### Raspberry Pi (Server)
 - Raspberry Pi 3B+ or newer
-- Raspberry Pi OS (modern version)
+- Raspberry Pi OS (modern version)  
 - USB port for Dynamixel adapter
 - Network connection
 
@@ -152,38 +193,38 @@ The system uses `resort_config.yaml` for motor and hotel configuration. The defa
 - USB-to-RS485 adapter (U2D2 or FTDI)
 - 12V power supply for motors
 
-## 🗂️ Package Structure
+## � API Endpoints
 
-```
-plate_resort/              # Professional Python package
-├── core.py               # Motor control (unchanged from v1.x)
-├── server/               # FastAPI REST API server  
-│   ├── main.py          # Server application
-│   └── wrapper.py       # Motor interface wrapper
-├── client/              # Client library and CLI
-│   ├── __init__.py      # Python client library
-│   └── cli.py           # Command-line interface
-├── setup.py             # Automated system setup
-└── keygen.py            # API key generation
+The REST API provides complete motor control:
 
-test_scripts/            # Hardware testing utilities
-archived/                # Legacy components (v1.x)  
-mechanical/              # Hardware documentation
-install-pip.sh           # One-line installer
-```
+- `POST /connect` - Connect to motor
+- `POST /disconnect` - Disconnect motor
+- `GET /status` - Get system status
+- `GET /health` - Motor health diagnostics
+- `POST /activate` - Move to hotel position (A, B, C, D)
+- `POST /move_to_angle` - Move to specific angle
+- `GET /position` - Get current position
+- `POST /home` - Return to home position
+- `POST /emergency_stop` - Emergency stop
+
+## 📚 Documentation
+
+- **Interactive API Docs:** `http://YOUR_PI_IP:8000/docs`
+- **OpenAPI Spec:** `http://YOUR_PI_IP:8000/openapi.json`
+- **Test Scripts:** `test_scripts/README.md`
 
 ## 🐛 Troubleshooting
 
 ### Server Issues
 ```bash
 # Check if server is running
-curl http://localhost:8000/health
+sudo systemctl status plate-resort-server
 
 # View server logs  
-sudo journalctl -u plate-resort -f
+sudo journalctl -u plate-resort-server -f
 
 # Restart server service
-sudo systemctl restart plate-resort
+sudo systemctl restart plate-resort-server
 ```
 
 ### Client Connection Issues
@@ -195,232 +236,22 @@ ping YOUR_PI_IP
 curl -H "X-API-Key: YOUR_API_KEY" http://YOUR_PI_IP:8000/status
 ```
 
-### Motor Issues
+### Updates
 ```bash
-# Check USB connection
-ls /dev/ttyUSB*
+# Update server to latest version
+plate-resort-update
 
-# Test motor communication
-cd test_scripts
-python test_dxl_ping.py --device /dev/ttyUSB0 --id 1
-```
-
-## 🔄 Updates
-
-To update the system:
-```bash
-# On the Pi server
+# Update client tools
 pip install --upgrade git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
-sudo systemctl restart plate-resort
 ```
 
-## 📝 Version History
+## 🤝 Support
 
-- **v2.0**: Professional pip package with server-client architecture  
-- **v1.x**: Direct script-based approach (archived)
+- **Issues:** [GitHub Issues](https://github.com/AccelerationConsortium/plate-RESORT/issues)
+- **Documentation:** Visit `/docs` on your server for complete API reference
+- **Hardware:** See `mechanical/` directory for BOM and specifications
 
 ---
 
-## 💡 Key Improvement: Complete Automation
+**Ready to manage plates like a pro! 🍽️🤖**
 
-**Before (v1.x):** Complex manual setup with multiple scripts, Docker, and manual configuration.
-
-**Now (v2.0):** One command installs everything and starts the server automatically. Just copy the API key to your client!
-
-**Perfect for:** Laboratory automation, remote plate handling, integration with existing Python workflows.
-
-### Server Won't Start
-- Check if port 8000 is already in use
-- Verify virtual environment is activated
-- Check USB device connections
-
-## 📄 License
-
-See LICENSE file for details.
-
-See [QUICK_SETUP.md](QUICK_SETUP.md) for details.
-
-## Features
-
-- **Automated Plate Rotation**: Precise Dynamixel motor control for hotel-based storage
-- **Health Monitoring**: Real-time motor health and diagnostics
-- **YAML Configuration**: Easy setup and customization
-- **Simple Deployment**: Direct Python execution with dependency management
-- **Safety Features**: Emergency stop with disconnect/reconnect recovery
-- **Test Utilities**: Comprehensive motor testing tools
-
-## Quick Start
-
-### 1. Installation (Fresh Pi)
-```bash
-curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/install.sh | bash
-sudo reboot
-```
-
-### 2. Basic Usage (Server Only - No GUI)
-```bash
-cd ~/plate-resort
-
-# Test motor connection
-python3 test_scripts/test_dxl_ping.py --device /dev/ttyUSB0 --id 1
-
-# Run basic example
-python3 example_usage.py
-
-# Use the core system directly
-python3 -c "
-from plate_resort import PlateResort
-resort = PlateResort()
-resort.connect()
-print('Motor health:', resort.get_motor_health())
-resort.activate_hotel('A')
-"
-```
-
-Note: All commands should be run from `~/plate-resort/plate-resort-multiple` directory.
-
-## Available Methods
-
-The `PlateResort` class provides these core methods:
-
-### Connection & Setup
-- `connect()` - Connect to Dynamixel motor
-- `disconnect()` - Disconnect from motor  
-- `is_connected()` - Check connection status
-
-### Motor Control
-- `activate_hotel(hotel)` - Move to hotel position (A, B, C, D)
-- `go_home()` - Return to home position
-- `emergency_stop()` - Immediate motor stop
-- `set_speed(speed)` - Change movement speed
-
-### Status & Monitoring  
-- `get_active_hotel()` - Get current hotel position
-- `get_current_position()` - Get motor position in degrees
-- `get_motor_health()` - Get health status dict
-- `print_motor_health()` - Print formatted health info
-
-### Example Usage
-```python
-from plate_resort import PlateResort
-
-# Initialize and connect
-resort = PlateResort("resort_config.yaml")
-resort.connect()
-
-# Move to hotel A
-resort.activate_hotel('A')
-
-# Check status
-health = resort.get_motor_health()
-current_hotel = resort.get_active_hotel()
-
-# Emergency stop if needed
-resort.emergency_stop()
-```
-
-## Core Functionality
-
-- **Motor Control**: Direct Dynamixel servo control
-- **Health Monitoring**: Real-time motor diagnostics  
-- **Position Management**: Precise hotel positioning
-- **Safety Features**: Emergency stop and error handling
-- **Configuration**: YAML-based setup
-```
-
-
-## Configuration
-
-Edit `resort_config.yaml` to customize:
-
-```yaml
-resort:
-  # Hardware
-  device: "/dev/ttyUSB0"
-  baudrate: 57600
-  motor_id: 1
-  
-  # Layout
-  hotels: ["A", "B", "C", "D"]
-  rooms_per_hotel: 20
-  
-  # Positioning
-  offset_angle: 11.0
-  rotation_direction: 1
-  
-  # Performance
-  default_speed: 50
-  position_tolerance: 0.5
-  movement_timeout: 20
-  
-  # Safety
-  goal_torque: 1023
-  temperature_limit: 70
-  current_limit: 2000
-  voltage_min: 10.0
-  voltage_max: 14.0
-```
-
-## Testing
-
-```bash
-# Basic functionality
-python test_scripts/test_plate_resort.py
-
-# Health monitoring
-python test_scripts/test_motor_health.py
-
-# Motor communication
-python test_scripts/test_dxl_ping.py
-```
-
-## Hardware Setup
-
-1. **Dynamixel Motor**: Robotis XM430-W210
-2. **USB Interface**: USB2Dynamixel or equivalent
-3. **Power**: 12V power supply for motor
-
-## Troubleshooting
-
-### Connection Issues
-- Check USB device: `ls /dev/ttyUSB*`
-- Verify permissions: `sudo chmod 666 /dev/ttyUSB0`
-- Test ping: `python test_scripts/test_dxl_ping.py`
-
-### Motor Issues
-- Check power supply (12V)
-- Verify motor ID (default: 1)
-- Run health check: `python test_scripts/test_motor_health.py`
-
-### Python Issues
-- Check virtual environment activation
-- Install dependencies: `pip install -r requirements.txt`
-- Verify Python path and permissions
-
-## Development
-
-### File Structure
-```
-├── plate_resort.py        # Core motor control class
-├── resort_config.yaml     # YAML configuration
-├── example_usage.py       # Basic usage example
-├── install.sh             # One-line installer
-├── test_scripts/          # Test utilities and mock tests
-├── archived_gui/          # Archived web interface components
-├── mechanical/            # Hardware documentation
-├── setup.sh               # Legacy system setup script
-├── QUICK_SETUP.md         # Quick setup guide
-├── PI_DEPLOYMENT.md       # Raspberry Pi setup guide
-├── CHANGELOG.md           # Version history
-└── requirements.txt       # Python dependencies
-```
-
-### Adding Features
-1. Update `plate_resort.py` for new motor functions
-2. Add test scripts in `test_scripts/` for validation
-3. Update configuration in `resort_config.yaml` if needed
-4. Document changes in `CHANGELOG.md`
-
-## License
-
-MIT License - See LICENSE file for details.
