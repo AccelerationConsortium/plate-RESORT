@@ -48,6 +48,9 @@ else
     git clone https://github.com/AccelerationConsortium/plate-RESORT.git .
 fi
 
+# Navigate to the correct subdirectory
+cd plate-resort-multiple
+
 # Update system packages
 echo "Updating system packages..."
 sudo apt update && sudo apt upgrade -y
@@ -150,15 +153,15 @@ else:
 echo ""
 echo "Setup completed successfully!"
 echo ""
-echo "Installation location: $PROJECT_DIR"
+echo "Installation location: $PROJECT_DIR/plate-resort-multiple"
 echo ""
 echo "Next steps:"
 echo "1. Connect your Dynamixel motor and USB adapter"
 echo "2. Reboot to apply group membership: sudo reboot"
-echo "3. After reboot, run: cd $PROJECT_DIR && ./run_server.sh"
+echo "3. After reboot, run: cd $PROJECT_DIR/plate-resort-multiple && ./run_server.sh"
 echo ""
 echo "Quick test commands:"
-echo "  cd $PROJECT_DIR"
+echo "  cd $PROJECT_DIR/plate-resort-multiple"
 echo "  source venv/bin/activate"
 echo "  python test_scripts/test_dxl_ping.py --device /dev/ttyUSB0"
 echo ""

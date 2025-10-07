@@ -22,14 +22,14 @@ This will:
 After installation and reboot:
 
 ```bash
-cd ~/plate-resort
+cd ~/plate-resort/plate-resort-multiple
 ./run_server.sh
 ```
 
 Or manually activate the environment:
 
 ```bash
-cd ~/plate-resort
+cd ~/plate-resort/plate-resort-multiple
 source venv/bin/activate
 python plate_resort.py
 ```

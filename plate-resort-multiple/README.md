@@ -49,6 +49,8 @@ resort.activate_hotel('A')
 "
 ```
 
+Note: All commands should be run from `~/plate-resort/plate-resort-multiple` directory.
+
 ## Available Methods
 
 The `PlateResort` class provides these core methods:
