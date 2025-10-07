@@ -6,9 +6,128 @@ A complete plate storage automation system for laboratory well plate management.
 
 For a fresh Raspberry Pi, use the one-line installer:
 
+# Plate Resort Control System
+
+A complete plate storage automation system for laboratory well plate management with REST API server-client architecture.
+
+## 🚀 Quick Installation
+
+### Fresh Raspberry Pi
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install.sh | bash
 ```
+
+### Existing Installation Update
+```bash
+./update.sh
+```
+
+## 🏗️ Architecture
+
+This system uses a **server-client architecture**:
+
+- **Server**: FastAPI REST API running on Raspberry Pi connected to Dynamixel motors
+- **Client**: Python library and CLI tool for remote control from any machine
+
+## 🚀 Quick Start
+
+### 1. Start the Server (on Pi)
+```bash
+cd ~/plate-resort/plate-resort-multiple
+./server/run_server.sh
+```
+
+### 2. Control from Client (any machine)
+```bash
+# Install client dependencies
+pip install requests
+
+# Use the Python client
+python client/client.py --host YOUR_PI_IP --api-key your-secret-key connect
+python client/client.py --host YOUR_PI_IP --api-key your-secret-key status
+python client/client.py --host YOUR_PI_IP --api-key your-secret-key activate --hotel 1
+```
+
+## 📚 API Documentation
+
+Visit `http://YOUR_PI_IP:8000/docs` for interactive API documentation.
+
+## 🔧 Core Components
+
+- `plate_resort.py` - Core motor control class
+- `server/` - FastAPI REST API server
+- `client/` - Python client library and CLI
+- `test_scripts/` - Hardware testing utilities
+- `resort_config.yaml` - Configuration file
+
+## 🧪 Testing
+
+```bash
+# Test motor connection
+source venv/bin/activate
+python test_scripts/test_dxl_ping.py --device /dev/ttyUSB0
+
+# Test core functionality  
+python test_scripts/test_plate_resort.py
+
+# Test motor health monitoring
+python test_scripts/test_motor_health.py
+```
+
+## ⚙️ Configuration
+
+Edit `resort_config.yaml` to configure:
+- Motor settings and positions
+- Hotel configurations
+- Safety parameters
+- Communication settings
+
+## 🔒 Security
+
+The API uses API key authentication. Set your API key in the server configuration or environment variables.
+
+## 📋 Hardware Requirements
+
+- Raspberry Pi (3B+ or newer recommended)
+- Dynamixel motors and controller
+- USB-to-serial adapter for Dynamixel communication
+- Power supply for motors
+
+## 🗂️ Directory Structure
+
+```
+plate-resort-multiple/
+├── server/              # FastAPI server
+├── client/              # Python client library
+├── test_scripts/        # Testing utilities
+├── archived/           # Deprecated files
+├── mechanical/         # Hardware documentation
+├── plate_resort.py     # Core control class
+├── install.sh          # One-line installer
+└── update.sh           # Quick update script
+```
+
+## 🐛 Troubleshooting
+
+### USB Permission Issues
+```bash
+sudo usermod -aG dialout $USER
+sudo reboot
+```
+
+### Motor Not Responding
+```bash
+python test_scripts/test_dxl_ping.py --device /dev/ttyUSB0 --scan
+```
+
+### Server Won't Start
+- Check if port 8000 is already in use
+- Verify virtual environment is activated
+- Check USB device connections
+
+## 📄 License
+
+See LICENSE file for details.
 
 See [QUICK_SETUP.md](QUICK_SETUP.md) for details.
 

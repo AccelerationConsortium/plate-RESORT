@@ -2,21 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.0.0] - 2025-10-07
 
-## [1.4.0] - 2025-10-07
+### Major Architecture Change
+- **BREAKING**: Migrated from GUI-based to server-client architecture
+- **NEW**: FastAPI REST API server with 9 endpoints
+- **NEW**: Python client library with CLI interface
+- **NEW**: Network-based control from any machine
+
+### Added
+- FastAPI server with automatic API documentation
+- Thread-safe motor control wrapper
+- API key authentication
+- Python client library (`client/client.py`)
+- Smart installer for fresh and existing Pi installations
+- Update script for easy maintenance
 
 ### Removed
-- Raspberry Pi deployment scripts
-- Docker references from documentation and scripts
+- Web GUI interface (archived)
+- Docker dependencies and configuration
+- Desktop integration files
+- Old setup scripts (archived)
 
 ### Changed
-- Simplified deployment with automated dependency management
-- Updated start-web-gui.sh to run Python directly
-- Modified documentation to reflect direct deployment approach
+- One-line installer now handles existing installations
+- Core motor control unchanged (backward compatible)
+- Configuration file format unchanged
+- Test scripts preserved for hardware validation
 
-## [1.2.1] - 2025-09-10
+### Migration Guide
+- Replace GUI usage with client commands
+- Server API available at `http://PI_IP:8000/docs`
+- Use `./server/run_server.sh` instead of web GUI
+- Install client with `pip install requests`
+
+## [1.4.0] - 2025-10-07 (Archived)
+
+### Removed
+- Docker references and configuration
+- Raspberry Pi specific deployment scripts
+
+### Changed
+- Simplified deployment approach
+- Direct Python execution without containers
 
 ### Added
 - CHANGELOG.md for tracking version history
