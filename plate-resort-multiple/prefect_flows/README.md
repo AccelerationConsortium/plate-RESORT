@@ -8,7 +8,7 @@ The Prefect implementation uses flow decorators directly on the PlateResort clas
 
 - **PlateResort class methods** (in `plate_resort/core.py`): Decorated with @flow for direct Prefect orchestration
 - **orchestrator.py**: Functions for submitting flow runs from a remote machine
-- **deploy_flows.py**: Helper script to deploy all flows to a work pool
+- **deploy_flows.py**: Helper script to deploy all flows to a work pool using `flow.from_source()` (no hardware initialization required)
 
 ## Setup Instructions
 
@@ -59,13 +59,7 @@ cd prefect_flows
 python deploy_flows.py
 ```
 
-Or specify a custom work pool name:
-
-```bash
-python deploy_flows.py my-custom-pool
-```
-
-Note: The deployment script uses a simple top-level approach without CLI argument parsing for simplicity.
+This script uses `flow.from_source()` to deploy flows without initializing the hardware, making it safe to run from any machine.
 
 ### 5. Start Worker on Device
 
