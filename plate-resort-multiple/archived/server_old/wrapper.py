@@ -1,18 +1,34 @@
 import os
 import threading
 import yaml
+import configparser
 from typing import Dict, Any, Optional
 from fastapi import Header, HTTPException
 
 
 def load_api_key():
-    """Load API key from environment or config file"""
+    """Load API key from environment, secrets.ini, or config file"""
     # First check environment variable
     env_key = os.getenv("PLATE_API_KEY")
     if env_key:
         return env_key
     
-    # Fall back to config file
+    # Check secrets.ini file
+    try:
+        config = configparser.ConfigParser()
+        secrets_file = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "secrets.ini"
+        )
+        if os.path.exists(secrets_file):
+            config.read(secrets_file)
+            api_key = config.get('server', 'api_key', fallback=None)
+            if api_key and api_key != 'changeme':
+                return api_key
+    except Exception:
+        pass
+    
+    # Fall back to main config file
     try:
         config_file = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -24,8 +40,8 @@ def load_api_key():
             
             # Warn if using default key
             if api_key in ['changeme', 'change_me', 'default']:
-                print("⚠️  WARNING: Using default API key! Generate secure key with:")
-                print("   python generate_api_key.py --generate --update-config")
+                print("⚠️  WARNING: Using default API key!")
+                print("   Create secrets.ini with: [server]\\napi_key = YOUR_KEY")
             
             return api_key
     except Exception:
@@ -37,7 +53,7 @@ def require_api_key(x_api_key: str = Header(None)):
     expected = load_api_key()
     if x_api_key != expected:
         raise HTTPException(
-            status_code=401, 
+            status_code=401,
             detail="Invalid API key. Use X-API-Key header."
         )
     return x_api_key

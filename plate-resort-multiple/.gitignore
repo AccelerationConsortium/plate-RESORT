@@ -59,6 +59,9 @@ venv/
 .env
 *.key
 .api_key
+secrets.yaml
+secrets.json
+secrets.ini
 
 # Server logs
 server/*.log

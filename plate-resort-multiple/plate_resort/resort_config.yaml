@@ -1,0 +1,51 @@
+# PlateResort Configuration
+resort:
+  # Hardware settings
+  device: "/dev/ttyUSB0"
+  baudrate: 57600
+  motor_id: 1
+  
+  # Physical layout
+  hotels: ["A", "B", "C", "D"]
+  rooms_per_hotel: 20
+  
+  # Positioning
+  offset_angle: 19  # Base offset angle in degrees
+  rotation_direction: 1  # 1 for clockwise, -1 for counter-clockwise
+  
+  # Hotel positions (calculated from offset_angle and hotels)
+  # Hotels A,B,C,D are at 90° intervals starting from offset_angle
+  
+  # Movement settings
+  default_speed: 50  # Profile velocity (50 = ~5% speed)
+  position_tolerance: 0.5  # Position accuracy in degrees
+  movement_timeout: 20  # Max wait time in seconds
+  
+  # Torque settings
+  goal_torque: 1023  # Max torque output (0-1023, 1023 = 100%)
+  torque_limit: 1023  # Torque limit for safety (0-1023)
+  
+  # Health monitoring
+  temperature_limit: 70  # Temperature warning threshold (°C)
+  current_limit: 2000  # Current warning threshold (mA)
+  voltage_min: 10.0  # Minimum voltage warning (V)
+  voltage_max: 14.0  # Maximum voltage warning (V)
+  
+  # Advanced motor settings
+  profile_acceleration: 0  # 0 = default acceleration
+  moving_threshold: 10  # Movement detection threshold
+
+# Server Configuration
+server:
+  # Network settings
+  host: "0.0.0.0"  # Bind to all interfaces
+  port: 8000
+  ip: "100.83.140.57"  # External IP for client connections
+  
+  # Security
+  api_key: "changeme"  # Default key - generate secure key with: python generate_api_key.py --generate --update-config
+  # API key can be overridden with PLATE_API_KEY environment variable
+  
+  # API settings
+  reload: true  # Enable auto-reload during development
+  docs_enabled: true  # Enable /docs endpoint

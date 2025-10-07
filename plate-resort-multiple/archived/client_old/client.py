@@ -1,6 +1,7 @@
 import os
 import sys
 import requests
+import argparse
 from typing import Dict, Any
 
 
@@ -72,66 +73,75 @@ class PlateResortClient:
 
 
 def main():
-    """Simple CLI interface"""
-    if len(sys.argv) < 2:
-        print("Usage:")
-        print("  python client.py connect [device] [baudrate] [motor_id]")
-        print("  python client.py disconnect")
-        print("  python client.py status")
-        print("  python client.py health")
-        print("  python client.py activate <hotel>")
-        print("  python client.py home")
-        print("  python client.py speed <speed>")
-        print("  python client.py stop")
-        print("  python client.py hotels")
-        return
+    """CLI interface with proper argument parsing"""
+    parser = argparse.ArgumentParser(description="Plate Resort Client")
+    parser.add_argument("--host", default="localhost",
+                        help="Server host (default: localhost)")
+    parser.add_argument("--port", type=int, default=8000,
+                        help="Server port (default: 8000)")
+    parser.add_argument("--api-key", 
+                        help="API key for authentication")
+    parser.add_argument("command", 
+                        choices=["connect", "disconnect", "status", "health", 
+                                "activate", "home", "speed", "stop", "hotels"],
+                        help="Command to execute")
+    parser.add_argument("args", nargs="*", 
+                        help="Additional arguments for command")
     
-    client = PlateResortClient()
-    command = sys.argv[1].lower()
+    args = parser.parse_args()
     
-    if command == "connect":
-        device = sys.argv[2] if len(sys.argv) > 2 else "/dev/ttyUSB0"
-        baudrate = int(sys.argv[3]) if len(sys.argv) > 3 else 57600
-        motor_id = int(sys.argv[4]) if len(sys.argv) > 4 else 1
-        result = client.connect(device, baudrate, motor_id)
+    # Build API URL
+    api_url = f"http://{args.host}:{args.port}"
     
-    elif command == "disconnect":
-        result = client.disconnect()
+    # Initialize client
+    client = PlateResortClient(api_url=api_url, api_key=args.api_key)
     
-    elif command == "status":
-        result = client.status()
+    command = args.command.lower()
     
-    elif command == "health":
-        result = client.health()
-    
-    elif command == "activate":
-        if len(sys.argv) < 3:
-            print("Error: Hotel required (A, B, C, D)")
-            return
-        hotel = sys.argv[2].upper()
-        result = client.activate_hotel(hotel)
-    
-    elif command == "home":
-        result = client.go_home()
-    
-    elif command == "speed":
-        if len(sys.argv) < 3:
-            print("Error: Speed value required")
-            return
-        speed = int(sys.argv[2])
-        result = client.set_speed(speed)
-    
-    elif command == "stop":
-        result = client.emergency_stop()
-    
-    elif command == "hotels":
-        result = client.get_hotels()
-    
-    else:
-        print(f"Unknown command: {command}")
-        return
-    
-    print(result)
+    try:
+        if command == "connect":
+            device = args.args[0] if len(args.args) > 0 else "/dev/ttyUSB0"
+            baudrate = int(args.args[1]) if len(args.args) > 1 else 57600
+            motor_id = int(args.args[2]) if len(args.args) > 2 else 1
+            result = client.connect(device, baudrate, motor_id)
+        
+        elif command == "disconnect":
+            result = client.disconnect()
+        
+        elif command == "status":
+            result = client.status()
+        
+        elif command == "health":
+            result = client.health()
+        
+        elif command == "activate":
+            if len(args.args) < 1:
+                print("Error: Hotel required (A, B, C, D)")
+                return
+            hotel = args.args[0].upper()
+            result = client.activate_hotel(hotel)
+        
+        elif command == "home":
+            result = client.go_home()
+        
+        elif command == "speed":
+            if len(args.args) < 1:
+                print("Error: Speed value required")
+                return
+            speed = int(args.args[0])
+            result = client.set_speed(speed)
+        
+        elif command == "stop":
+            result = client.emergency_stop()
+        
+        elif command == "hotels":
+            result = client.get_hotels()
+        
+        print(result)
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

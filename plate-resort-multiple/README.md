@@ -10,42 +10,50 @@ For a fresh Raspberry Pi, use the one-line installer:
 
 A complete plate storage automation system for laboratory well plate management with REST API server-client architecture.
 
-## 🚀 Quick Installation
+## 🚀 Installation
 
-### Fresh Raspberry Pi
+### One-Line Installation (Server + Client)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install.sh | bash
+# Installs both server and client tools with automatic setup
+curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install-pip.sh | bash
 ```
 
-### Existing Installation Update
+### Manual Installation
 ```bash
-./update.sh
+# Install the package (works on any machine - Pi server or client)
+pip install git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
+
+# Run setup (only needed on Pi server)
+plate-resort-setup
 ```
 
-## 🏗️ Architecture
+## 🎯 Usage
 
-This system uses a **server-client architecture**:
-
-- **Server**: FastAPI REST API running on Raspberry Pi connected to Dynamixel motors
-- **Client**: Python library and CLI tool for remote control from any machine
-
-## 🚀 Quick Start
-
-### 1. Start the Server (on Pi)
+### On Raspberry Pi (Server)
 ```bash
-cd ~/plate-resort/plate-resort-multiple
-./server/run_server.sh
+# Start the server
+plate-resort-server
+
+# Generate API key
+plate-resort-keygen --generate --update-config
 ```
 
-### 2. Control from Client (any machine)
+### On Any Machine (Client)
 ```bash
-# Install client dependencies
-pip install requests
+# Control the server remotely
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_KEY status
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_KEY connect
+plate-resort-client --host YOUR_PI_IP --api-key YOUR_KEY activate A
+```
 
-# Use the Python client
-python client/client.py --host YOUR_PI_IP --api-key your-secret-key connect
-python client/client.py --host YOUR_PI_IP --api-key your-secret-key status
-python client/client.py --host YOUR_PI_IP --api-key your-secret-key activate --hotel 1
+### Python API (Any Machine)
+```python
+from plate_resort.client import PlateResortClient
+
+client = PlateResortClient("http://YOUR_PI_IP:8000", "YOUR_API_KEY")
+status = client.status()
+client.connect()
+client.activate_hotel("A")
 ```
 
 ## 📚 API Documentation
@@ -54,11 +62,14 @@ Visit `http://YOUR_PI_IP:8000/docs` for interactive API documentation.
 
 ## 🔧 Core Components
 
-- `plate_resort.py` - Core motor control class
-- `server/` - FastAPI REST API server
-- `client/` - Python client library and CLI
-- `test_scripts/` - Hardware testing utilities
-- `resort_config.yaml` - Configuration file
+- **`plate_resort/`** - Professional Python package
+  - `core.py` - Motor control logic (unchanged from v1.x)
+  - `server/` - FastAPI REST API server
+  - `client/` - Client library and CLI tools
+  - `setup.py` - Automated system configuration
+- **`test_scripts/`** - Hardware testing utilities  
+- **`resort_config.yaml`** - Configuration template
+- **`pyproject.toml`** - Modern Python packaging
 
 ## 🧪 Testing
 

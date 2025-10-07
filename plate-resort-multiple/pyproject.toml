@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plate-resort"
+version = "2.0.0"
+description = "Plate Resort Control System - Server-Client Architecture for Laboratory Plate Management"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Acceleration Consortium", email = "info@acceleration.utoronto.ca"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+]
+keywords = ["laboratory", "automation", "robotics", "dynamixel", "plate-handling"]
+requires-python = ">=3.8"
+dependencies = [
+    "dynamixel-sdk>=3.7.51",
+    "pyyaml>=6.0",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=23.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/AccelerationConsortium/plate-RESORT"
+Repository = "https://github.com/AccelerationConsortium/plate-RESORT"
+Issues = "https://github.com/AccelerationConsortium/plate-RESORT/issues"
+Documentation = "https://github.com/AccelerationConsortium/plate-RESORT/blob/main/README.md"
+
+[project.scripts]
+plate-resort-server = "plate_resort.server.main:run_server"
+plate-resort-client = "plate_resort.client.cli:main"
+plate-resort-setup = "plate_resort.setup:setup_system"
+plate-resort-keygen = "plate_resort.keygen:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["plate_resort*"]
+
+[tool.setuptools.package-data]
+plate_resort = ["*.yaml", "*.yml", "*.ini", "*.template"]

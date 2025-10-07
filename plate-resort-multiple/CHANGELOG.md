@@ -4,37 +4,55 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.0] - 2025-10-07
 
-### Major Architecture Change
-- **BREAKING**: Migrated from GUI-based to server-client architecture
-- **NEW**: FastAPI REST API server with 9 endpoints
-- **NEW**: Python client library with CLI interface
-- **NEW**: Network-based control from any machine
+### 🎉 Major Release: Pip Package + Automatic Setup
 
-### Added
-- FastAPI server with automatic API documentation
-- Thread-safe motor control wrapper
-- API key authentication
-- Python client library (`client/client.py`)
-- Smart installer for fresh and existing Pi installations
-- Update script for easy maintenance
+**BREAKING CHANGES:**
+- Complete transformation to pip-installable package
+- Simplified installation and usage
+- Archived all legacy installers
 
-### Removed
-- Web GUI interface (archived)
-- Docker dependencies and configuration
-- Desktop integration files
-- Old setup scripts (archived)
+### 🆕 New Package Structure
+- **pip installable**: `pip install git+https://github.com/...`
+- **Command line tools**: `plate-resort-server`, `plate-resort-client`, `plate-resort-setup`
+- **Professional package**: `plate_resort` Python package
+- **Automatic setup**: System dependencies, USB permissions, API keys
 
-### Changed
-- One-line installer now handles existing installations
-- Core motor control unchanged (backward compatible)
-- Configuration file format unchanged
-- Test scripts preserved for hardware validation
+### ✨ New Features
+- One-line installation with automatic setup
+- Command-line tools for server and client
+- Automatic USB permissions and system configuration
+- Professional Python package structure
+- pip-based dependency management
 
-### Migration Guide
-- Replace GUI usage with client commands
-- Server API available at `http://PI_IP:8000/docs`
-- Use `./server/run_server.sh` instead of web GUI
-- Install client with `pip install requests`
+### 🗂️ Archived Components
+- Legacy bash installers (install.sh, update.sh)
+- Standalone server/ and client/ directories
+- Manual setup scripts and GUI components
+- All deprecated files moved to archived/
+
+### 🔧 Installation Methods
+- **Recommended**: `curl ... | bash` (pip + auto-setup)
+- **Manual**: `pip install ...` + `plate-resort-setup`
+- **Development**: `pip install -e .` for local development
+
+### 📦 Package Contents
+- `plate_resort.core` - Motor control logic
+- `plate_resort.server` - FastAPI REST API
+- `plate_resort.client` - Client library and CLI
+- `plate_resort.setup` - System setup automation
+- `plate_resort.keygen` - API key management
+
+### 🎯 Usage Simplification
+- **Server**: `plate-resort-server` (instead of bash scripts)
+- **Client**: `plate-resort-client --host IP` (consistent CLI)
+- **Setup**: `plate-resort-setup` (automated system config)
+- **Keys**: `plate-resort-keygen` (secure key generation)
+
+### 🚀 Deployment Ready
+- Works on any Python 3.8+ system
+- Automatic Raspberry Pi detection and setup
+- Professional dependency management
+- Clean separation of server/client concerns
 
 ## [1.4.0] - 2025-10-07 (Archived)
 
