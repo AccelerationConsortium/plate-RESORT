@@ -142,14 +142,19 @@ def run_server():
 
     host = server_config.get("host", "0.0.0.0")
     port = server_config.get("port", 8000)
-    reload = server_config.get("reload", True)
+    reload = server_config.get("reload", False)  # Default False for production
 
     print(f"🚀 Starting Plate Resort Server")
     print(f"📡 Server: http://{host}:{port}")
     print(f"📖 API Docs: http://{host}:{port}/docs")
     print(f"🔑 API Key: {load_api_key()}")
 
-    uvicorn.run(app, host=host, port=port, reload=reload)
+    # Use import string for reload to work properly
+    if reload:
+        uvicorn.run("plate_resort.server.main:app", host=host, port=port,
+                    reload=reload)
+    else:
+        uvicorn.run(app, host=host, port=port, reload=False)
 
 
 if __name__ == "__main__":
