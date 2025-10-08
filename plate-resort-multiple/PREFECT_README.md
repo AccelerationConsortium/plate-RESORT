@@ -1,6 +1,6 @@
 # Plate Resort - Prefect Workflow Orchestration
 
-This system uses **Prefect v3** for workflow orchestration to control the Plate Resort motor system.
+This system uses **Prefect v3** for workflow orchestration. The `PlateResort` class methods are decorated with `@flow`, making them Prefect workflows.
 
 ## Setup
 
@@ -11,7 +11,7 @@ cd /home/runner/work/plate-RESORT/plate-RESORT/plate-resort-multiple
 pip install prefect dynamixel-sdk pyyaml
 ```
 
-### 2. Start Prefect Server (if not using Prefect Cloud)
+### 2. Start Prefect Server (Optional - for UI/monitoring)
 
 In a terminal, start the Prefect server:
 
@@ -21,187 +21,86 @@ prefect server start
 
 The server will be available at http://127.0.0.1:4200
 
-### 3. Create Work Pool
-
-You can create a work pool via the UI or CLI:
-
-**Option A: Via UI**
-1. Open http://127.0.0.1:4200
-2. Navigate to Work Pools
-3. Click "Create Work Pool"
-4. Name it `plate-resort-pool`
-5. Type: `process`
-
-**Option B: Via CLI**
-```bash
-prefect work-pool create plate-resort-pool --type process
-```
-
-### 4. Deploy Flows
-
-Deploy all flows to the work pool:
-
-```bash
-cd /home/runner/work/plate-RESORT/plate-RESORT/plate-resort-multiple
-python -c "
-from device import *
-from prefect import flow
-
-# Deploy each flow
-connect.from_source(
-    source='.',
-    entrypoint='device.py:connect'
-).deploy(name='connect', work_pool_name='plate-resort-pool')
-
-disconnect.from_source(
-    source='.',
-    entrypoint='device.py:disconnect'
-).deploy(name='disconnect', work_pool_name='plate-resort-pool')
-
-status.from_source(
-    source='.',
-    entrypoint='device.py:status'
-).deploy(name='status', work_pool_name='plate-resort-pool')
-
-health.from_source(
-    source='.',
-    entrypoint='device.py:health'
-).deploy(name='health', work_pool_name='plate-resort-pool')
-
-activate_hotel.from_source(
-    source='.',
-    entrypoint='device.py:activate_hotel'
-).deploy(name='activate-hotel', work_pool_name='plate-resort-pool')
-
-go_home.from_source(
-    source='.',
-    entrypoint='device.py:go_home'
-).deploy(name='go-home', work_pool_name='plate-resort-pool')
-
-move_to_angle.from_source(
-    source='.',
-    entrypoint='device.py:move_to_angle'
-).deploy(name='move-to-angle', work_pool_name='plate-resort-pool')
-
-get_position.from_source(
-    source='.',
-    entrypoint='device.py:get_position'
-).deploy(name='get-position', work_pool_name='plate-resort-pool')
-
-set_speed.from_source(
-    source='.',
-    entrypoint='device.py:set_speed'
-).deploy(name='set-speed', work_pool_name='plate-resort-pool')
-
-emergency_stop.from_source(
-    source='.',
-    entrypoint='device.py:emergency_stop'
-).deploy(name='emergency-stop', work_pool_name='plate-resort-pool')
-
-get_hotels.from_source(
-    source='.',
-    entrypoint='device.py:get_hotels'
-).deploy(name='get-hotels', work_pool_name='plate-resort-pool')
-"
-```
-
-### 5. Start Worker
-
-In a separate terminal, start the worker:
-
-```bash
-prefect worker start --pool plate-resort-pool --type process
-```
-
-The worker should be left running to execute flow runs.
-
 ## Usage
 
-### Running Flows Directly (Local)
+### Direct Method Calls (Simplest)
 
-You can run flows directly without deployments:
+The PlateResort class methods are Prefect flows, so you can use them directly:
 
 ```python
-from device import connect, status, activate_hotel, get_position, go_home
+from plate_resort.core import PlateResort
 
-# Connect to motor
-connect(device="/dev/ttyUSB0", baudrate=57600, motor_id=1)
+# Create instance
+resort = PlateResort()
 
-# Get status
-current_status = status()
-print(current_status)
-
-# Move to hotel A
-activate_hotel("A")
-
-# Get position
-position = get_position()
-print(position)
-
-# Go home
-go_home()
+# All methods are Prefect flows - use them normally
+resort.connect()
+resort.activate_hotel("A")
+position = resort.get_current_position()
+resort.go_home()
+resort.disconnect()
 ```
 
-### Running Flows via Deployments (Remote/Scheduled)
+### With Prefect UI Monitoring
 
-After deploying flows and starting a worker:
+If you want to monitor flows in the Prefect UI, just make sure the Prefect server is running and call methods normally. Prefect will automatically track them.
+
+### Creating Deployments (Advanced)
+
+For scheduled or remote execution, you can create deployments:
+
+```python
+from plate_resort.core import PlateResort
+
+resort = PlateResort()
+
+# Deploy a specific method as a flow
+resort.activate_hotel.deploy(
+    name="activate-hotel-a",
+    work_pool_name="plate-resort-pool",
+    parameters={"hotel": "A"}
+)
+```
+
+Then run the deployment:
 
 ```python
 from prefect.deployments import run_deployment
 
-# Connect to motor
-run_deployment(
-    name="connect/connect",
-    parameters={"device": "/dev/ttyUSB0", "baudrate": 57600, "motor_id": 1}
-)
-
-# Get status
-run_deployment(name="status/status")
-
-# Move to hotel B
-run_deployment(name="activate-hotel/activate-hotel", parameters={"hotel": "B"})
-
-# Get position
-run_deployment(name="get-position/get-position")
+run_deployment(name="activate-hotel/activate-hotel-a")
 ```
 
-### Via Orchestrator Script
+## Available Flow Methods
 
-Use the provided orchestrator script:
+All public methods in the `PlateResort` class are Prefect flows:
 
-```bash
-python orchestrator.py
-```
-
-## Available Flows
-
-- `connect` - Connect to Dynamixel motor
-- `disconnect` - Disconnect from motor
-- `status` - Get system status
-- `health` - Get motor health diagnostics
-- `activate_hotel` - Move to specified hotel (A, B, C, D)
-- `go_home` - Return to home position
-- `move_to_angle` - Move to specific angle in degrees
-- `get_position` - Get current motor position
-- `set_speed` - Set motor movement speed
-- `emergency_stop` - Emergency stop motor
-- `get_hotels` - Get available hotels and their angles
+- `connect()` - Connect to Dynamixel motor
+- `disconnect()` - Disconnect from motor
+- `activate_hotel(hotel)` - Move to specified hotel (A, B, C, D)
+- `go_home()` - Return to home position
+- `move_to_angle(angle)` - Move to specific angle in degrees
+- `get_current_position()` - Get current motor position
+- `get_motor_health()` - Get motor health diagnostics
+- `set_speed(speed)` - Set motor movement speed
+- `emergency_stop()` - Emergency stop motor
 
 ## Architecture
 
-- **device.py**: Contains all Prefect flows for motor operations
-- **orchestrator.py**: Example script for running multiple deployments in sequence
-- **plate_resort/core.py**: Core motor control logic (unchanged)
+- **plate_resort/core.py**: Core PlateResort class with `@flow` decorated methods
+- **orchestrator.py**: Example script showing how to chain multiple operations
+- **example_usage.py**: Simple usage example
 
 ## Benefits of Prefect
 
+- **Automatic tracking**: All method calls are tracked in Prefect UI (if server is running)
 - **Workflow orchestration**: Chain multiple operations together
-- **Scheduling**: Schedule flows to run at specific times
-- **Monitoring**: Track flow execution in the Prefect UI
-- **Retry logic**: Automatic retries on failures
-- **Distributed execution**: Run flows on different machines via workers
+- **Retry logic**: Built-in retry capabilities on failures
+- **Monitoring**: Track execution history in the Prefect UI
+- **Deployments**: Schedule or trigger flows remotely
 - **State management**: Track the state of each flow run
 
 ## Monitoring
 
-View flow runs in the Prefect UI at http://127.0.0.1:4200
+If you started the Prefect server, view flow runs at http://127.0.0.1:4200
+
+Every time you call a decorated method (like `resort.activate_hotel("A")`), Prefect logs it and you can see the execution in the UI.

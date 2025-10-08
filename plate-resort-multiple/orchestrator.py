@@ -1,11 +1,28 @@
-from prefect.deployments import run_deployment
+"""
+Example orchestrator for running multiple PlateResort operations
 
-run_deployment(name="connect/connect")
+This demonstrates how to use PlateResort methods as Prefect flows
+for orchestration and monitoring.
+"""
 
-run_deployment(name="status/status")
+from plate_resort.core import PlateResort
 
-run_deployment(name="activate-hotel/activate-hotel", parameters={"hotel": "A"})
+# Create instance
+resort = PlateResort()
 
-run_deployment(name="get-position/get-position")
+# Connect to motor
+resort.connect()
 
-run_deployment(name="go-home/go-home")
+# Move to hotel A
+resort.activate_hotel("A")
+
+# Get current position
+position = resort.get_current_position()
+print(f"Position after moving to A: {position}")
+
+# Go home
+resort.go_home()
+
+# Disconnect
+resort.disconnect()
+

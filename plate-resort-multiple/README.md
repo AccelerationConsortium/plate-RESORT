@@ -1,290 +1,174 @@
 # Plate Resort Control System
 
-**Professional laboratory plate management system with REST API server-client architecture.**
+**Professional laboratory plate management system with Prefect v3 workflow orchestration.**
 
 ## 🚀 Quick Setup
 
-### Server Setup (Raspberry Pi)
-
-**One command installs everything and starts the server:**
+### Installation
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install-pip.sh | bash
-```
-
-**That's it!** The installer:
-- ✅ Installs the package and dependencies
-- ✅ Configures system permissions 
-- ✅ Generates a secure API key
-- ✅ **Automatically starts the server**
-- ✅ Sets up systemd service for auto-start
-
-**Your API key will be displayed during installation - save it for client access!**
-
-### Client Setup (Any Machine)
-
-```bash
-# Install client tools
+# Install the package
 pip install git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
 
-# Configure client credentials (recommended)
-cp secrets.ini.template secrets.ini
-# Edit secrets.ini with your Pi IP and API key
-
-# Or use command line directly
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
+# Or for development
+git clone https://github.com/AccelerationConsortium/plate-RESORT.git
+cd plate-RESORT/plate-resort-multiple
+pip install -e .
 ```
 
-### 🔐 Client Configuration
+### Optional: Prefect UI (for monitoring)
 
-**Option 1: secrets.ini file (recommended)**
 ```bash
-# Copy and edit the template
-cp secrets.ini.template secrets.ini
-
-# Edit secrets.ini:
-[server]
-api_key = YOUR_API_KEY_FROM_PI_INSTALLATION
-
-[client]  
-default_host = YOUR_PI_IP
-default_port = 8000
+# Start Prefect server for UI monitoring
+prefect server start
 ```
+Then visit http://127.0.0.1:4200 to view flow runs
 
-**Option 2: Environment variables**
-```bash
-export PLATE_API_KEY=YOUR_API_KEY
-export PLATE_HOST=YOUR_PI_IP
-export PLATE_PORT=8000
-```
-
-**Option 3: Command line arguments**
-```bash
-python interactive_client.py YOUR_PI_IP YOUR_API_KEY
-python demo_client.py YOUR_PI_IP YOUR_API_KEY
-```
+📚 **See [PREFECT_README.md](PREFECT_README.md) for detailed Prefect features**
 
 ## 🎯 Usage
 
-### 📡 Server Management
+### Basic Usage
 
-```bash
-# Server auto-starts after installation
-plate-resort-update                    # Update to latest version
-sudo systemctl status plate-resort-server  # Check status
-sudo systemctl restart plate-resort-server # Restart service
-```
-
-**Server automatically available at:** `http://YOUR_PI_IP:8000`  
-**API Documentation:** `http://YOUR_PI_IP:8000/docs`
-
-### 💻 Client Tools
-
-#### Command Line Interface
-```bash
-# Motor control
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY connect
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY health
-
-# Movement commands
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY activate A
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY move 90
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY position
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY home
-
-# Emergency stop
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY stop
-```
-
-#### Interactive Client
-```bash
-# Start interactive session
-python interactive_client.py
-
-# Then use commands like:
-# connect, status, move 90, position, activate A, home, stop, quit
-```
-
-#### Demo Client
-```bash
-# Run automated demonstration
-python demo_client.py
-```
-
-### 🐍 Python API
+All `PlateResort` methods are Prefect flows, so use them normally:
 
 ```python
-from plate_resort.client import PlateResortClient
+from plate_resort.core import PlateResort
 
-# Initialize client with your API key
-client = PlateResortClient("http://YOUR_PI_IP:8000", "YOUR_API_KEY")
+# Create instance
+resort = PlateResort()
 
-# Motor control
-client.connect()
-status = client.status()
-health = client.health()
-
-# Movement
-client.activate_hotel("A")          # Move to hotel A, B, C, or D
-client.move_to_angle(90.0)         # Move to specific angle
-position = client.get_position()    # Get current position
-client.go_home()                    # Return to home position
-
-# Safety
-client.emergency_stop()
-client.disconnect()
+# Use methods - they're automatically Prefect flows
+resort.connect()
+resort.activate_hotel("A")
+position = resort.get_current_position()
+print(f"Current position: {position}")
+resort.go_home()
+resort.disconnect()
 ```
 
-## � API Key Management
+### Example Scripts
 
-**Your API key is generated during installation and shown on screen.**
-
-To regenerate or view your API key:
 ```bash
-# On the Pi server
-plate-resort-keygen --generate --update-config
+# Simple usage example
+python example_usage.py
+
+# Orchestration example
+python orchestrator.py
 ```
 
-## � Project Structure
+### Available Methods (All are Prefect Flows)
+
+- `connect()` - Connect to Dynamixel motor
+- `disconnect()` - Disconnect from motor
+- `activate_hotel(hotel)` - Move to specified hotel (A, B, C, D)
+- `go_home()` - Return to home position
+- `move_to_angle(angle)` - Move to specific angle in degrees
+- `get_current_position()` - Get current motor position
+- `get_motor_health()` - Get motor health diagnostics
+- `set_speed(speed)` - Set motor movement speed
+- `emergency_stop()` - Emergency stop motor
+
+## 📦 Project Structure
 
 ```
 plate-resort-multiple/
-├── 📦 plate_resort/           # Main package
-│   ├── core.py               # Motor control logic
-│   ├── client/               # Client tools
-│   ├── server/               # REST API server
-│   ├── setup.py              # System configuration
-│   ├── keygen.py             # API key management
-│   └── update.py             # Update utilities
-├── 🎮 interactive_client.py   # Interactive CLI tool
-├── 📊 demo_client.py          # Automated demo
-├── 🔧 test_scripts/           # Hardware testing
-├── 🏗️ install-pip.sh          # One-line installer
-├── 📚 README.md               # This file
-└── ⚙️ pyproject.toml          # Package configuration
+├── plate_resort/          # Core package
+│   ├── core.py           # PlateResort class with @flow decorated methods
+│   ├── setup.py          # System configuration
+│   ├── keygen.py         # API key management (legacy)
+│   └── update.py         # Update utilities
+├── example_usage.py       # Simple usage example
+├── orchestrator.py        # Orchestration example
+├── PREFECT_README.md      # Detailed Prefect guide
+├── test_scripts/          # Hardware testing
+├── archived/              # Legacy REST API code
+└── pyproject.toml         # Package configuration
 ```
 
 ## 🧪 Testing & Development
 
-### Test Scripts
+### Test Motor Hardware
+
 ```bash
-# Test motor connection and functionality  
 cd test_scripts
 python test_plate_resort.py      # Main functionality test
 python test_motor_health.py      # Health monitoring
 python test_dxl_ping.py          # Low-level motor test
 ```
 
-### Interactive Tools
-```bash
-python interactive_client.py     # Interactive command line
-python demo_client.py           # Automated demonstration
-```
-
 ### Development Installation
+
 ```bash
-# For development work
 git clone https://github.com/AccelerationConsortium/plate-RESORT.git
 cd plate-RESORT/plate-resort-multiple
-pip install -e .                 # Install in development mode
+pip install -e .
 ```
 
 ## ⚙️ Configuration
 
-The system uses `resort_config.yaml` for motor and hotel configuration. The default configuration works with most setups, but you can customize:
+The system uses `plate_resort/resort_config.yaml` for motor and hotel configuration:
 
 - Motor communication settings (port, baud rate, ID)
-- Hotel positions and angles  
+- Hotel positions and angles
 - Safety limits and timeouts
-- Server settings
 
-## 🔒 Security & Features
+## 🔒 Features
 
-- **🔐 API Key Authentication:** All endpoints protected with secure keys
-- **✅ Request Validation:** Input sanitization and validation  
-- **🛡️ Error Handling:** Graceful error responses
-- **🌐 REST API:** 9 endpoints for complete motor control
-- **📚 Auto-Documentation:** Interactive API docs at `/docs`
-- **🔄 One-Command Updates:** `plate-resort-update`
+- **Simple API**: Use methods normally, Prefect handles orchestration
+- **Automatic Tracking**: All method calls tracked if Prefect server is running
+- **Monitoring**: View execution in Prefect UI
+- **Retry Logic**: Built-in retry capabilities
+- **State Management**: Track flow run states
 
 ## 📋 System Requirements
-
-### Raspberry Pi (Server)
-- Raspberry Pi 3B+ or newer
-- Raspberry Pi OS (modern version)  
-- USB port for Dynamixel adapter
-- Network connection
-
-### Client Machine  
-- Python 3.8+
-- Network access to Pi server
-- API key from server installation
 
 ### Hardware
 - Dynamixel motor (XC330 or compatible)
 - USB-to-RS485 adapter (U2D2 or FTDI)
 - 12V power supply for motors
 
-## � API Endpoints
-
-The REST API provides complete motor control:
-
-- `POST /connect` - Connect to motor
-- `POST /disconnect` - Disconnect motor
-- `GET /status` - Get system status
-- `GET /health` - Motor health diagnostics
-- `POST /activate` - Move to hotel position (A, B, C, D)
-- `POST /move_to_angle` - Move to specific angle
-- `GET /position` - Get current position
-- `POST /home` - Return to home position
-- `POST /emergency_stop` - Emergency stop
+### Software
+- Python 3.8+
+- Prefect v3
+- dynamixel-sdk
+- pyyaml
 
 ## 📚 Documentation
 
-- **Interactive API Docs:** `http://YOUR_PI_IP:8000/docs`
-- **OpenAPI Spec:** `http://YOUR_PI_IP:8000/openapi.json`
-- **Test Scripts:** `test_scripts/README.md`
+- **Prefect UI**: http://127.0.0.1:4200 (if server running)
+- **Setup Guide**: [PREFECT_README.md](PREFECT_README.md)
+- **Test Scripts**: [test_scripts/](test_scripts/)
+- **Hardware**: [mechanical/](mechanical/) for BOM
 
 ## 🐛 Troubleshooting
 
-### Server Issues
+### Method calls not showing in UI
+Start the Prefect server:
 ```bash
-# Check if server is running
-sudo systemctl status plate-resort-server
-
-# View server logs  
-sudo journalctl -u plate-resort-server -f
-
-# Restart server service
-sudo systemctl restart plate-resort-server
+prefect server start
 ```
 
-### Client Connection Issues
-```bash
-# Test network connectivity
-ping YOUR_PI_IP
+### Connection issues
+Check hardware connections and verify config in `plate_resort/resort_config.yaml`
 
-# Test API access (replace with your IP and key)
-curl -H "X-API-Key: YOUR_API_KEY" http://YOUR_PI_IP:8000/status
-```
+## 🔄 Migration from v2.x (REST API)
 
-### Updates
-```bash
-# Update server to latest version
-plate-resort-update
+If upgrading from v2.x:
 
-# Update client tools
-pip install --upgrade git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
-```
+1. REST API replaced with direct method calls
+2. No need for API keys or server/client setup
+3. Methods are now Prefect flows for better orchestration
+4. Legacy code preserved in `archived/` directory
+
+See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ## 🤝 Support
 
-- **Issues:** [GitHub Issues](https://github.com/AccelerationConsortium/plate-RESORT/issues)
-- **Documentation:** Visit `/docs` on your server for complete API reference
-- **Hardware:** See `mechanical/` directory for BOM and specifications
+- **Issues**: [GitHub Issues](https://github.com/AccelerationConsortium/plate-RESORT/issues)
+- **Prefect Docs**: https://docs.prefect.io/
+- **Hardware**: See `mechanical/` directory
 
 ---
 
-**Ready to manage plates like a pro! 🍽️🤖**
-
+**Workflow-powered plate management! 🍽️🤖**
