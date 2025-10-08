@@ -28,9 +28,7 @@ requires-python = ">=3.8"
 dependencies = [
     "dynamixel-sdk>=3.7.51",
     "pyyaml>=6.0",
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
-    "requests>=2.31.0",
+    "prefect>=3.0.0",
 ]
 
 [project.optional-dependencies]
@@ -48,8 +46,6 @@ Issues = "https://github.com/AccelerationConsortium/plate-RESORT/issues"
 Documentation = "https://github.com/AccelerationConsortium/plate-RESORT/blob/main/README.md"
 
 [project.scripts]
-plate-resort-server = "plate_resort.server.main:run_server"
-plate-resort-client = "plate_resort.client.cli:main"
 plate-resort-setup = "plate_resort.setup:setup_system"
 plate-resort-keygen = "plate_resort.keygen:main"
 plate-resort-update = "plate_resort.update:main"

@@ -2,6 +2,54 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2025-01-XX
+
+### 🎉 Major Release: Migration to Prefect v3 Workflow Orchestration
+
+**BREAKING CHANGES:**
+- Replaced REST API (FastAPI) with Prefect v3 workflow orchestration
+- Removed REST API server endpoints and client tools
+- New workflow-based architecture for motor control
+
+### 🆕 New Workflow Architecture
+- **Prefect flows**: All motor operations implemented as Prefect @flow decorated functions
+- **Work pools**: Use Prefect work pools for distributed execution
+- **Monitoring**: Full workflow monitoring via Prefect UI
+- **Orchestration**: Chain operations together with orchestrator scripts
+
+### ✨ New Features
+- `device.py` - All motor control operations as Prefect flows
+- `orchestrator.py` - Example orchestration script for running multiple operations
+- `PREFECT_README.md` - Complete setup and usage guide
+- Direct flow execution or deployment-based execution
+- Workflow scheduling and retry capabilities
+- Distributed execution via Prefect workers
+
+### 🗑️ Removed Components
+- FastAPI REST API server (`plate_resort/server/`)
+- Client library and CLI tools (`plate_resort/client/`)
+- `plate-resort-server` command
+- `plate-resort-client` command
+- API key authentication system
+
+### 📦 Updated Dependencies
+- Removed: `fastapi`, `uvicorn`, `requests`
+- Added: `prefect>=3.0.0`
+- Kept: `dynamixel-sdk`, `pyyaml`
+
+### 🎯 Migration Path
+- Replace API calls with direct flow execution or `run_deployment()` calls
+- Set up Prefect work pool instead of running REST API server
+- Use Prefect UI (http://127.0.0.1:4200) instead of FastAPI docs
+- Refer to PREFECT_README.md for complete migration guide
+
+### 🚀 Benefits
+- Better workflow orchestration and chaining
+- Built-in scheduling and retry logic
+- Comprehensive monitoring and logging
+- Distributed execution capabilities
+- State management and tracking
+
 ## [2.0.0] - 2025-10-07
 
 ### 🎉 Major Release: Pip Package + Automatic Setup
