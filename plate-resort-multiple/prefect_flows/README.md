@@ -9,6 +9,15 @@ The Prefect implementation uses flow decorators directly on the PlateResort clas
 - **PlateResort class methods** (in `plate_resort/core.py`): Decorated with @flow for direct Prefect orchestration
 - **orchestrator.py**: Functions for submitting flow runs from a remote machine
 - **deploy_flows.py**: Helper script to deploy all flows to a work pool using `flow.from_source()` (no hardware initialization required)
+- **worker_service.py**: Custom worker that maintains a persistent PlateResort instance for efficient hardware usage
+
+## Architecture Options
+
+### Option 1: Standard Worker (Reconnect per Flow)
+Each flow run creates a new PlateResort instance and reconnects to hardware. Simple but has connection overhead.
+
+### Option 2: Custom Worker with Persistent Connection (Recommended)
+Uses `worker_service.py` to maintain a single PlateResort instance across all flow runs, avoiding reconnection overhead while keeping work pool architecture.
 
 ## Setup Instructions
 
@@ -63,17 +72,41 @@ This script uses `flow.from_source()` to deploy flows without initializing the h
 
 ### 5. Start Worker on Device
 
-On the Raspberry Pi (or device with motor access), start a worker:
-
+#### Option A: Standard Worker (Simple)
 ```bash
-# Run in foreground for testing
 prefect worker start --pool plate-resort-pool
-
-# Or run in background (production)
-nohup prefect worker start --pool plate-resort-pool > worker.log 2>&1 &
 ```
+Each flow run will create a new PlateResort instance and connect/disconnect.
 
-The worker will continuously poll the work pool for new flow runs to execute.
+#### Option B: Custom Worker (Recommended for persistent connection)
+```bash
+cd prefect_flows
+python worker_service.py
+```
+This maintains a persistent PlateResort instance across all flow runs, avoiding reconnection overhead.
+
+The custom worker provides:
+- Deploy-like permissions (work pool architecture)
+- Serve-like persistence (single hardware connection)
+- Automatic connection management in setup/teardown
+
+For production, run as a systemd service:
+```bash
+# Create service file at /etc/systemd/system/plate-resort-worker.service
+[Unit]
+Description=Plate Resort Prefect Worker
+After=network.target
+
+[Service]
+Type=simple
+User=prefect
+WorkingDirectory=/path/to/plate-resort-multiple/plate_resort
+ExecStart=/usr/bin/python3 /path/to/plate-resort-multiple/prefect_flows/worker_service.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ### 6. Submit Flow Runs
 
