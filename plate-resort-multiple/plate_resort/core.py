@@ -52,6 +52,9 @@ class PlateResort:
         self.port = None
         self.packet_handler = None
         
+        # Call counter for testing instance persistence
+        self._call_counter = 0
+        
         # Dynamixel constants
         self.ADDR_TORQUE_ENABLE = 64
         self.ADDR_GOAL_POSITION = 116
@@ -341,6 +344,15 @@ class PlateResort:
     def is_connected(self):
         """Check if connected to motor"""
         return self.port is not None and self.port.is_open
+    
+    @flow(name="test-counter")
+    def test_counter(self):
+        """Test method that increments and returns call counter for instance persistence testing"""
+        self._call_counter += 1
+        return {
+            "counter": self._call_counter,
+            "instance_id": id(self)
+        }
         
     @flow(name="disconnect")
     def disconnect(self):
