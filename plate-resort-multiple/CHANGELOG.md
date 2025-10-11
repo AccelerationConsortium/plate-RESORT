@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2025-01-XX
+
+### Added
+- Prefect v3 integration for workflow orchestration
+- `prefect_flows/device.py` - Prefect flows for device control
+- `prefect_flows/orchestrator.py` - Remote flow execution functions
+- `prefect_flows/README.md` - Setup and usage documentation
+
+### Changed
+- Added Prefect>=3.0.0 to dependencies
+- REST API remains available but Prefect is now the recommended approach
+
+### Notes
+- Prefect provides better observability, retry logic, and async execution
+- No breaking changes - REST API still functional for backward compatibility
+
 ## [2.0.0] - 2025-10-07
 
 ### 🎉 Major Release: Pip Package + Automatic Setup
