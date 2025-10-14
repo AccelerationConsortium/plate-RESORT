@@ -8,16 +8,17 @@ from prefect import flow
 work_pool_name = "plate-resort-pool"
 
 # Define flows using from_source to avoid hardware initialization during deployment
+# Deployment names should be concise since they're combined with flow name in format: flow-name/deployment-name
 flow_specs = [
-    ("connect", "plate-resort-connect"),
-    ("disconnect", "plate-resort-disconnect"),
-    ("get_motor_health", "plate-resort-health"),
-    ("activate_hotel", "plate-resort-activate-hotel"),
-    ("go_home", "plate-resort-go-home"),
-    ("move_to_angle", "plate-resort-move-to-angle"),
-    ("set_speed", "plate-resort-set-speed"),
-    ("emergency_stop", "plate-resort-emergency-stop"),
-    ("get_current_position", "plate-resort-get-position"),
+    ("connect", "connect"),
+    ("disconnect", "disconnect"),
+    ("get_motor_health", "health"),
+    ("activate_hotel", "activate-hotel"),
+    ("go_home", "go-home"),
+    ("move_to_angle", "move-to-angle"),
+    ("set_speed", "set-speed"),
+    ("emergency_stop", "emergency-stop"),
+    ("get_current_position", "get-position"),
 ]
 
 print(f"Deploying {len(flow_specs)} flows to work pool: {work_pool_name}")

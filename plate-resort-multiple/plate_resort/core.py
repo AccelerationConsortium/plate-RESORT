@@ -78,7 +78,7 @@ class PlateResort:
             
         return config['resort']
         
-    @flow(name="connect")
+    @flow(name="connect")  # Explicitly naming flow "connect" (would default to method name without this)
     def connect(self):
         """Connect to Dynamixel motor"""
         self.port = PortHandler(self.device)
@@ -347,7 +347,10 @@ class PlateResort:
     
     @flow(name="test-counter")
     def test_counter(self):
-        """Test method that increments and returns call counter for instance persistence testing"""
+        """
+        Test method that increments and returns call counter for instance persistence testing.
+        NOTE: This method is temporary and used only for testing. Will be removed after validation.
+        """
         self._call_counter += 1
         return {
             "counter": self._call_counter,

@@ -2,6 +2,10 @@
 """
 Custom Prefect worker that maintains a persistent PlateResort instance.
 This provides deploy-like permissions (work pools) with serve-like persistence.
+
+Documentation:
+- ProcessWorker: https://docs.prefect.io/latest/api-ref/prefect/workers/process/
+- Custom Workers: https://docs.prefect.io/latest/concepts/workers/
 """
 import asyncio
 from prefect.workers.process import ProcessWorker
