@@ -58,4 +58,7 @@ where = ["."]
 include = ["plate_resort*"]
 
 [tool.setuptools.package-data]
-plate_resort = ["*.yaml", "*.yml", "*.ini", "*.template"]
+plate_resort = [
+    "config/*.yaml",
+    "config/*.template"
+]

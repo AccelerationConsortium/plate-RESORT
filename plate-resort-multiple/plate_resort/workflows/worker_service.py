@@ -7,8 +7,7 @@ Documentation:
 - ProcessWorker: https://docs.prefect.io/latest/api-ref/prefect/workers/process/
 - Custom Workers: https://docs.prefect.io/latest/concepts/workers/
 """
-import asyncio
-from prefect.workers.process import ProcessWorker
+from prefect.worker.process import ProcessWorker
 from plate_resort.core import PlateResort
 
 
@@ -36,6 +35,16 @@ class PlateResortWorker(ProcessWorker):
                 self._resort_instance.disconnect()
             self._resort_instance = None
         await super().teardown()
+  
+  
+def main():
+    """
+    Entry point for the Plate Resort worker CLI.
+    Starts the custom ProcessWorker for the 'plate-resort-pool'.
+    """
+    import asyncio
+    worker = PlateResortWorker(work_pool_name="plate-resort-pool")
+    asyncio.run(worker.start())
     
     def get_resort(self):
         """Get the persistent resort instance"""
@@ -43,4 +52,6 @@ class PlateResortWorker(ProcessWorker):
 
 
 if __name__ == "__main__":
-    asyncio.run(PlateResortWorker(work_pool_name="plate-resort-pool").start())
+    main()
+    
+  
