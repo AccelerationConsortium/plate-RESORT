@@ -4,13 +4,11 @@ Custom Prefect worker that maintains a persistent PlateResort instance.
 This provides deploy-like permissions (work pools) with serve-like persistence.
 
 Documentation:
-- ProcessWorker: https://docs.prefect.io/latest/api-ref/prefect/workers/process/
-- Custom Workers: https://docs.prefect.io/latest/concepts/workers/
 """
-from prefect.worker.process import ProcessWorker
+from prefect.workers.process import ProcessWorker
 from plate_resort.core import PlateResort
-
-
+  
+  
 class PlateResortWorker(ProcessWorker):
     """Custom worker that maintains a persistent hardware connection."""
     
@@ -49,10 +47,6 @@ def main():
     import asyncio
     worker = PlateResortWorker(work_pool_name="plate-resort-pool")
     asyncio.run(worker.start())
-    
-    def get_resort(self):
-        """Get the persistent resort instance"""
-        return self._resort_instance
 
 
 if __name__ == "__main__":
