@@ -39,3 +39,13 @@ print(f"Successfully deployed all flows to '{work_pool_name}'")
 print("\nNext steps:")
 print(f"1. Start worker: prefect worker start --pool {work_pool_name}")
 print("2. Submit jobs using orchestrator.py or Prefect CLI")
+
+
+def main():
+    """Entry point for the deploy script."""
+    # The deployment code is already executed at module level
+    pass
+
+
+if __name__ == "__main__":
+    main()
