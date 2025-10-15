@@ -35,6 +35,10 @@ class PlateResortWorker(ProcessWorker):
                 self._resort_instance.disconnect()
             self._resort_instance = None
         await super().teardown()
+
+    def get_resort(self):
+        """Get the persistent resort instance"""
+        return self._resort_instance
   
   
 def main():
