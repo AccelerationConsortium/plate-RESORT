@@ -50,6 +50,18 @@ if [[ ":$PATH:" != *":$VENV_BIN:"* ]]; then
     export PATH="$VENV_BIN:$PATH"
 fi
 
+# Auto-activate venv in new shells
+echo "🔄 Setting up automatic venv activation..."
+BASHRC_LINE="source $VENV_DIR/bin/activate"
+if ! grep -Fxq "$BASHRC_LINE" ~/.bashrc; then
+    echo "" >> ~/.bashrc
+    echo "# Auto-activate plate-resort virtual environment" >> ~/.bashrc
+    echo "$BASHRC_LINE" >> ~/.bashrc
+    echo "✅ Added auto-activation to ~/.bashrc"
+else
+    echo "✅ Auto-activation already configured"
+fi
+
 # Create configuration directory
 echo "⚙️  Setting up configuration..."
 mkdir -p ~/plate-resort-config
@@ -74,6 +86,9 @@ if config_src.exists():
     if (config_src / 'secrets.ini.template').exists():
         shutil.copy(config_src / 'secrets.ini.template', '.')
         print('✅ Copied secrets.ini.template')
+        # Create initial secrets.ini
+        shutil.copy('secrets.ini.template', 'secrets.ini')
+        print('✅ Created secrets.ini from template')
 else:
     print('⚠️  Config directory not found in package')
 "
@@ -81,14 +96,21 @@ else:
 echo ""
 echo "✅ Installation complete!"
 echo ""
-echo "🎯 Quick start:"
-echo "  plate-resort-interactive            # Interactive client"
-echo "  plate-resort-demo                   # Demo flows"
-echo "  plate-resort-worker                 # Start worker service"
+echo "🎯 Virtual environment will auto-activate in new terminals!"
+echo "🔄 To activate in current terminal: source $VENV_DIR/bin/activate"
 echo ""
 echo "📖 Configuration: ~/plate-resort-config/"
 echo "🔧 Edit ~/plate-resort-config/secrets.ini with your Pi's IP"
 echo ""
+echo "🎯 Available commands:"
+echo "  plate-resort-interactive            # Interactive client"
+echo "  plate-resort-demo                   # Demo flows"
+echo "  plate-resort-worker                 # Start worker service"
+echo ""
+
+# Reload current shell to activate venv
+echo "� Activating virtual environment for current session..."
+source "$VENV_DIR/bin/activate"
 
 # Option to start interactive client
 read -p "Start the interactive client now? [y/N]: " start_client

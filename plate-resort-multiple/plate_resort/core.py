@@ -35,12 +35,14 @@ class PlateResort:
         if config_file is None:
             # Get the directory where this file is located
             package_dir = os.path.dirname(os.path.abspath(__file__))
+            home_dir = os.path.expanduser("~")
             
-            # Try new structure first, then fall back to old location
+            # Try user config first, then package defaults
             possible_paths = [
-                os.path.join(package_dir, "config", "defaults.yaml"),
-                "config/defaults.yaml", 
-                "resort_config.yaml"
+                os.path.join(home_dir, "plate-resort-config", "defaults.yaml"),  # User config
+                os.path.join(package_dir, "config", "defaults.yaml"),           # Package defaults
+                "config/defaults.yaml",                                          # Current dir
+                "resort_config.yaml"                                             # Legacy
             ]
             
             for path in possible_paths:
@@ -48,7 +50,7 @@ class PlateResort:
                     config_file = path
                     break
             else:
-                # If no config found, use package defaults location
+                # If no config found, use package defaults location (will fail gracefully)
                 config_file = os.path.join(package_dir, "config", "defaults.yaml")
         
         # Load configuration
