@@ -1,94 +1,179 @@
 import os
 import sys
-import requests
 import argparse
 from typing import Dict, Any
+from plate_resort.core import PlateResort
+from plate_resort.workflows import orchestrator
 
 
 class PlateResortClient:
-    """Python client for Plate Resort API"""
+    """Python client for Plate Resort using Prefect workflows"""
     
-    def __init__(self, api_url: str = None, api_key: str = None):
-        self.api_url = api_url or os.getenv("PLATE_API_URL", "http://plate-resort.local:8000")
-        self.api_key = api_key or os.getenv("PLATE_API_KEY", "changeme")
-        self.headers = {"x-api-key": self.api_key}
-    
-    def _request(self, method: str, endpoint: str, json_data: Dict = None) -> Dict[str, Any]:
-        """Make HTTP request to API"""
-        url = f"{self.api_url}{endpoint}"
+    def __init__(self, remote: bool = False, host: str = None, 
+                 port: int = None):
+        """
+        Initialize Plate Resort client
         
-        try:
-            if method.upper() == "GET":
-                response = requests.get(url, headers=self.headers)
-            elif method.upper() == "POST":
-                response = requests.post(url, json=json_data, headers=self.headers)
-            else:
-                raise ValueError(f"Unsupported method: {method}")
-            
-            response.raise_for_status()
-            return response.json()
+        Args:
+            remote: If True, use remote Prefect orchestration. 
+                   If False, run flows locally.
+            host: Prefect server host (for remote mode)
+            port: Prefect server port (for remote mode)
+        """
+        self.remote = remote
+        self.host = host or os.getenv("PREFECT_HOST", "localhost")
+        self.port = port or int(os.getenv("PREFECT_PORT", "4200"))
         
-        except requests.exceptions.RequestException as e:
-            return {"error": str(e)}
+        if remote:
+            # Configure Prefect API URL for remote execution
+            prefect_api_url = f"http://{self.host}:{self.port}/api"
+            os.environ["PREFECT_API_URL"] = prefect_api_url
+            print(f"🌐 Remote mode: Using Prefect server at {prefect_api_url}")
+        else:
+            # Local mode - direct flow execution
+            print("🏠 Local mode: Running flows directly")
+            self.resort = PlateResort()
     
-    def connect(self, device="/dev/ttyUSB0", baudrate=57600, motor_id=1) -> Dict[str, Any]:
+    def connect(self, device: str = "/dev/ttyUSB0", baudrate: int = 57600, 
+                motor_id: int = 1) -> Dict[str, Any]:
         """Connect to Dynamixel motor"""
-        return self._request("POST", "/connect", {
-            "device": device,
-            "baudrate": baudrate,
-            "motor_id": motor_id
-        })
+        if self.remote:
+            result = orchestrator.connect(device, baudrate, motor_id)
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                self.resort.connect(device, baudrate, motor_id)
+                return {"status": "success", "message": "Connected to motor"}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
     
     def disconnect(self) -> Dict[str, Any]:
         """Disconnect from motor"""
-        return self._request("POST", "/disconnect")
+        if self.remote:
+            result = orchestrator.disconnect()
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                self.resort.disconnect()
+                return {"status": "success", "message": "Disconnected from motor"}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
     
     def status(self) -> Dict[str, Any]:
         """Get system status"""
-        return self._request("GET", "/status")
+        if self.remote:
+            result = orchestrator.get_status()
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                connected = self.resort.is_connected if hasattr(self.resort, 'is_connected') else False
+                return {"status": "success", "connected": connected}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
     
     def health(self) -> Dict[str, Any]:
         """Get motor health diagnostics"""
-        return self._request("GET", "/health")
+        if self.remote:
+            result = orchestrator.get_motor_health()
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                health_data = self.resort.get_motor_health()
+                return {"status": "success", "health": health_data}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
     
     def activate_hotel(self, hotel: str) -> Dict[str, Any]:
         """Move to specified hotel"""
-        return self._request("POST", "/activate", {"hotel": hotel})
+        if self.remote:
+            result = orchestrator.activate_hotel(hotel)
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                self.resort.activate_hotel(hotel)
+                return {"status": "success", "message": f"Activated hotel {hotel}"}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
     
     def go_home(self) -> Dict[str, Any]:
         """Return to home position"""
-        return self._request("POST", "/home")
+        if self.remote:
+            result = orchestrator.go_home()
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                self.resort.go_home()
+                return {"status": "success", "message": "Moved to home position"}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
     
     def set_speed(self, speed: int) -> Dict[str, Any]:
         """Set motor movement speed"""
-        return self._request("POST", "/set_speed", {"speed": speed})
+        if self.remote:
+            result = orchestrator.set_profile_velocity(speed)
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                self.resort.set_profile_velocity(speed)
+                return {"status": "success", "message": f"Set speed to {speed}"}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
     
     def emergency_stop(self) -> Dict[str, Any]:
         """Emergency stop motor"""
-        return self._request("POST", "/emergency_stop")
+        if self.remote:
+            result = orchestrator.emergency_stop()
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                self.resort.emergency_stop()
+                return {"status": "success", "message": "Emergency stop executed"}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
     
     def get_hotels(self) -> Dict[str, Any]:
         """Get available hotels"""
-        return self._request("GET", "/hotels")
+        # This is config-based, no need for remote execution
+        try:
+            hotels = ["A", "B", "C", "D"]  # From config
+            return {"status": "success", "hotels": hotels}
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
     
     def get_position(self) -> Dict[str, Any]:
         """Get current motor position"""
-        return self._request("GET", "/position")
+        if self.remote:
+            result = orchestrator.get_current_position()
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                position = self.resort.get_current_position()
+                return {"status": "success", "position": position}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
     
     def move_to_angle(self, angle: float) -> Dict[str, Any]:
         """Move to specific angle in degrees"""
-        return self._request("POST", "/move_to_angle", {"angle": angle})
+        if self.remote:
+            result = orchestrator.move_to_angle(angle)
+            return {"status": "submitted", "flow_run": str(result)}
+        else:
+            try:
+                self.resort.move_to_angle(angle)
+                return {"status": "success", "message": f"Moved to {angle} degrees"}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
 
 
 def main():
     """CLI interface with proper argument parsing"""
-    parser = argparse.ArgumentParser(description="Plate Resort Client")
+    parser = argparse.ArgumentParser(description="Plate Resort Client - Prefect Workflows")
     parser.add_argument("--host", default="localhost",
-                        help="Server host (default: localhost)")
-    parser.add_argument("--port", type=int, default=8000,
-                        help="Server port (default: 8000)")
-    parser.add_argument("--api-key", 
-                        help="API key for authentication")
+                        help="Prefect server host (default: localhost)")
+    parser.add_argument("--port", type=int, default=4200,
+                        help="Prefect server port (default: 4200)")
+    parser.add_argument("--remote", action="store_true",
+                        help="Use remote Prefect orchestration")
     parser.add_argument("command", 
                         choices=["connect", "disconnect", "status", "health", 
                                  "activate", "home", "speed", "stop", "hotels", 
@@ -99,11 +184,8 @@ def main():
     
     args = parser.parse_args()
     
-    # Build API URL
-    api_url = f"http://{args.host}:{args.port}"
-    
     # Initialize client
-    client = PlateResortClient(api_url=api_url, api_key=args.api_key)
+    client = PlateResortClient(remote=args.remote, host=args.host, port=args.port)
     
     command = args.command.lower()
     

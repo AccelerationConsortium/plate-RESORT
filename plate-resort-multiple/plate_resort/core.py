@@ -11,19 +11,46 @@ try:
     PREFECT_AVAILABLE = True
 except ImportError:
     PREFECT_AVAILABLE = False
-    def flow(func):
+    def flow(*args, **kwargs):
         """Dummy decorator when Prefect is not installed"""
-        return func
+        def decorator(func):
+            return func
+        if len(args) == 1 and callable(args[0]):
+            # Direct decoration: @flow
+            return args[0]
+        else:
+            # Parameterized decoration: @flow(name="...")
+            return decorator
 
 class PlateResort:
-    def __init__(self, config_file="resort_config.yaml", **overrides):
+    def __init__(self, config_file=None, **overrides):
         """
         Initialize plate resort system from YAML config
         
         Args:
-            config_file: Path to YAML configuration file
+            config_file: Path to YAML configuration file (default: auto-detect)
             **overrides: Override any config values (e.g., speed=30, offset_angle=15)
         """
+        # Auto-detect config file if not specified
+        if config_file is None:
+            # Get the directory where this file is located
+            package_dir = os.path.dirname(os.path.abspath(__file__))
+            
+            # Try new structure first, then fall back to old location
+            possible_paths = [
+                os.path.join(package_dir, "config", "defaults.yaml"),
+                "config/defaults.yaml", 
+                "resort_config.yaml"
+            ]
+            
+            for path in possible_paths:
+                if os.path.exists(path):
+                    config_file = path
+                    break
+            else:
+                # If no config found, use package defaults location
+                config_file = os.path.join(package_dir, "config", "defaults.yaml")
+        
         # Load configuration
         self.config = self._load_config(config_file)
         

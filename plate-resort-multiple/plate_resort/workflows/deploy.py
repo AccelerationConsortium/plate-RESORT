@@ -8,7 +8,7 @@ from prefect import flow
 work_pool_name = "plate-resort-pool"
 
 # Define flows using from_source to avoid hardware initialization during deployment
-# Deployment names should be concise since they're combined with flow name in format: flow-name/deployment-name
+# Deployment names should be concise since they're combined with flow name
 flow_specs = [
     ("connect", "connect"),
     ("disconnect", "disconnect"),
@@ -39,4 +39,3 @@ print(f"Successfully deployed all flows to '{work_pool_name}'")
 print("\nNext steps:")
 print(f"1. Start worker: prefect worker start --pool {work_pool_name}")
 print("2. Submit jobs using orchestrator.py or Prefect CLI")
-
