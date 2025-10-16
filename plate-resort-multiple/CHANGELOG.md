@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.5] - 2025-10-16
+
+### Added
+- Debug instrumentation in `plate_resort.workflows.deploy` to print source file path for each flow function during deployment.
+
+### Fixed
+- Began addressing Prefect deployment import path mismatch (`FileNotFoundError: /home/pi/plate_resort/core.py`). The package installs under `site-packages/plate_resort/` but Prefect attempted to load a filesystem path as if it were a loose script. Debug output will help confirm correct `site-packages` path on the Raspberry Pi.
+
+### Notes
+- If Prefect still resolves `/home/pi/plate_resort/core.py`, ensure the virtual environment has the package installed (not just a partial copy) and that `plate_resort` is not shadowed by a directory named `plate_resort` in `$HOME`. Remove/rename any stray `$HOME/plate_resort/` directory to avoid import shadowing.
+
 ## [2.0.4] - 2025-10-16
 
 ### Removed
