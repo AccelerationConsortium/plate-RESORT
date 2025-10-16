@@ -9,9 +9,12 @@ deployment-name is specified in deploy.py
 from prefect.deployments import run_deployment
 
 
-def connect():
-    """Connect to the motor (no parameters; deployment targets instance method)."""
-    return run_deployment(name="connect/connect")
+def connect(device: str = "/dev/ttyUSB0", baudrate: int = 57600, motor_id: int = 1):
+    """Connect to the motor using function-based flow deployment."""
+    return run_deployment(
+        name="connect/connect",
+        parameters={"device": device, "baudrate": baudrate, "motor_id": motor_id},
+    )
 
 
 def disconnect():

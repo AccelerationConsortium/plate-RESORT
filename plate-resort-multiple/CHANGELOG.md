@@ -14,6 +14,21 @@ All notable changes to this project will be documented in this file.
 
 ## [2.1.0] - 2025-01-XX
 
+## [2.0.2] - 2025-10-15
+
+### Changed
+- Removed `@flow` decorators from `PlateResort` class methods to eliminate signature mismatches.
+- Deployments now source only function-based flows in `plate_resort/workflows/flows.py`.
+- `deploy.py` refactored to use explicit function list (`FUNCTION_FLOWS`).
+- `orchestrator.connect` restored to accept device/baud/motor parameters for the function flow.
+
+### Fixed
+- Resolved repeated CRASHED flow runs caused by method-based deployments passing unexpected parameters.
+
+### Notes
+- Class still usable locally; Prefect orchestration isolated to stateless function flows.
+
+
 ### Added
 - Prefect v3 integration for workflow orchestration
 - `prefect_flows/device.py` - Prefect flows for device control
