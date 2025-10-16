@@ -4,9 +4,9 @@ Interactive Plate Resort Client - Prefect Workflows
 Command-line interface for controlling the Plate Resort via Prefect flows
 """
 
-import sys
 import os
 import configparser
+from pathlib import Path
 from plate_resort.core import PlateResort
 from plate_resort.workflows import orchestrator
 
@@ -19,8 +19,9 @@ def load_client_config():
         'prefect_api_url': 'http://localhost:4200/api'
     }
     
-    # Try to load from config/secrets.ini
-    secrets_file = 'config/secrets.ini'
+    # Try to load from the repository root secrets.ini
+    repo_root = Path(__file__).parents[2]
+    secrets_file = str(repo_root / 'secrets.ini')
     if os.path.exists(secrets_file):
         try:
             parser = configparser.ConfigParser()
@@ -35,6 +36,10 @@ def load_client_config():
             if 'prefect' in parser:
                 config['prefect_api_url'] = parser.get('prefect', 'server_api_url',
                                                      fallback=config['prefect_api_url'])
+            if 'server' in parser:
+                api_key = parser.get('server', 'api_key', fallback=None)
+                if api_key:
+                    config['api_key'] = api_key
                     
         except Exception as e:
             print(f"⚠️  Warning: Could not read config/secrets.ini: {e}")
@@ -43,7 +48,11 @@ def load_client_config():
     config['host'] = os.getenv('PREFECT_HOST', config['host'])
     config['port'] = int(os.getenv('PREFECT_PORT', config['port']))
     config['prefect_api_url'] = os.getenv('PREFECT_API_URL', config['prefect_api_url'])
-    
+    # Set Prefect API key if provided in config or environment
+    api_key = os.getenv('PREFECT_API_KEY', config.get('api_key'))
+    if api_key:
+        os.environ['PREFECT_API_KEY'] = api_key
+
     return config
 
 
@@ -198,51 +207,27 @@ class InteractivePlateResort:
         """Main interactive loop"""
         print("🚀 Plate Resort Interactive Client")
         print("═" * 50)
-        
-        if self.use_remote:
-            print("📡 Remote workflow orchestration mode")
-            print(f"🔗 Prefect server: {self.config['prefect_api_url']}")
-        else:
-            print("🏠 Local workflow execution mode")
-            
-        print("💡 Type 'help' for commands or 'quit' to exit")
-        print()
-
+        self.show_help()
         while True:
-            try:
-                command = input("plate-resort> ").strip()
-                
-                if command.lower() in ['quit', 'exit', 'q']:
-                    print("👋 Goodbye!")
-                    break
-                elif command:
-                    self.execute_command(command)
-                    
-            except KeyboardInterrupt:
-                print("\n👋 Goodbye!")
+            cmd = input("› ")
+            if cmd.lower() in ("quit", "exit"):  # allow user to exit
+                print("👋 Bye!")
                 break
-            except EOFError:
-                print("\n👋 Goodbye!")
-                break
+            self.execute_command(cmd)
 
+# Add CLI entrypoint
 
 def main():
-    """Main entry point"""
-    # Check for remote mode flag
-    use_remote = '--remote' in sys.argv or '-r' in sys.argv
-    
-    if len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h']:
-        print("Usage: python interactive.py [--remote/-r]")
-        print("  --remote/-r: Use remote Prefect orchestration")
-        print("  Default: Run flows locally")
-        return
-    
-    try:
-        client = InteractivePlateResort(use_remote=use_remote)
-        client.run()
-    except Exception as e:
-        print(f"❌ Failed to start client: {e}")
-        sys.exit(1)
+    """Command-line interface for interactive Plate Resort client"""
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Plate Resort Interactive Client (local or remote via Prefect)")
+    parser.add_argument(
+        '-r', '--remote', action='store_true',
+        help='Use remote Prefect server instead of local instance')
+    args = parser.parse_args()
+    client = InteractivePlateResort(use_remote=args.remote)
+    client.run()
 
 
 if __name__ == "__main__":
