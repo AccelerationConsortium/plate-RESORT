@@ -7,19 +7,25 @@ set -euo pipefail
 #   export PREFECT_API_URL=... PREFECT_API_KEY=... && \
 #   curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/copilot/replace-rest-api-with-prefect/plate-resort-multiple/install.sh | bash
 # Optional flags:
-#   --no-auto-activate    Skip adding venv auto-activation to ~/.bashrc
-#   --editable            Install package editable (clone + pip install -e .)
-#   --pool NAME           Override work pool name (default: plate-resort-pool)
+#   --no-auto-activate          Skip adding venv auto-activation to ~/.bashrc
+#   --editable                  Install package editable (clone + pip install -e .)
+#   --pool NAME                 Override work pool name (default: plate-resort-pool)
+#   --force-refresh             Remove venv & reinstall (fresh clone of package)
+#   --ref <branch|tag|commit>   Override git ref (default: copilot/replace-rest-api-with-prefect)
 
 POOL="plate-resort-pool"
 AUTO_ACTIVATE=1
 EDITABLE=0
+FORCE_REFRESH=0
+GIT_REF="copilot/replace-rest-api-with-prefect"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --no-auto-activate) AUTO_ACTIVATE=0; shift;;
-        --editable) EDITABLE=1; shift;;
-        --pool) POOL="$2"; shift 2;;
+    --no-auto-activate) AUTO_ACTIVATE=0; shift;;
+    --editable) EDITABLE=1; shift;;
+    --pool) POOL="$2"; shift 2;;
+    --force-refresh) FORCE_REFRESH=1; shift;;
+    --ref) GIT_REF="$2"; shift 2;;
         *) echo "Unknown flag: $1"; exit 1;;
     esac
 done
@@ -38,14 +44,25 @@ command -v python3 >/dev/null || { echo "Python3 required"; exit 1; }
 command -v pip3 >/dev/null || { echo "Installing pip"; sudo apt update && sudo apt install -y python3-pip python3-venv; }
 
 VENV_DIR="$HOME/plate-resort-env"
+if [[ $FORCE_REFRESH -eq 1 ]]; then
+    echo "♻️  Force refresh requested: deleting existing venv (if any)";
+    rm -rf "$VENV_DIR"
+fi
 if [[ ! -d "$VENV_DIR" ]]; then
     echo "🐍 Creating virtual environment at $VENV_DIR";
     python3 -m venv "$VENV_DIR"
 fi
 source "$VENV_DIR/bin/activate"
 
-echo "📦 Installing plate-resort package (remote Git URL)"
-pip install --upgrade git+https://github.com/AccelerationConsortium/plate-RESORT.git@copilot/replace-rest-api-with-prefect#subdirectory=plate-resort-multiple
+echo "📦 Installing plate-resort package (Git ref: $GIT_REF)"
+# Bypass pip wheel cache if force refresh requested
+if [[ $FORCE_REFRESH -eq 1 ]]; then
+    PIP_NO_CACHE_DIR=1 pip install --no-cache-dir --upgrade \
+        "git+https://github.com/AccelerationConsortium/plate-RESORT.git@${GIT_REF}#subdirectory=plate-resort-multiple"
+else
+    pip install --upgrade \
+        "git+https://github.com/AccelerationConsortium/plate-RESORT.git@${GIT_REF}#subdirectory=plate-resort-multiple"
+fi
 
 if [[ $EDITABLE -eq 1 ]]; then
     echo "🔧 Editable mode requested: cloning repository"
@@ -54,7 +71,11 @@ if [[ $EDITABLE -eq 1 ]]; then
         git clone https://github.com/AccelerationConsortium/plate-RESORT.git
     fi
     cd plate-RESORT/plate-resort-multiple
-    pip install -e .
+    if [[ $FORCE_REFRESH -eq 1 ]]; then
+        PIP_NO_CACHE_DIR=1 pip install --no-cache-dir -e .
+    else
+        pip install -e .
+    fi
 fi
 
 if [[ $AUTO_ACTIVATE -eq 1 ]]; then

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 
 ## [2.0.5] - 2025-10-16
+## [2.0.6] - 2025-10-16
+
+### Added
+- `install.sh` flags: `--force-refresh` (delete venv + no pip cache), `--ref <git-ref>` (override branch/tag/commit for install).
+
+### Changed
+- Installer now prints the git ref used for clarity.
+- Force refresh bypasses wheel and HTTP caches to ensure latest remote commit is fetched.
+
+### Notes
+- Use `--force-refresh` when suspecting stale artifacts or cached wheels.
+- `--ref` enables pinning to a release tag or commit SHA for reproducible setups.
+
 
 ### Added
 - Debug instrumentation in `plate_resort.workflows.deploy` to print source file path for each flow function during deployment.
