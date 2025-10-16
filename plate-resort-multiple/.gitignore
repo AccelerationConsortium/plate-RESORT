@@ -62,6 +62,7 @@ venv/
 secrets.yaml
 secrets.json
 secrets.ini
+secrets.local.ini
 
 # Server logs
 server/*.log

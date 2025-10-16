@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.4] - 2025-10-16
+
+### Removed
+- Orphaned `plate-resort-keygen` console script entry from `pyproject.toml` (legacy REST/key generation utility fully retired).
+
+### Changed
+- Updated `README.md` to reflect Prefect-only architecture and environment variable based authentication (removed residual keygen / REST references).
+ - Simplified `install.sh`; now auto-deploys flows and starts worker when Prefect env vars are present.
+ - Bumped package version to 2.0.4.
+
+### Notes
+- Key generation is no longer part of the workflow; use Prefect Cloud API credentials via environment variables.
+
+## [2.0.3] - 2025-10-16
+
+### Added
+- `bootstrap_pi.sh` script for end-to-end fresh Raspberry Pi setup (clone, venv, deploy Prefect flows, start worker).
+- `verify_prefect.py` diagnostic script to confirm Prefect Cloud connectivity, work pool presence, deployments, and recent flow runs.
+
+### Changed
+- Pinned Prefect dependency to `prefect==3.4.23` for stable flow deployment behavior.
+
+### Notes
+- Future Prefect upgrades should edit pin deliberately; run `verify_prefect.py` after any upgrade.
+
 ## [2.0.1] - 2025-10-15
 
 ### Fixed

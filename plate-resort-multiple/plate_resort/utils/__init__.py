@@ -1,9 +1,8 @@
-"""Plate Resort Utilities Package"""
+"""Plate Resort Utilities Package
 
-from .keygen import generate_api_key
+Legacy key generation removed; only update utilities remain.
+"""
+
 from .update import main as update_main
 
-__all__ = [
-    "generate_api_key",
-    "update_main",
-]
+__all__ = ["update_main"]

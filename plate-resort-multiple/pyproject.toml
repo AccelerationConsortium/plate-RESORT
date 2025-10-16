@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plate-resort"
-version = "2.0.0"
+version = "2.0.4"
 description = "Plate Resort Control System - Server-Client Architecture for Laboratory Plate Management"
 readme = "README.md"
 license = {text = "MIT"}
@@ -28,7 +28,8 @@ requires-python = ">=3.8"
 dependencies = [
     "dynamixel-sdk>=3.7.51",
     "pyyaml>=6.0",
-    "prefect>=3.0.0",
+    # Pin Prefect minor version to ensure stable deployment behavior; update intentionally in future releases
+    "prefect==3.4.23",
 ]
 
 [project.optional-dependencies]
@@ -48,7 +49,6 @@ Documentation = "https://github.com/AccelerationConsortium/plate-RESORT/blob/mai
 [project.scripts]
 plate-resort-interactive = "plate_resort.client.interactive:main"
 plate-resort-demo = "plate_resort.client.demo:main"
-plate-resort-keygen = "plate_resort.utils.keygen:main"
 plate-resort-update = "plate_resort.utils.update:main"
 plate-resort-worker = "plate_resort.workflows.worker_service:main"
 plate-resort-deploy = "plate_resort.workflows.deploy:main"

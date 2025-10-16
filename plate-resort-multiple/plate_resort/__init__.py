@@ -1,11 +1,10 @@
-"""
-Plate Resort Control System
+"""Plate Resort Control System
 
-A complete server-client architecture for laboratory plate management
-using Dynamixel motors and FastAPI.
+Prefect-orchestrated laboratory plate management using Dynamixel motors.
+Legacy REST/FastAPI layer removed in favor of function-based Prefect flows.
 """
 
-__version__ = "2.0.0"
+__version__ = "2.0.4"
 __author__ = "Acceleration Consortium"
 __email__ = "info@acceleration.utoronto.ca"
 

@@ -1,120 +1,97 @@
-#!/bin/bash
-#
-# Plate Resort - Prefect Workflow Installation Script
-# Usage: curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/copilot/replace-rest-api-with-prefect/plate-resort-multiple/install.sh | bash
-#
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+# Plate Resort Installer (Prefect workflows)
+# Assumes PREFECT_API_URL and PREFECT_API_KEY already exported by the user.
+# Usage:
+#   export PREFECT_API_URL=... PREFECT_API_KEY=... && \
+#   curl -fsSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/copilot/replace-rest-api-with-prefect/plate-resort-multiple/install.sh | bash
+# Optional flags:
+#   --no-auto-activate    Skip adding venv auto-activation to ~/.bashrc
+#   --editable            Install package editable (clone + pip install -e .)
+#   --pool NAME           Override work pool name (default: plate-resort-pool)
 
-echo "🚀 Plate Resort - Prefect Workflow Installation"
-echo "=============================================="
-echo ""
+POOL="plate-resort-pool"
+AUTO_ACTIVATE=1
+EDITABLE=0
 
-# Check Python version
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python 3 is required but not found"
-    echo "Install Python 3: sudo apt install python3 python3-pip"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --no-auto-activate) AUTO_ACTIVATE=0; shift;;
+        --editable) EDITABLE=1; shift;;
+        --pool) POOL="$2"; shift 2;;
+        *) echo "Unknown flag: $1"; exit 1;;
+    esac
+done
+
+echo "🚀 Plate Resort - Prefect Installer"
+
+# Require Prefect Cloud environment variables before any installation so flows can deploy immediately.
+if [[ -z "${PREFECT_API_URL:-}" || -z "${PREFECT_API_KEY:-}" ]]; then
+    echo "❌ PREFECT_API_URL and PREFECT_API_KEY must be exported before running this installer." >&2
+    echo "   Example: export PREFECT_API_URL=https://api.prefect.cloud/api/accounts/<acct>/workspaces/<ws>" >&2
+    echo "            export PREFECT_API_KEY=pnu_XXXXXXXX" >&2
     exit 1
 fi
 
-PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-echo "🐍 Python version: $PYTHON_VERSION"
+command -v python3 >/dev/null || { echo "Python3 required"; exit 1; }
+command -v pip3 >/dev/null || { echo "Installing pip"; sudo apt update && sudo apt install -y python3-pip python3-venv; }
 
-# Install pip and venv if not available
-if ! command -v pip3 &> /dev/null; then
-    echo "📦 Installing pip and venv..."
-    sudo apt update
-    sudo apt install -y python3-pip python3-venv python3-full
-fi
-
-# Create virtual environment
 VENV_DIR="$HOME/plate-resort-env"
-if [ ! -d "$VENV_DIR" ]; then
-    echo "🐍 Creating virtual environment..."
+if [[ ! -d "$VENV_DIR" ]]; then
+    echo "🐍 Creating virtual environment at $VENV_DIR";
     python3 -m venv "$VENV_DIR"
 fi
-
-# Activate virtual environment
-echo "🔄 Activating virtual environment..."
 source "$VENV_DIR/bin/activate"
 
-# Install/upgrade plate-resort with Prefect
-echo "📦 Installing Plate Resort with Prefect workflows..."
+echo "📦 Installing plate-resort package (remote Git URL)"
 pip install --upgrade git+https://github.com/AccelerationConsortium/plate-RESORT.git@copilot/replace-rest-api-with-prefect#subdirectory=plate-resort-multiple
 
-# Add virtual environment bin to PATH if not already there
-VENV_BIN="$VENV_DIR/bin"
-if [[ ":$PATH:" != *":$VENV_BIN:"* ]]; then
-    echo "🔧 Adding virtual environment to PATH..."
-    echo "export PATH=\"$VENV_BIN:\$PATH\"" >> ~/.bashrc
-    export PATH="$VENV_BIN:$PATH"
+if [[ $EDITABLE -eq 1 ]]; then
+    echo "🔧 Editable mode requested: cloning repository"
+    cd "$HOME"
+    if [[ ! -d plate-RESORT ]]; then
+        git clone https://github.com/AccelerationConsortium/plate-RESORT.git
+    fi
+    cd plate-RESORT/plate-resort-multiple
+    pip install -e .
 fi
 
-# Auto-activate venv in new shells
-echo "🔄 Setting up automatic venv activation..."
-BASHRC_LINE="source $VENV_DIR/bin/activate"
-if ! grep -Fxq "$BASHRC_LINE" ~/.bashrc; then
-    echo "" >> ~/.bashrc
-    echo "# Auto-activate plate-resort virtual environment" >> ~/.bashrc
-    echo "$BASHRC_LINE" >> ~/.bashrc
-    echo "✅ Added auto-activation to ~/.bashrc"
+if [[ $AUTO_ACTIVATE -eq 1 ]]; then
+    if ! grep -Fq "source $VENV_DIR/bin/activate" "$HOME/.bashrc"; then
+        echo "# Auto-activate plate-resort venv" >> "$HOME/.bashrc"
+        echo "source $VENV_DIR/bin/activate" >> "$HOME/.bashrc"
+        echo "✅ Added auto-activation to .bashrc"
+    else
+        echo "✅ Auto-activation already present"
+    fi
+fi
+
+echo "✅ Base installation complete"
+
+# Auto deploy & start worker if environment variables present
+if [[ -n "${PREFECT_API_URL:-}" && -n "${PREFECT_API_KEY:-}" ]]; then
+    echo "🔐 Prefect Cloud environment detected"
+    echo "🌐 API URL: $PREFECT_API_URL"
+    echo "🚀 Ensuring work pool '$POOL' exists"
+    prefect work-pool create --type process "$POOL" 2>/dev/null || true
+    echo "📦 Deploying flows"
+    plate-resort-deploy || { echo "Deployment failed"; exit 3; }
+    echo "🛠 Starting worker (process pool: $POOL)"
+    # Start worker in background using nohup; user can manage later.
+    nohup prefect worker start --pool "$POOL" >/dev/null 2>&1 &
+    echo "✅ Worker started in background (nohup)"
 else
-    echo "✅ Auto-activation already configured"
+    echo "ℹ️ PREFECT_API_URL / PREFECT_API_KEY not set; skipping deploy & worker."
+    echo "   Export them and run: prefect work-pool create --type process $POOL; plate-resort-deploy; plate-resort-worker"
 fi
 
-# Create configuration directory
-echo "⚙️  Setting up configuration..."
-mkdir -p ~/plate-resort-config
-cd ~/plate-resort-config
+echo "ℹ️  Next steps:" 
+echo "   plate-resort-interactive            # local device control"
+echo "   plate-resort-interactive --remote   # submit to Prefect Cloud deployments"
+echo "   plate-resort-deploy                 # (manual redeploy flows)"
+echo "   plate-resort-worker                 # start a worker manually (foreground)"
+echo "   prefect work-pool ls                # confirm pool exists"
+echo "   prefect deployment ls               # view registered deployments"
 
-# Copy default configuration
-python3 -c "
-import shutil
-import os
-from pathlib import Path
-
-# Find the installed package
-import plate_resort
-package_dir = Path(plate_resort.__file__).parent
-
-# Copy config files
-config_src = package_dir / 'config'
-if config_src.exists():
-    if (config_src / 'defaults.yaml').exists():
-        shutil.copy(config_src / 'defaults.yaml', '.')
-        print('✅ Copied defaults.yaml')
-    if (config_src / 'secrets.ini.template').exists():
-        shutil.copy(config_src / 'secrets.ini.template', '.')
-        print('✅ Copied secrets.ini.template')
-        # Create initial secrets.ini
-        shutil.copy('secrets.ini.template', 'secrets.ini')
-        print('✅ Created secrets.ini from template')
-else:
-    print('⚠️  Config directory not found in package')
-"
-
-echo ""
-echo "✅ Installation complete!"
-echo ""
-echo "🎯 Virtual environment will auto-activate in new terminals!"
-echo "🔄 To activate in current terminal: source $VENV_DIR/bin/activate"
-echo ""
-echo "📖 Configuration: ~/plate-resort-config/"
-echo "🔧 Edit ~/plate-resort-config/secrets.ini with your Pi's IP"
-echo ""
-echo "🎯 Available commands:"
-echo "  plate-resort-interactive            # Interactive client"
-echo "  plate-resort-demo                   # Demo flows"
-echo "  plate-resort-worker                 # Start worker service"
-echo ""
-
-# Reload current shell to activate venv
-echo "� Activating virtual environment for current session..."
-source "$VENV_DIR/bin/activate"
-
-# Option to start interactive client
-read -p "Start the interactive client now? [y/N]: " start_client
-if [ "$start_client" = "y" ] || [ "$start_client" = "Y" ]; then
-    echo "Starting Plate Resort Interactive Client..."
-    plate-resort-interactive
-fi
+echo "Done."

@@ -1,6 +1,6 @@
 # Plate Resort Control System - Prefect Workflows
 
-**Professional laboratory plate management system with Prefect workflow orchestration.**
+**Laboratory plate management orchestrated via Prefect stateless function flows (no REST, no keygen).**
 
 ## 🎯 Overview
 
@@ -10,17 +10,19 @@ This system provides **Prefect-based workflow orchestration** for controlling th
 
 ### Server Setup (Raspberry Pi)
 
-**One command installs everything:**
+Export Prefect Cloud credentials first (required for auto-deploy & worker start):
 
+```bash
+export PREFECT_API_URL="https://api.prefect.cloud/api/accounts/<account-id>/workspaces/<workspace-id>"
+export PREFECT_API_KEY="pnu_XXXXXXXXXXXX"
+```
+
+Then install (auto deploy if env vars set):
 ```bash
 curl -sSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/copilot/replace-rest-api-with-prefect/plate-resort-multiple/install.sh | bash
 ```
 
-**What gets installed:**
-- ✅ Plate Resort package with Prefect flows
-- ✅ Prefect v3.0+ workflow engine
-- ✅ All client tools and utilities
-- ✅ Configuration templates
+Automatic (with env vars): create venv, install, ensure work pool, deploy flows, start worker (nohup), add auto-activation.
 
 ### Client Setup (Any Machine)
 
@@ -49,14 +51,8 @@ python -c "from plate_resort.core import PlateResort; resort = PlateResort(); re
 
 #### 2. Remote Workflow Orchestration  
 ```bash
-# On Pi: Start Prefect server and worker
-prefect server start --host 0.0.0.0 --port 4200 &
-plate-resort-worker
-
-# From any machine: Submit workflows remotely
 plate-resort-interactive --remote
-# Or
-python -c "from plate_resort.workflows import orchestrator; orchestrator.connect()"
+python -c "from plate_resort.workflows import orchestrator; orchestrator.connect(device='/dev/ttyUSB0', baudrate=57600, motor_id=1)"
 ```
 
 ### 💻 Client Tools
@@ -89,10 +85,8 @@ plate-resort-demo --remote
 
 ### 🔧 Workflow Management
 
-#### Deploy Flows to Work Pool
+#### Re-deploy Flows Manually
 ```bash
-# Create work pool and deploy all flows
-prefect work-pool create --type process plate-resort-pool
 plate-resort-deploy
 ```
 
@@ -114,10 +108,7 @@ plate-resort-worker
 
 ```
 plate_resort/
-├── core.py                    # Hardware controller with @flow decorators
-├── config/
-│   ├── defaults.yaml          # Default configuration
-│   └── secrets.ini.template   # Connection settings template
+├── core.py                 # Hardware controller class (not decorated with @flow)
 ├── client/
 │   ├── interactive.py         # Interactive client
 │   └── demo.py               # Demo workflows
@@ -126,17 +117,18 @@ plate_resort/
 │   ├── worker_service.py     # Persistent worker
 │   └── deploy.py            # Flow deployment
 └── utils/
-    ├── keygen.py             # Key generation
-    └── update.py            # Update utilities
+  └── update.py           # Update utilities
 ```
 
 ### Flow Architecture
 
-**Every PlateResort method is a Prefect flow:**
-- `@flow` decorators enable workflow orchestration
-- Direct method calls run flows locally
-- Remote execution via work pools and workers
-- Built-in retry logic and error handling
+Flows are pure functions in `workflows/flows.py`:
+1. Instantiate `PlateResort`
+2. Connect
+3. Perform single action
+4. Disconnect
+
+No state retained between flow runs; avoids method signature mismatch.
 
 ## 🔐 Configuration
 
@@ -178,10 +170,8 @@ default_port = 4200
 plate-resort-update
 ```
 
-### Generate Configuration
-```bash
-plate-resort-keygen --generate
-```
+### Configuration
+Environment variables (PREFECT_API_URL, PREFECT_API_KEY) replace any legacy key/REST configuration. No keygen required.
 
 ### Testing
 ```bash
@@ -206,58 +196,43 @@ resort.get_current_position()  # Runs as Prefect flow
 - ✅ **Flow Scheduling**: Time-based and event-driven execution
 - ✅ **Parameter Validation**: Type-safe workflow inputs
 
-### Available Flows
+### Available Flows (function-based)
 ```python
-# All PlateResort methods are Prefect flows:
-resort.connect()              # @flow
-resort.activate_hotel("A")    # @flow  
-resort.move_to_angle(45.0)    # @flow
-resort.get_current_position() # @flow
-resort.get_motor_health()     # @flow
-resort.go_home()              # @flow
-resort.disconnect()           # @flow
+from plate_resort.workflows.flows import (
+  connect,
+  disconnect,
+  activate_hotel,
+  move_to_angle,
+  get_position,
+  health,
+  go_home,
+  emergency_stop,
+  set_speed,
+)
 ```
 
 ## 🎮 Examples
 
-### Local Workflow Execution
+### Local Execution
 ```python
-from plate_resort.core import PlateResort
+from plate_resort.workflows.flows import connect, activate_hotel, disconnect
 
-# Each method call runs as a Prefect flow
-resort = PlateResort()
-resort.connect()
-resort.activate_hotel("A")
-position = resort.get_current_position()
-resort.disconnect()
+connect(device="/dev/ttyUSB0", baudrate=57600, motor_id=1)
+activate_hotel("A")
+disconnect()
 ```
 
 ### Remote Workflow Orchestration
 ```python
 from plate_resort.workflows import orchestrator
 
-# Submit flows to remote Prefect work pool
-connect_run = orchestrator.connect()
+connect_run = orchestrator.connect(device="/dev/ttyUSB0", baudrate=57600, motor_id=1)
 activate_run = orchestrator.activate_hotel("A")
 position_run = orchestrator.get_position()
 ```
 
-### Workflow Composition
-```python
-from prefect import flow
-from plate_resort.core import PlateResort
-
-@flow
-def complete_cycle():
-    resort = PlateResort()
-    resort.connect()
-    for hotel in ["A", "B", "C", "D"]:
-        resort.activate_hotel(hotel)
-        # Process plates...
-    resort.go_home()
-    resort.disconnect()
-
-# Run the composed workflow
+### Legacy Notes
+REST/FastAPI + keygen removed. Avoid reintroducing class method flows; keep stateless function flows.
 complete_cycle()
 ```
 
