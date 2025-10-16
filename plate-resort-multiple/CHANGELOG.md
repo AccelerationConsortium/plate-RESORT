@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.5] - 2025-10-16
 ## [2.0.6] - 2025-10-16
+## [2.0.7] - 2025-10-16
+
+### Fixed
+- Deployment failures due to Prefect attempting to read a non-existent script path (`/home/pi/plate_resort/core.py`). Added explicit module entrypoints in `deploy.py` so flows are resolved from `plate_resort.workflows.flows:<function>` rather than inferred file paths.
+
+### Added
+- Deployment output now prints each flow's entrypoint string along with source file.
+
+### Notes
+- If stale `deploy.py` persists, fully uninstall (`pip uninstall -y plate-resort`), remove any `plate_resort*` directories in the venv `site-packages`, then reinstall with `--force-refresh`.
+
 
 ### Added
 - `install.sh` flags: `--force-refresh` (delete venv + no pip cache), `--ref <git-ref>` (override branch/tag/commit for install).
