@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2025-10-15
+
+### Fixed
+- Resolved Prefect Cloud flow crash (SignatureMismatchError) by removing extraneous parameters from remote `connect` deployment submission.
+- Updated `orchestrator.connect()` to call `run_deployment(name="connect/connect")` without a parameter dict (method flow expects only `self`).
+
+### Notes
+- Other flows (activate-hotel, move-to-angle, etc.) retain parameters matching their method signatures.
+- No breaking API changes; remote client now successfully submits `connect` without crashing.
+
 ## [2.1.0] - 2025-01-XX
 
 ### Added
