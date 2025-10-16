@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [2.0.5] - 2025-10-16
 ## [2.0.6] - 2025-10-16
 ## [2.0.7] - 2025-10-16
+## [2.0.9] - 2025-10-16
+
+### Fixed
+- `deploy.py` now inspects the underlying wrapped function (`flow.fn`) for source path printing to avoid `TypeError` when `inspect` is used directly on Prefect Flow objects.
+- Updated sentinel to `DEPLOY_SCRIPT_VERSION=2.0.9` for remote verification.
+
+### Notes
+- If sentinel version <2.0.9 appears on target system after reinstall, stale artifact persistence is still occurring; force a refresh reinstall.
+
 ## [2.0.8] - 2025-10-16
 
 ### Added

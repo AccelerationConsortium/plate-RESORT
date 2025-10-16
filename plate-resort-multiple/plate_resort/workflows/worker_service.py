@@ -9,6 +9,7 @@ from prefect.workers.process import ProcessWorker
 
 class PlateResortWorker(ProcessWorker):
     """Custom worker for Plate Resort flows."""
+
     pass
 
 

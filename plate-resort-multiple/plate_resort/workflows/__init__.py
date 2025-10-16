@@ -14,7 +14,7 @@ from .orchestrator import (
 
 __all__ = [
     "activate_hotel",
-    "connect", 
+    "connect",
     "disconnect",
     "emergency_stop",
     "get_health",

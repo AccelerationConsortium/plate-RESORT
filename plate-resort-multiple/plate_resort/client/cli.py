@@ -8,14 +8,13 @@ from plate_resort.workflows import orchestrator
 
 class PlateResortClient:
     """Python client for Plate Resort using Prefect workflows"""
-    
-    def __init__(self, remote: bool = False, host: str = None, 
-                 port: int = None):
+
+    def __init__(self, remote: bool = False, host: str = None, port: int = None):
         """
         Initialize Plate Resort client
-        
+
         Args:
-            remote: If True, use remote Prefect orchestration. 
+            remote: If True, use remote Prefect orchestration.
                    If False, run flows locally.
             host: Prefect server host (for remote mode)
             port: Prefect server port (for remote mode)
@@ -23,7 +22,7 @@ class PlateResortClient:
         self.remote = remote
         self.host = host or os.getenv("PREFECT_HOST", "localhost")
         self.port = port or int(os.getenv("PREFECT_PORT", "4200"))
-        
+
         if remote:
             # Configure Prefect API URL for remote execution
             prefect_api_url = f"http://{self.host}:{self.port}/api"
@@ -33,9 +32,10 @@ class PlateResortClient:
             # Local mode - direct flow execution
             print("🏠 Local mode: Running flows directly")
             self.resort = PlateResort()
-    
-    def connect(self, device: str = "/dev/ttyUSB0", baudrate: int = 57600, 
-                motor_id: int = 1) -> Dict[str, Any]:
+
+    def connect(
+        self, device: str = "/dev/ttyUSB0", baudrate: int = 57600, motor_id: int = 1
+    ) -> Dict[str, Any]:
         """Connect to Dynamixel motor"""
         if self.remote:
             result = orchestrator.connect(device, baudrate, motor_id)
@@ -46,7 +46,7 @@ class PlateResortClient:
                 return {"status": "success", "message": "Connected to motor"}
             except Exception as e:
                 return {"status": "error", "error": str(e)}
-    
+
     def disconnect(self) -> Dict[str, Any]:
         """Disconnect from motor"""
         if self.remote:
@@ -58,7 +58,7 @@ class PlateResortClient:
                 return {"status": "success", "message": "Disconnected from motor"}
             except Exception as e:
                 return {"status": "error", "error": str(e)}
-    
+
     def status(self) -> Dict[str, Any]:
         """Get system status"""
         if self.remote:
@@ -66,11 +66,15 @@ class PlateResortClient:
             return {"status": "submitted", "flow_run": str(result)}
         else:
             try:
-                connected = self.resort.is_connected if hasattr(self.resort, 'is_connected') else False
+                connected = (
+                    self.resort.is_connected
+                    if hasattr(self.resort, "is_connected")
+                    else False
+                )
                 return {"status": "success", "connected": connected}
             except Exception as e:
                 return {"status": "error", "error": str(e)}
-    
+
     def health(self) -> Dict[str, Any]:
         """Get motor health diagnostics"""
         if self.remote:
@@ -82,7 +86,7 @@ class PlateResortClient:
                 return {"status": "success", "health": health_data}
             except Exception as e:
                 return {"status": "error", "error": str(e)}
-    
+
     def activate_hotel(self, hotel: str) -> Dict[str, Any]:
         """Move to specified hotel"""
         if self.remote:
@@ -94,7 +98,7 @@ class PlateResortClient:
                 return {"status": "success", "message": f"Activated hotel {hotel}"}
             except Exception as e:
                 return {"status": "error", "error": str(e)}
-    
+
     def go_home(self) -> Dict[str, Any]:
         """Return to home position"""
         if self.remote:
@@ -106,7 +110,7 @@ class PlateResortClient:
                 return {"status": "success", "message": "Moved to home position"}
             except Exception as e:
                 return {"status": "error", "error": str(e)}
-    
+
     def set_speed(self, speed: int) -> Dict[str, Any]:
         """Set motor movement speed"""
         if self.remote:
@@ -118,7 +122,7 @@ class PlateResortClient:
                 return {"status": "success", "message": f"Set speed to {speed}"}
             except Exception as e:
                 return {"status": "error", "error": str(e)}
-    
+
     def emergency_stop(self) -> Dict[str, Any]:
         """Emergency stop motor"""
         if self.remote:
@@ -130,7 +134,7 @@ class PlateResortClient:
                 return {"status": "success", "message": "Emergency stop executed"}
             except Exception as e:
                 return {"status": "error", "error": str(e)}
-    
+
     def get_hotels(self) -> Dict[str, Any]:
         """Get available hotels"""
         # This is config-based, no need for remote execution
@@ -139,7 +143,7 @@ class PlateResortClient:
             return {"status": "success", "hotels": hotels}
         except Exception as e:
             return {"status": "error", "error": str(e)}
-    
+
     def get_position(self) -> Dict[str, Any]:
         """Get current motor position"""
         if self.remote:
@@ -151,7 +155,7 @@ class PlateResortClient:
                 return {"status": "success", "position": position}
             except Exception as e:
                 return {"status": "error", "error": str(e)}
-    
+
     def move_to_angle(self, angle: float) -> Dict[str, Any]:
         """Move to specific angle in degrees"""
         if self.remote:
@@ -167,79 +171,95 @@ class PlateResortClient:
 
 def main():
     """CLI interface with proper argument parsing"""
-    parser = argparse.ArgumentParser(description="Plate Resort Client - Prefect Workflows")
-    parser.add_argument("--host", default="localhost",
-                        help="Prefect server host (default: localhost)")
-    parser.add_argument("--port", type=int, default=4200,
-                        help="Prefect server port (default: 4200)")
-    parser.add_argument("--remote", action="store_true",
-                        help="Use remote Prefect orchestration")
-    parser.add_argument("command", 
-                        choices=["connect", "disconnect", "status", "health", 
-                                 "activate", "home", "speed", "stop", "hotels", 
-                                 "position", "move"],
-                        help="Command to execute")
-    parser.add_argument("args", nargs="*", 
-                        help="Additional arguments for command")
-    
+    parser = argparse.ArgumentParser(
+        description="Plate Resort Client - Prefect Workflows"
+    )
+    parser.add_argument(
+        "--host", default="localhost", help="Prefect server host (default: localhost)"
+    )
+    parser.add_argument(
+        "--port", type=int, default=4200, help="Prefect server port (default: 4200)"
+    )
+    parser.add_argument(
+        "--remote", action="store_true", help="Use remote Prefect orchestration"
+    )
+    parser.add_argument(
+        "command",
+        choices=[
+            "connect",
+            "disconnect",
+            "status",
+            "health",
+            "activate",
+            "home",
+            "speed",
+            "stop",
+            "hotels",
+            "position",
+            "move",
+        ],
+        help="Command to execute",
+    )
+    parser.add_argument("args", nargs="*", help="Additional arguments for command")
+
     args = parser.parse_args()
-    
+
     # Initialize client
     client = PlateResortClient(remote=args.remote, host=args.host, port=args.port)
-    
+
     command = args.command.lower()
-    
+
     try:
         if command == "connect":
             device = args.args[0] if len(args.args) > 0 else "/dev/ttyUSB0"
             baudrate = int(args.args[1]) if len(args.args) > 1 else 57600
             motor_id = int(args.args[2]) if len(args.args) > 2 else 1
             result = client.connect(device, baudrate, motor_id)
-        
+
         elif command == "disconnect":
             result = client.disconnect()
-        
+
         elif command == "status":
             result = client.status()
-        
+
         elif command == "health":
             result = client.health()
-        
+
         elif command == "activate":
             if len(args.args) < 1:
                 print("Error: Hotel required (A, B, C, D)")
                 return
             hotel = args.args[0].upper()
             result = client.activate_hotel(hotel)
-        
+
         elif command == "home":
             result = client.go_home()
-        
+
         elif command == "speed":
             if len(args.args) < 1:
                 print("Error: Speed value required")
                 return
             speed = int(args.args[0])
             result = client.set_speed(speed)
-        
+
         elif command == "stop":
             result = client.emergency_stop()
-        
+
         elif command == "hotels":
             result = client.get_hotels()
-        
+
         elif command == "position":
             result = client.get_position()
-        
+
         elif command == "move":
             if len(args.args) < 1:
                 print("Error: Angle required (e.g., move 90)")
                 return
             angle = float(args.args[0])
             result = client.move_to_angle(angle)
-        
+
         print(result)
-        
+
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)

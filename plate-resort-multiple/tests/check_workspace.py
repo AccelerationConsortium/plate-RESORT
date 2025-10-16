@@ -24,7 +24,9 @@ async def main():
         try:
             pools = await client.read_work_pools()
         except AttributeError:
-            print("[ERROR] Client method read_work_pools() not available in this Prefect version.")
+            print(
+                "[ERROR] Client method read_work_pools() not available in this Prefect version."
+            )
             return
         names = [p.name for p in pools]
         print(f"Work pools ({len(names)}): {names}")

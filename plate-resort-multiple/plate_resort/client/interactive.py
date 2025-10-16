@@ -14,60 +14,65 @@ from plate_resort.workflows import orchestrator
 def load_client_config():
     """Load client configuration from secrets.ini or environment variables"""
     config = {
-        'host': 'localhost',
-        'port': 4200,
-        'prefect_api_url': 'http://localhost:4200/api'
+        "host": "localhost",
+        "port": 4200,
+        "prefect_api_url": "http://localhost:4200/api",
     }
-    
+
     # Try to load from the repository root secrets.ini
     repo_root = Path(__file__).parents[2]
-    secrets_file = str(repo_root / 'secrets.ini')
+    secrets_file = str(repo_root / "secrets.ini")
     if os.path.exists(secrets_file):
         try:
             parser = configparser.ConfigParser()
             parser.read(secrets_file)
-            
-            if 'client' in parser:
-                config['host'] = parser.get('client', 'default_host', 
-                                          fallback=config['host'])
-                config['port'] = parser.getint('client', 'default_port', 
-                                             fallback=config['port'])
-            
-            if 'prefect' in parser:
-                config['prefect_api_url'] = parser.get('prefect', 'server_api_url',
-                                                     fallback=config['prefect_api_url'])
-            if 'server' in parser:
-                api_key = parser.get('server', 'api_key', fallback=None)
+
+            if "client" in parser:
+                config["host"] = parser.get(
+                    "client", "default_host", fallback=config["host"]
+                )
+                config["port"] = parser.getint(
+                    "client", "default_port", fallback=config["port"]
+                )
+
+            if "prefect" in parser:
+                config["prefect_api_url"] = parser.get(
+                    "prefect", "server_api_url", fallback=config["prefect_api_url"]
+                )
+            if "server" in parser:
+                api_key = parser.get("server", "api_key", fallback=None)
                 if api_key:
-                    config['api_key'] = api_key
-                    
+                    config["api_key"] = api_key
+
         except Exception as e:
             print(f"⚠️  Warning: Could not read config/secrets.ini: {e}")
-    
+
     # Environment variables override file settings
-    config['host'] = os.getenv('PREFECT_HOST', config['host'])
-    config['port'] = int(os.getenv('PREFECT_PORT', config['port']))
-    config['prefect_api_url'] = os.getenv('PREFECT_API_URL', config['prefect_api_url'])
+    config["host"] = os.getenv("PREFECT_HOST", config["host"])
+    config["port"] = int(os.getenv("PREFECT_PORT", config["port"]))
+    config["prefect_api_url"] = os.getenv("PREFECT_API_URL", config["prefect_api_url"])
     # Set Prefect API key if provided in config or environment
-    api_key = os.getenv('PREFECT_API_KEY', config.get('api_key'))
+    api_key = os.getenv("PREFECT_API_KEY", config.get("api_key"))
     if api_key:
-        os.environ['PREFECT_API_KEY'] = api_key
+        os.environ["PREFECT_API_KEY"] = api_key
 
     return config
 
 
 class InteractivePlateResort:
     """Interactive client for Plate Resort workflows"""
-    
+
     def __init__(self, use_remote=False):
         """Initialize client in local or remote mode"""
         self.use_remote = use_remote
         self.config = load_client_config()
-        
+
         if use_remote:
-            print(f"🌐 Remote mode - Using Prefect server: {self.config['prefect_api_url']}")
+            print(
+                f"🌐 Remote mode - Using Prefect server: {self.config['prefect_api_url']}"
+            )
             # Set Prefect API URL for remote orchestration
-            os.environ['PREFECT_API_URL'] = self.config['prefect_api_url']
+            os.environ["PREFECT_API_URL"] = self.config["prefect_api_url"]
         else:
             print("🏠 Local mode - Running flows directly")
             self.resort = PlateResort()
@@ -104,7 +109,7 @@ class InteractivePlateResort:
         parts = command.strip().split()
         if not parts:
             return
-            
+
         cmd = parts[0].lower()
         args = parts[1:] if len(parts) > 1 else []
 
@@ -116,7 +121,7 @@ class InteractivePlateResort:
                 else:
                     self.resort.connect()
                     print("✅ Connected to motor")
-                    
+
             elif cmd == "disconnect":
                 if self.use_remote:
                     result = orchestrator.disconnect()
@@ -124,7 +129,7 @@ class InteractivePlateResort:
                 else:
                     self.resort.disconnect()
                     print("✅ Disconnected from motor")
-                    
+
             elif cmd == "health":
                 if self.use_remote:
                     result = orchestrator.get_health()
@@ -132,7 +137,7 @@ class InteractivePlateResort:
                 else:
                     health = self.resort.get_motor_health()
                     print(f"🏥 Motor Health: {health}")
-                    
+
             elif cmd == "activate":
                 if not args:
                     print("❌ Usage: activate <hotel> (A/B/C/D)")
@@ -144,7 +149,7 @@ class InteractivePlateResort:
                 else:
                     self.resort.activate_hotel(hotel)
                     print(f"✅ Moved to hotel {hotel}")
-                    
+
             elif cmd == "home":
                 if self.use_remote:
                     result = orchestrator.go_home()
@@ -152,7 +157,7 @@ class InteractivePlateResort:
                 else:
                     self.resort.go_home()
                     print("✅ Returned to home position")
-                    
+
             elif cmd == "angle":
                 if not args:
                     print("❌ Usage: angle <degrees>")
@@ -164,7 +169,7 @@ class InteractivePlateResort:
                 else:
                     self.resort.move_to_angle(angle)
                     print(f"✅ Moved to {angle}°")
-                    
+
             elif cmd == "position":
                 if self.use_remote:
                     result = orchestrator.get_position()
@@ -172,7 +177,7 @@ class InteractivePlateResort:
                 else:
                     pos = self.resort.get_current_position()
                     print(f"📍 Current position: {pos}°")
-                    
+
             elif cmd == "speed":
                 if not args:
                     print("❌ Usage: speed <value> (1-100)")
@@ -184,7 +189,7 @@ class InteractivePlateResort:
                 else:
                     self.resort.set_speed(speed)
                     print(f"✅ Speed set to {speed}")
-                    
+
             elif cmd == "stop":
                 if self.use_remote:
                     result = orchestrator.emergency_stop()
@@ -192,14 +197,14 @@ class InteractivePlateResort:
                 else:
                     self.resort.emergency_stop()
                     print("🛑 Emergency stop executed")
-                    
+
             elif cmd in ["help", "?"]:
                 self.show_help()
-                
+
             else:
                 print(f"❌ Unknown command: {cmd}")
                 print("💡 Type 'help' for available commands")
-                
+
         except Exception as e:
             print(f"❌ Error: {e}")
 
@@ -215,16 +220,23 @@ class InteractivePlateResort:
                 break
             self.execute_command(cmd)
 
+
 # Add CLI entrypoint
+
 
 def main():
     """Command-line interface for interactive Plate Resort client"""
     import argparse
+
     parser = argparse.ArgumentParser(
-        description="Plate Resort Interactive Client (local or remote via Prefect)")
+        description="Plate Resort Interactive Client (local or remote via Prefect)"
+    )
     parser.add_argument(
-        '-r', '--remote', action='store_true',
-        help='Use remote Prefect server instead of local instance')
+        "-r",
+        "--remote",
+        action="store_true",
+        help="Use remote Prefect server instead of local instance",
+    )
     args = parser.parse_args()
     client = InteractivePlateResort(use_remote=args.remote)
     client.run()
