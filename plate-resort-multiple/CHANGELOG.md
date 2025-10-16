@@ -2,6 +2,127 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.5] - 2025-10-16
+## [2.0.6] - 2025-10-16
+## [2.0.7] - 2025-10-16
+## [2.0.9] - 2025-10-16
+
+### Fixed
+- `deploy.py` now inspects the underlying wrapped function (`flow.fn`) for source path printing to avoid `TypeError` when `inspect` is used directly on Prefect Flow objects.
+- Updated sentinel to `DEPLOY_SCRIPT_VERSION=2.0.9` for remote verification.
+
+### Notes
+- If sentinel version <2.0.9 appears on target system after reinstall, stale artifact persistence is still occurring; force a refresh reinstall.
+
+## [2.0.8] - 2025-10-16
+
+### Added
+- Sentinel comment `DEPLOY_SCRIPT_VERSION=2.0.8` to `workflows/deploy.py` to verify correct file fetched on remote systems.
+
+### Fixed
+- Addressed persistent stale deployment script issue by adding explicit marker and instructions for manual overwrite when legacy `flow.from_source` pattern appears.
+
+### Notes
+- If deployment prints `Deploying 9 flows...` immediately upon import or still references `/home/pi/plate_resort/core.py`, the old script is in use. Manually overwrite site-packages `deploy.py` or reinstall with commit hash containing the sentinel.
+
+
+### Fixed
+- Deployment failures due to Prefect attempting to read a non-existent script path (`/home/pi/plate_resort/core.py`). Added explicit module entrypoints in `deploy.py` so flows are resolved from `plate_resort.workflows.flows:<function>` rather than inferred file paths.
+
+### Added
+- Deployment output now prints each flow's entrypoint string along with source file.
+
+### Notes
+- If stale `deploy.py` persists, fully uninstall (`pip uninstall -y plate-resort`), remove any `plate_resort*` directories in the venv `site-packages`, then reinstall with `--force-refresh`.
+
+
+### Added
+- `install.sh` flags: `--force-refresh` (delete venv + no pip cache), `--ref <git-ref>` (override branch/tag/commit for install).
+
+### Changed
+- Installer now prints the git ref used for clarity.
+- Force refresh bypasses wheel and HTTP caches to ensure latest remote commit is fetched.
+
+### Notes
+- Use `--force-refresh` when suspecting stale artifacts or cached wheels.
+- `--ref` enables pinning to a release tag or commit SHA for reproducible setups.
+
+
+### Added
+- Debug instrumentation in `plate_resort.workflows.deploy` to print source file path for each flow function during deployment.
+
+### Fixed
+- Began addressing Prefect deployment import path mismatch (`FileNotFoundError: /home/pi/plate_resort/core.py`). The package installs under `site-packages/plate_resort/` but Prefect attempted to load a filesystem path as if it were a loose script. Debug output will help confirm correct `site-packages` path on the Raspberry Pi.
+
+### Notes
+- If Prefect still resolves `/home/pi/plate_resort/core.py`, ensure the virtual environment has the package installed (not just a partial copy) and that `plate_resort` is not shadowed by a directory named `plate_resort` in `$HOME`. Remove/rename any stray `$HOME/plate_resort/` directory to avoid import shadowing.
+
+## [2.0.4] - 2025-10-16
+
+### Removed
+- Orphaned `plate-resort-keygen` console script entry from `pyproject.toml` (legacy REST/key generation utility fully retired).
+
+### Changed
+- Updated `README.md` to reflect Prefect-only architecture and environment variable based authentication (removed residual keygen / REST references).
+ - Simplified `install.sh`; now auto-deploys flows and starts worker when Prefect env vars are present.
+ - Bumped package version to 2.0.4.
+
+### Notes
+- Key generation is no longer part of the workflow; use Prefect Cloud API credentials via environment variables.
+
+## [2.0.3] - 2025-10-16
+
+### Added
+- `bootstrap_pi.sh` script for end-to-end fresh Raspberry Pi setup (clone, venv, deploy Prefect flows, start worker).
+- `verify_prefect.py` diagnostic script to confirm Prefect Cloud connectivity, work pool presence, deployments, and recent flow runs.
+
+### Changed
+- Pinned Prefect dependency to `prefect==3.4.23` for stable flow deployment behavior.
+
+### Notes
+- Future Prefect upgrades should edit pin deliberately; run `verify_prefect.py` after any upgrade.
+
+## [2.0.1] - 2025-10-15
+
+### Fixed
+- Resolved Prefect Cloud flow crash (SignatureMismatchError) by removing extraneous parameters from remote `connect` deployment submission.
+- Updated `orchestrator.connect()` to call `run_deployment(name="connect/connect")` without a parameter dict (method flow expects only `self`).
+
+### Notes
+- Other flows (activate-hotel, move-to-angle, etc.) retain parameters matching their method signatures.
+- No breaking API changes; remote client now successfully submits `connect` without crashing.
+
+## [2.1.0] - 2025-01-XX
+
+## [2.0.2] - 2025-10-15
+
+### Changed
+- Removed `@flow` decorators from `PlateResort` class methods to eliminate signature mismatches.
+- Deployments now source only function-based flows in `plate_resort/workflows/flows.py`.
+- `deploy.py` refactored to use explicit function list (`FUNCTION_FLOWS`).
+- `orchestrator.connect` restored to accept device/baud/motor parameters for the function flow.
+
+### Fixed
+- Resolved repeated CRASHED flow runs caused by method-based deployments passing unexpected parameters.
+
+### Notes
+- Class still usable locally; Prefect orchestration isolated to stateless function flows.
+
+
+### Added
+- Prefect v3 integration for workflow orchestration
+- `prefect_flows/device.py` - Prefect flows for device control
+- `prefect_flows/orchestrator.py` - Remote flow execution functions
+- `prefect_flows/README.md` - Setup and usage documentation
+
+### Changed
+- Added Prefect>=3.0.0 to dependencies
+- REST API remains available but Prefect is now the recommended approach
+
+### Notes
+- Prefect provides better observability, retry logic, and async execution
+- No breaking changes - REST API still functional for backward compatibility
+
 ## [2.0.0] - 2025-10-07
 
 ### 🎉 Major Release: Pip Package + Automatic Setup

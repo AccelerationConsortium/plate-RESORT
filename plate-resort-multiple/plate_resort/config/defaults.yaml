@@ -35,17 +35,16 @@ resort:
   profile_acceleration: 0  # 0 = default acceleration
   moving_threshold: 10  # Movement detection threshold
 
-# Server Configuration
-server:
-  # Network settings
-  host: "0.0.0.0"  # Bind to all interfaces
-  port: 8000
-  ip: "100.83.140.57"  # External IP for client connections
+# Prefect Configuration
+prefect:
+  # Workflow settings
+  server_host: "0.0.0.0"
+  server_port: 4200
   
-  # Security
-  api_key: "changeme"  # Default key - generate secure key with: python generate_api_key.py --generate --update-config
-  # API key can be overridden with PLATE_API_KEY environment variable
+  # Work pool settings
+  work_pool_name: "plate-resort-pool"
+  worker_name: "plate-resort-worker"
   
-  # API settings
-  reload: true  # Enable auto-reload during development
-  docs_enabled: true  # Enable /docs endpoint
+  # Flow settings
+  default_retries: 3
+  retry_delay_seconds: 5
