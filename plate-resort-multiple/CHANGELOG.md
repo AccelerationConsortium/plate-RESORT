@@ -8,6 +8,15 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.12] - 2025-10-21
 
+## [2.0.13] - 2025-10-21
+
+### Fixed
+- Corrected Prefect Cloud deployment entrypoint path to include top-level folder
+	`plate-resort-multiple/` so remote cloning resolves `flows.py`.
+
+### Notes
+- Redeploy with `plate-resort-deploy` to register fixed entrypoints.
+
 ### Added
 - Remote Git repository source in `deploy.py` using `flow.from_source` to satisfy Prefect Cloud requirement for image or storage without building a container image.
 

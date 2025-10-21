@@ -37,7 +37,12 @@ def main():
     )
     print("-" * 60)
     for flow_obj, deployment_name in FUNCTION_FLOWS:
-        entrypoint = f"plate_resort/workflows/flows.py:{flow_obj.fn.__name__}"
+        # Repo layout nests package in 'plate-resort-multiple/plate_resort/'.
+        # Entrypoint must include that base folder for Prefect Cloud cloning.
+        entrypoint = (
+            "plate-resort-multiple/plate_resort/workflows/flows.py:" +
+            f"{flow_obj.fn.__name__}"
+        )
         print(
             f"Deploying '{deployment_name}' (flow: {flow_obj.fn.__name__},"
             f" entrypoint: {entrypoint})"
@@ -46,7 +51,7 @@ def main():
         source_flow = flow_obj.from_source(
             source=REPO_URL,
             entrypoint=entrypoint,
-            # NOTE: Prefect clones default ref; commit SHA pin needs tag/branch.
+            # NOTE: Prefect clones default ref; pin SHA via tag or branch.
         )
         source_flow.deploy(
             name=deployment_name,

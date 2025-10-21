@@ -4,7 +4,7 @@ Prefect-orchestrated laboratory plate management using Dynamixel motors.
 Legacy REST/FastAPI layer removed in favor of function-based Prefect flows.
 """
 
-__version__ = "2.0.12"
+__version__ = "2.0.13"
 __author__ = "Acceleration Consortium"
 __email__ = "info@acceleration.utoronto.ca"
 
