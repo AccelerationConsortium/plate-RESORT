@@ -10,6 +10,17 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.13] - 2025-10-21
 
+## [2.0.14] - 2025-10-21
+
+### Added
+- Commit pinning support in `deploy.py` via `PLATE_RESORT_GIT_COMMIT` (uses GitRepository storage).
+
+### Changed
+- Improved warnings when a commit SHA is not supplied (falls back to default branch).
+
+### Notes
+- For reproducible deployments: `export PLATE_RESORT_GIT_COMMIT=$(git rev-parse HEAD)` then run `plate-resort-deploy`.
+
 ### Fixed
 - Corrected Prefect Cloud deployment entrypoint path to include top-level folder
 	`plate-resort-multiple/` so remote cloning resolves `flows.py`.

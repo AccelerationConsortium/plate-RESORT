@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plate-resort"
-version = "2.0.13"
+version = "2.0.14"
 description = "Plate Resort Control System - Server-Client Architecture for Laboratory Plate Management"
 readme = "README.md"
 license = {text = "MIT"}

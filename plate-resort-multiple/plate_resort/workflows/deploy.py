@@ -11,9 +11,11 @@ Pin a specific commit: export PLATE_RESORT_GIT_REF=<ref>
 """
 import os
 from plate_resort.workflows import flows
+from prefect.runner.storage import GitRepository
 
 REPO_URL = "https://github.com/AccelerationConsortium/plate-RESORT.git"
-GIT_REF = os.getenv("PLATE_RESORT_GIT_REF", "main")  # branch/tag/commit
+GIT_REF = os.getenv("PLATE_RESORT_GIT_REF", "main")  # branch/tag info
+GIT_COMMIT = os.getenv("PLATE_RESORT_GIT_COMMIT")  # 40-char commit SHA
 
 FUNCTION_FLOWS = [
     (flows.connect, "connect"),
@@ -33,8 +35,11 @@ def main():
     work_pool_name = "plate-resort-pool"
     print(
         f"Deploying {len(FUNCTION_FLOWS)} flows to work pool: {work_pool_name}"
-        f" (git ref: {GIT_REF})"
+        f" (ref: {GIT_REF}{' commit: ' + GIT_COMMIT if GIT_COMMIT else ''})"
     )
+    if not GIT_COMMIT:
+        print("WARNING: no commit SHA; cloning default 'main'.")
+    print("If path missing: set PLATE_RESORT_GIT_COMMIT and redeploy.")
     print("-" * 60)
     for flow_obj, deployment_name in FUNCTION_FLOWS:
         # Repo layout nests package in 'plate-resort-multiple/plate_resort/'.
@@ -48,11 +53,18 @@ def main():
             f" entrypoint: {entrypoint})"
         )
     # Attach remote source; from_source returns new Flow with storage metadata
-        source_flow = flow_obj.from_source(
-            source=REPO_URL,
-            entrypoint=entrypoint,
-            # NOTE: Prefect clones default ref; pin SHA via tag or branch.
-        )
+        if GIT_COMMIT:
+            storage = GitRepository(repo_url=REPO_URL, commit_sha=GIT_COMMIT)
+            source_flow = flow_obj.from_source(
+                source=storage,
+                entrypoint=entrypoint,
+            )
+        else:
+            # Fallback: no commit provided; attempt clone of default branch.
+            source_flow = flow_obj.from_source(
+                source=REPO_URL,
+                entrypoint=entrypoint,
+            )
         source_flow.deploy(
             name=deployment_name,
             work_pool_name=work_pool_name,
