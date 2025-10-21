@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.5] - 2025-10-16
 ## [2.0.6] - 2025-10-16
+## [2.0.11] - 2025-10-21
+
+### Fixed
+- Removed unsupported `entrypoint` argument from `Flow.deploy` calls (Prefect 3.4.23 API does not accept it).
+
+### Notes
+- Run `plate-resort-deploy` again to register flows without error.
+
 ## [2.0.10] - 2025-10-21
 
 ### Fixed

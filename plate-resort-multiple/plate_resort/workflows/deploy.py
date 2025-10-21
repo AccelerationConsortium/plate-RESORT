@@ -27,12 +27,12 @@ def main():
     print("-" * 60)
     for flow_obj, deployment_name in FUNCTION_FLOWS:
         # flow_obj is a Prefect Flow; underlying function is flow_obj.fn
-        entrypoint = f"plate_resort.workflows.flows:{flow_obj.fn.__name__}"
-        print(f"Deploying '{deployment_name}' (entrypoint: {entrypoint})")
+        print(
+            f"Deploying '{deployment_name}' (flow: {flow_obj.fn.__name__})"
+        )
         flow_obj.deploy(
             name=deployment_name,
             work_pool_name=work_pool_name,
-            entrypoint=entrypoint,
         )
         print(f"\u2713 Deployed: {deployment_name}")
     print("-" * 60)
