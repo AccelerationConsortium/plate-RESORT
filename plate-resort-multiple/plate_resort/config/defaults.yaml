@@ -13,8 +13,8 @@ resort:
   offset_angle: 19  # Base offset angle in degrees
   rotation_direction: 1  # 1 for clockwise, -1 for counter-clockwise
   
-  # Hotel positions (calculated from offset_angle and hotels)
-  # Hotels A,B,C,D are at 90° intervals starting from offset_angle
+  # Hotel positions computed dynamically:
+  # angle_i = offset_angle + i * (360 / len(hotels)) * rotation_direction
   
   # Movement settings
   default_speed: 50  # Profile velocity (50 = ~5% speed)

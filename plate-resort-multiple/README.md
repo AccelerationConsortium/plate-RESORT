@@ -33,8 +33,6 @@ pip install git+https://github.com/AccelerationConsortium/plate-RESORT.git@copil
 # Interactive client
 plate-resort-interactive
 
-# Demo workflows
-plate-resort-demo
 ```
 
 ## 🎯 Usage
@@ -66,14 +64,6 @@ plate-resort-interactive
 plate-resort-interactive --remote
 ```
 
-#### Demo Workflows
-```bash
-# Demonstrate local flows
-plate-resort-demo
-
-# Demonstrate remote orchestration
-plate-resort-demo --remote
-```
 
 #### Available Commands
 ```
@@ -110,14 +100,13 @@ plate-resort-worker
 plate_resort/
 ├── core.py                 # Hardware controller class (not decorated with @flow)
 ├── client/
-│   ├── interactive.py         # Interactive client
-│   └── demo.py               # Demo workflows
+│   └── interactive.py         # Interactive client
 ├── workflows/
 │   ├── orchestrator.py       # Remote flow submission
 │   ├── worker_service.py     # Persistent worker
 │   └── deploy.py            # Flow deployment
 └── utils/
-  └── update.py           # Update utilities
+  └── __init__.py          # Utilities package placeholder
 ```
 
 ### Flow Architecture
@@ -165,9 +154,10 @@ default_port = 4200
 
 ## 🔄 Development
 
-### Update System
+### Update
+Reinstall from source for latest version:
 ```bash
-plate-resort-update
+pip install --upgrade git+https://github.com/AccelerationConsortium/plate-RESORT.git@main#subdirectory=plate-resort-multiple
 ```
 
 ### Configuration
@@ -175,15 +165,7 @@ Environment variables (PREFECT_API_URL, PREFECT_API_KEY) replace any legacy key/
 
 ### Testing
 ```bash
-# Test all workflows
-plate-resort-demo
-
-# Test specific flows
-python -c "
-from plate_resort.core import PlateResort
-resort = PlateResort()
-resort.get_current_position()  # Runs as Prefect flow
-"
+python -c "from plate_resort.core import PlateResort; r=PlateResort(); r.connect(); print(r.get_current_position()); r.disconnect()" || echo "(Expected to fail without hardware)"
 ```
 
 ## 📊 Workflow Features
@@ -203,8 +185,8 @@ from plate_resort.workflows.flows import (
   disconnect,
   activate_hotel,
   move_to_angle,
-  get_position,
-  health,
+  get_current_position,
+  get_motor_health,
   go_home,
   emergency_stop,
   set_speed,
@@ -232,8 +214,7 @@ position_run = orchestrator.get_position()
 ```
 
 ### Legacy Notes
-REST/FastAPI + keygen removed. Avoid reintroducing class method flows; keep stateless function flows.
-complete_cycle()
+REST/FastAPI + keygen removed. Keep stateless function flows only.
 ```
 
 ## 📚 Documentation

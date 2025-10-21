@@ -48,8 +48,6 @@ Documentation = "https://github.com/AccelerationConsortium/plate-RESORT/blob/mai
 
 [project.scripts]
 plate-resort-interactive = "plate_resort.client.interactive:main"
-plate-resort-demo = "plate_resort.client.demo:main"
-plate-resort-update = "plate_resort.utils.update:main"
 plate-resort-worker = "plate_resort.workflows.worker_service:main"
 plate-resort-deploy = "plate_resort.workflows.deploy:main"
 

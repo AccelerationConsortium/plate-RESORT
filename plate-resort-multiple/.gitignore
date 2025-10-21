@@ -75,3 +75,6 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+archived/
+archived_gui/
+verify_prefect.py

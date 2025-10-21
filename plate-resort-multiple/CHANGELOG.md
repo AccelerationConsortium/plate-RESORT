@@ -4,27 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.5] - 2025-10-16
 ## [2.0.6] - 2025-10-16
+## [2.0.9] - 2025-10-21
+
+### Changed
+- `PlateResort.connect` now accepts optional overrides: `device`, `baudrate`, `motor_id` for flow parameter pass-through.
+
+### Removed
+- Console script entries for deleted artifacts (`plate-resort-demo`, `plate-resort-update`).
+
+### Notes
+- Function-based Prefect flows can now supply connection parameters safely without signature mismatch crashes.
+
+## [2.0.8] - 2025-10-21
+
+### Removed
+- Legacy artifacts: `plate_resort/utils/keygen.py`, `plate_resort/utils/update.py`, `plate_resort/client/demo.py`, temporary `test_counter` Prefect flow method, duplicate `is_connected`.
+- Legacy config search path entry for `resort_config.yaml`.
+
+### Changed
+- `.gitignore` now ignores `archived/`, `archived_gui/`, and `verify_prefect.py` (archives retained locally).
+- Clarified hotel angle computation comment in `defaults.yaml`.
+- Consolidated single `is_connected` method.
+
+### Notes
+- Archives preserved for reference but excluded from change tracking; consider moving to separate branch in future.
+
 ## [2.0.7] - 2025-10-16
-## [2.0.9] - 2025-10-16
-
-### Fixed
-- `deploy.py` now inspects the underlying wrapped function (`flow.fn`) for source path printing to avoid `TypeError` when `inspect` is used directly on Prefect Flow objects.
-- Updated sentinel to `DEPLOY_SCRIPT_VERSION=2.0.9` for remote verification.
-
-### Notes
-- If sentinel version <2.0.9 appears on target system after reinstall, stale artifact persistence is still occurring; force a refresh reinstall.
-
-## [2.0.8] - 2025-10-16
-
-### Added
-- Sentinel comment `DEPLOY_SCRIPT_VERSION=2.0.8` to `workflows/deploy.py` to verify correct file fetched on remote systems.
-
-### Fixed
-- Addressed persistent stale deployment script issue by adding explicit marker and instructions for manual overwrite when legacy `flow.from_source` pattern appears.
-
-### Notes
-- If deployment prints `Deploying 9 flows...` immediately upon import or still references `/home/pi/plate_resort/core.py`, the old script is in use. Manually overwrite site-packages `deploy.py` or reinstall with commit hash containing the sentinel.
-
 
 ### Fixed
 - Deployment failures due to Prefect attempting to read a non-existent script path (`/home/pi/plate_resort/core.py`). Added explicit module entrypoints in `deploy.py` so flows are resolved from `plate_resort.workflows.flows:<function>` rather than inferred file paths.

@@ -34,7 +34,8 @@ class PlateResort:
 
         Args:
             config_file: Path to YAML configuration file (default: auto-detect)
-            **overrides: Override any config values (e.g., speed=30, offset_angle=15)
+            **overrides: Override top-level config values (e.g., speed=30,
+                offset_angle=15)
         """
         # Auto-detect config file if not specified
         if config_file is None:
@@ -46,12 +47,12 @@ class PlateResort:
             possible_paths = [
                 os.path.join(
                     home_dir, "plate-resort-config", "defaults.yaml"
-                ),  # User config
+                ),  # User override
                 os.path.join(
                     package_dir, "config", "defaults.yaml"
                 ),  # Package defaults
-                "config/defaults.yaml",  # Current dir
-                "resort_config.yaml",  # Legacy
+                "config/defaults.yaml",  # Relative fallback
+                # Legacy file resort_config.yaml removed from search
             ]
 
             for path in possible_paths:
@@ -59,8 +60,10 @@ class PlateResort:
                     config_file = path
                     break
             else:
-                # If no config found, use package defaults location (will fail gracefully)
-                config_file = os.path.join(package_dir, "config", "defaults.yaml")
+                # Use package defaults location (final fallback)
+                config_file = os.path.join(
+                    package_dir, "config", "defaults.yaml"
+                )
 
         # Load configuration
         self.config = self._load_config(config_file)
@@ -116,8 +119,24 @@ class PlateResort:
 
         return config["resort"]
 
-    def connect(self):
-        """Connect to Dynamixel motor"""
+    def connect(self, device=None, baudrate=None, motor_id=None):
+        """Connect to Dynamixel motor.
+
+        Optional overrides allow flows / callers to specify connection
+        parameters without reconstructing the instance.
+
+        Args:
+            device (str | None): Serial device path override.
+            baudrate (int | None): Baud rate override.
+            motor_id (int | None): Motor ID override.
+        """
+        if device is not None:
+            self.device = device
+        if baudrate is not None:
+            self.baud = baudrate
+        if motor_id is not None:
+            self.motor_id = motor_id
+
         self.port = PortHandler(self.device)
         self.packet_handler = PacketHandler(2.0)
 
@@ -142,7 +161,10 @@ class PlateResort:
             self.config["torque_limit"],
         )
         self.packet_handler.write2ByteTxRx(
-            self.port, self.motor_id, self.ADDR_GOAL_TORQUE, self.config["goal_torque"]
+            self.port,
+            self.motor_id,
+            self.ADDR_GOAL_TORQUE,
+            self.config["goal_torque"],
         )
 
         self.packet_handler.write1ByteTxRx(
@@ -150,7 +172,12 @@ class PlateResort:
         )
 
         # Set profile velocity (speed)
-        self.packet_handler.write4ByteTxRx(self.port, self.motor_id, 112, self.speed)
+        self.packet_handler.write4ByteTxRx(
+            self.port,
+            self.motor_id,
+            112,
+            self.speed,
+        )
 
     def activate_hotel(self, hotel, tolerance=None, timeout=None):
         """
@@ -158,7 +185,7 @@ class PlateResort:
 
         Args:
             hotel: Hotel identifier (e.g., from hotels list)
-            tolerance: Position tolerance in degrees (uses config default if None)
+            tolerance: Position tolerance (degrees, config default if None)
             timeout: Maximum wait time in seconds (uses config default if None)
 
         Returns:
@@ -169,7 +196,9 @@ class PlateResort:
         if timeout is None:
             timeout = self.config["movement_timeout"]
         if hotel not in self.hotels:
-            raise ValueError(f"Hotel {hotel} not found. Available: {self.hotels}")
+            raise ValueError(
+                f"Hotel {hotel} not found. Available: {self.hotels}"
+            )
 
         if self.port is None:
             raise Exception("Not connected. Call connect() first.")
@@ -180,7 +209,10 @@ class PlateResort:
         self.packet_handler.write4ByteTxRx(
             self.port, self.motor_id, self.ADDR_GOAL_POSITION, goal_pos
         )
-        print(f"Moving to hotel {hotel} at {target_angle}° (position {goal_pos})")
+        print(
+            f"Moving to hotel {hotel} at {target_angle}° "
+            f"(position {goal_pos})"
+        )
 
         # Wait for position to be reached
         import time
@@ -196,14 +228,19 @@ class PlateResort:
             if error <= tolerance:
                 self.current_hotel = hotel
                 print(
-                    f"✓ Hotel {hotel} activated! Position: {current_pos:.1f}° (error: {error:.2f}°)"
+                    "✓ Hotel {hotel} activated! Position: "
+                    f"{current_pos:.1f}° (error: {error:.2f}°)".format(
+                        hotel=hotel
+                    )
                 )
                 return True
 
             time.sleep(0.1)
 
         print(
-            f"✗ Timeout waiting for hotel {hotel}. Current: {self.get_current_position():.1f}°, Min error achieved: {min_error:.2f}°"
+            "✗ Timeout waiting for hotel {hotel}. Current: "
+            f"{self.get_current_position():.1f}°, "
+            f"Min error: {min_error:.2f}°".format(hotel=hotel)
         )
         return False
 
@@ -236,7 +273,8 @@ class PlateResort:
             time.sleep(0.1)
 
         print(
-            f"✗ Timeout waiting for home position. Current: {self.get_current_position():.1f}°"
+            "✗ Timeout waiting for home position. Current: "
+            f"{self.get_current_position():.1f}°"
         )
         return False
 
@@ -265,13 +303,17 @@ class PlateResort:
             error = abs(current_pos - angle)
 
             if error <= tolerance:
-                print(f"✓ Target position reached! Position: {current_pos:.1f}°")
+                print(
+                    "✓ Target position reached! Position: "
+                    f"{current_pos:.1f}°"
+                )
                 return True
 
             time.sleep(0.1)
 
         print(
-            f"✗ Timeout waiting for target position. Current: {self.get_current_position():.1f}°"
+            "✗ Timeout waiting for target position. Current: "
+            f"{self.get_current_position():.1f}°"
         )
         return False
 
@@ -291,7 +333,7 @@ class PlateResort:
         Get the currently active hotel based on motor position
 
         Returns:
-            str: Hotel identifier from hotels list, or None if position doesn't match any hotel
+            str: Hotel identifier or None if position doesn't match any hotel
         """
         if self.port is None:
             raise Exception("Not connected. Call connect() first.")
@@ -319,7 +361,7 @@ class PlateResort:
         Get comprehensive motor health status
 
         Returns:
-            dict: Motor health data including temperature, current, voltage, errors
+            dict: Motor health data (temperature, current, voltage, errors)
         """
         if self.port is None:
             raise Exception("Not connected. Call connect() first.")
@@ -348,7 +390,9 @@ class PlateResort:
         voltage, result, error = self.packet_handler.read2ByteTxRx(
             self.port, self.motor_id, self.ADDR_PRESENT_VOLTAGE
         )
-        health["voltage"] = voltage * 0.1 if result == 0 else None  # Convert to volts
+        health["voltage"] = (
+            voltage * 0.1 if result == 0 else None
+        )  # Convert to volts
 
         # Hardware error status
         hw_error, result, error = self.packet_handler.read1ByteTxRx(
@@ -365,14 +409,25 @@ class PlateResort:
             health["temperature"]
             and health["temperature"] > self.config["temperature_limit"]
         ):
-            health["warnings"].append(f"High temperature: {health['temperature']}°C")
-        if health["current"] and abs(health["current"]) > self.config["current_limit"]:
-            health["warnings"].append(f"High current: {health['current']:.0f}mA")
+            health["warnings"].append(
+                f"High temperature: {health['temperature']}°C"
+            )
+        if (
+            health["current"]
+            and abs(health["current"]) > self.config["current_limit"]
+        ):
+            health["warnings"].append(
+                f"High current: {health['current']:.0f}mA"
+            )
         if health["voltage"]:
             if health["voltage"] < self.config["voltage_min"]:
-                health["warnings"].append(f"Low voltage: {health['voltage']:.1f}V")
+                health["warnings"].append(
+                    f"Low voltage: {health['voltage']:.1f}V"
+                )
             elif health["voltage"] > self.config["voltage_max"]:
-                health["warnings"].append(f"High voltage: {health['voltage']:.1f}V")
+                health["warnings"].append(
+                    f"High voltage: {health['voltage']:.1f}V"
+                )
         if health["hardware_error"] and health["hardware_error"] > 0:
             health["warnings"].append(
                 f"Hardware error: 0x{health['hardware_error']:02X}"
@@ -418,7 +473,12 @@ class PlateResort:
         """Set motor speed (profile velocity)"""
         self.speed = speed
         if self.port:
-            self.packet_handler.write4ByteTxRx(self.port, self.motor_id, 112, speed)
+            self.packet_handler.write4ByteTxRx(
+                self.port,
+                self.motor_id,
+                112,
+                speed,
+            )
 
     def get_current_position(self):
         """Get current motor position in degrees"""
@@ -434,18 +494,8 @@ class PlateResort:
         else:
             raise Exception("Failed to read position")
 
-    def is_connected(self):
-        """Check if connected to motor"""
-        return self.port is not None and self.port.is_open
-
-    @flow(name="test-counter")
-    def test_counter(self):
-        """
-        Test method that increments and returns call counter for instance persistence testing.
-        NOTE: This method is temporary and used only for testing. Will be removed after validation.
-        """
-        self._call_counter += 1
-        return {"counter": self._call_counter, "instance_id": id(self)}
+    def is_connected(self):  # consolidated; removed legacy test_counter flow
+        return self.port is not None and getattr(self.port, "is_open", False)
 
     def disconnect(self):
         """Disconnect from motor"""
@@ -456,15 +506,4 @@ class PlateResort:
             self.port.closePort()
             self.port = None
 
-    def is_connected(self):
-        """Check if connected to motor"""
-        if self.port is None:
-            return False
-        try:
-            # Try to read a simple value to test connection
-            _, result, _ = self.packet_handler.read1ByteTxRx(
-                self.port, self.motor_id, self.ADDR_TORQUE_ENABLE
-            )
-            return result == 0
-        except:
-            return False
+    # Removed duplicate is_connected (runtime artifact)

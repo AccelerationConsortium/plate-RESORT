@@ -3,48 +3,44 @@
 Helper script to deploy all Plate Resort flows to a work pool.
 Run this script after creating the work pool to deploy all flows.
 """
-from prefect import flow
+from plate_resort.workflows import flows
+import inspect
 
-work_pool_name = "plate-resort-pool"
-
-# Define flows using from_source to avoid hardware initialization during deployment
-# Deployment names should be concise since they're combined with flow name
-flow_specs = [
-    ("connect", "connect"),
-    ("disconnect", "disconnect"),
-    ("get_motor_health", "health"),
-    ("activate_hotel", "activate-hotel"),
-    ("go_home", "go-home"),
-    ("move_to_angle", "move-to-angle"),
-    ("set_speed", "set-speed"),
-    ("emergency_stop", "emergency-stop"),
-    ("get_current_position", "get-position"),
+FUNCTION_FLOWS = [
+    (flows.connect, "connect"),
+    (flows.disconnect, "disconnect"),
+    (flows.get_motor_health, "health"),
+    (flows.activate_hotel, "activate-hotel"),
+    (flows.go_home, "go-home"),
+    (flows.move_to_angle, "move-to-angle"),
+    (flows.set_speed, "set-speed"),
+    (flows.emergency_stop, "emergency-stop"),
+    (flows.get_current_position, "get-position"),
 ]
-
-print(f"Deploying {len(flow_specs)} flows to work pool: {work_pool_name}")
-print("-" * 60)
-
-for flow_method, deployment_name in flow_specs:
-    flow.from_source(
-        source=".",
-        entrypoint=f"plate_resort/core.py:PlateResort.{flow_method}",
-    ).deploy(
-        name=deployment_name,
-        work_pool_name=work_pool_name,
-    )
-    print(f"✓ Deployed: {deployment_name}")
-
-print("-" * 60)
-print(f"Successfully deployed all flows to '{work_pool_name}'")
-print("\nNext steps:")
-print(f"1. Start worker: prefect worker start --pool {work_pool_name}")
-print("2. Submit jobs using orchestrator.py or Prefect CLI")
 
 
 def main():
-    """Entry point for the deploy script."""
-    # The deployment code is already executed at module level
-    pass
+    """Deploy function-based flows (no class method flows)."""
+    work_pool_name = "plate-resort-pool"
+    print(f"Deploying {len(FUNCTION_FLOWS)} flows to work pool: {work_pool_name}")
+    print("-" * 60)
+    for flow_fn, deployment_name in FUNCTION_FLOWS:
+        # Debug: show where Python thinks the flow function is defined
+        src = inspect.getsourcefile(flow_fn) or "<unknown>"
+        print(f"Deploying '{deployment_name}' (source: {src})")
+        # Explicit entrypoint ensures Prefect uses module path, not a guessed script path
+        entrypoint = f"plate_resort.workflows.flows:{flow_fn.__name__}"
+        flow_fn.deploy(
+            name=deployment_name,
+            work_pool_name=work_pool_name,
+            entrypoint=entrypoint,
+        )
+        print(f"\u2713 Deployed: {deployment_name} (entrypoint: {entrypoint})")
+    print("-" * 60)
+    print(f"Successfully deployed all flows to '{work_pool_name}'")
+    print("\nNext steps:")
+    print(f"1. Start worker: prefect worker start --pool {work_pool_name}")
+    print("2. Submit jobs using orchestrator.py or Prefect CLI")
 
 
 if __name__ == "__main__":
