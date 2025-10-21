@@ -12,6 +12,15 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.14] - 2025-10-21
 
+## [2.0.15] - 2025-10-21
+
+### Fixed
+- Corrected `GitRepository` initialization (uses `url=` not `repo_url=`) and added
+	local path presence warning to help diagnose layout mismatches.
+
+### Notes
+- Set `PLATE_RESORT_GIT_COMMIT` to a commit containing `plate-resort-multiple/plate_resort/workflows/flows.py` before redeploy.
+
 ### Added
 - Commit pinning support in `deploy.py` via `PLATE_RESORT_GIT_COMMIT` (uses GitRepository storage).
 

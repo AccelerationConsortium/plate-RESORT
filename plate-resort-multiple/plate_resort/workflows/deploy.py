@@ -11,6 +11,7 @@ Pin a specific commit: export PLATE_RESORT_GIT_REF=<ref>
 """
 import os
 from plate_resort.workflows import flows
+from pathlib import Path
 from prefect.runner.storage import GitRepository
 
 REPO_URL = "https://github.com/AccelerationConsortium/plate-RESORT.git"
@@ -54,7 +55,7 @@ def main():
         )
     # Attach remote source; from_source returns new Flow with storage metadata
         if GIT_COMMIT:
-            storage = GitRepository(repo_url=REPO_URL, commit_sha=GIT_COMMIT)
+            storage = GitRepository(url=REPO_URL, commit_sha=GIT_COMMIT)
             source_flow = flow_obj.from_source(
                 source=storage,
                 entrypoint=entrypoint,
@@ -65,6 +66,10 @@ def main():
                 source=REPO_URL,
                 entrypoint=entrypoint,
             )
+    # Local existence sanity check (running inside repo; worker skip)
+        local_path = Path(__file__).parent.parent / "workflows" / "flows.py"
+        if not local_path.exists():
+            print("WARNING: flows.py missing; verify remote path.")
         source_flow.deploy(
             name=deployment_name,
             work_pool_name=work_pool_name,
