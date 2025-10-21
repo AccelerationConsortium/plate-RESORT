@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.5] - 2025-10-16
 ## [2.0.6] - 2025-10-16
+## [2.0.10] - 2025-10-21
+
+### Fixed
+- `deploy.py` now handles Prefect Flow objects correctly (uses `flow.fn` instead of passing Flow object to `inspect.getsourcefile`), preventing TypeError during deployment.
+
+### Notes
+- Re-run `plate-resort-deploy` after upgrading to register deployments successfully.
+
 ## [2.0.9] - 2025-10-21
 
 ### Changed
@@ -35,7 +43,13 @@ All notable changes to this project will be documented in this file.
 - Deployment failures due to Prefect attempting to read a non-existent script path (`/home/pi/plate_resort/core.py`). Added explicit module entrypoints in `deploy.py` so flows are resolved from `plate_resort.workflows.flows:<function>` rather than inferred file paths.
 
 ### Added
-- Deployment output now prints each flow's entrypoint string along with source file.
+- Deployment output now prints each flow's entrypoint string along with s  Stored in directory: /tmp/pip-ephem-wheel-cache-8mgnby2f/wheels/0b/aa/c0/11eecf10bed573525c496e7254c0e4a38ec0a80e991cc2e583
+Successfully built plate-resort
+Installing collected packages: pyserial, websockets, uvloop, urllib3, typing-extensions, sniffio, pyyaml, python-dotenv, idna, httptools, h11, dynamixel-sdk, click, charset_normalizer, certifi, annotated-types, uvicorn, typing-inspection, requests, pydantic-core, anyio, watchfiles, starlette, pydantic, fastapi, plate-resort
+Successfully installed annotated-types-0.7.0 anyio-4.11.0 certifi-2025.10.5 charset_normalizer-3.4.4 click-8.3.0 dynamixel-sdk-3.8.4 fastapi-0.119.1 h11-0.16.0 httptools-0.7.1 idna-3.11 plate-resort-2.0.0 pydantic-2.12.3 pydantic-core-2.41.4 pyserial-3.5 python-dotenv-1.1.1 pyyaml-6.0.3 requests-2.32.5 sniffio-1.3.1 starlette-0.48.0 typing-extensions-4.15.0 typing-inspection-0.4.2 urllib3-2.5.0 uvicorn-0.38.0 uvloop-0.22.1 watchfiles-1.1.1 websockets-15.0.1
+-bash: plate-resort-deploy: command not found
+-bash: prefect: command not found
+-bash: prefect: command not foundource file.
 
 ### Notes
 - If stale `deploy.py` persists, fully uninstall (`pip uninstall -y plate-resort`), remove any `plate_resort*` directories in the venv `site-packages`, then reinstall with `--force-refresh`.

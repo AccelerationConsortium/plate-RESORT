@@ -4,7 +4,6 @@ Helper script to deploy all Plate Resort flows to a work pool.
 Run this script after creating the work pool to deploy all flows.
 """
 from plate_resort.workflows import flows
-import inspect
 
 FUNCTION_FLOWS = [
     (flows.connect, "connect"),
@@ -22,20 +21,20 @@ FUNCTION_FLOWS = [
 def main():
     """Deploy function-based flows (no class method flows)."""
     work_pool_name = "plate-resort-pool"
-    print(f"Deploying {len(FUNCTION_FLOWS)} flows to work pool: {work_pool_name}")
+    print(
+        f"Deploying {len(FUNCTION_FLOWS)} flows to work pool: {work_pool_name}"
+    )
     print("-" * 60)
-    for flow_fn, deployment_name in FUNCTION_FLOWS:
-        # Debug: show where Python thinks the flow function is defined
-        src = inspect.getsourcefile(flow_fn) or "<unknown>"
-        print(f"Deploying '{deployment_name}' (source: {src})")
-        # Explicit entrypoint ensures Prefect uses module path, not a guessed script path
-        entrypoint = f"plate_resort.workflows.flows:{flow_fn.__name__}"
-        flow_fn.deploy(
+    for flow_obj, deployment_name in FUNCTION_FLOWS:
+        # flow_obj is a Prefect Flow; underlying function is flow_obj.fn
+        entrypoint = f"plate_resort.workflows.flows:{flow_obj.fn.__name__}"
+        print(f"Deploying '{deployment_name}' (entrypoint: {entrypoint})")
+        flow_obj.deploy(
             name=deployment_name,
             work_pool_name=work_pool_name,
             entrypoint=entrypoint,
         )
-        print(f"\u2713 Deployed: {deployment_name} (entrypoint: {entrypoint})")
+        print(f"\u2713 Deployed: {deployment_name}")
     print("-" * 60)
     print(f"Successfully deployed all flows to '{work_pool_name}'")
     print("\nNext steps:")
