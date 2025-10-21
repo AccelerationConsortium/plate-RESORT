@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
+"""Deploy all Plate Resort flows to Prefect Cloud.
+
+Prefect Cloud requires image or remote source storage for deployments.
+We avoid building a container by pointing flows to the public Git repository.
+
+Environment overrides:
+    PLATE_RESORT_GIT_REF   Optional branch, tag, or commit SHA (default: main)
+
+Pin a specific commit: export PLATE_RESORT_GIT_REF=<ref>
 """
-Helper script to deploy all Plate Resort flows to a work pool.
-Run this script after creating the work pool to deploy all flows.
-"""
+import os
 from plate_resort.workflows import flows
+
+REPO_URL = "https://github.com/AccelerationConsortium/plate-RESORT.git"
+GIT_REF = os.getenv("PLATE_RESORT_GIT_REF", "main")  # branch/tag/commit
 
 FUNCTION_FLOWS = [
     (flows.connect, "connect"),
@@ -19,18 +29,26 @@ FUNCTION_FLOWS = [
 
 
 def main():
-    """Deploy function-based flows (no class method flows)."""
+    """Deploy function-based flows using remote Git source (no image build)."""
     work_pool_name = "plate-resort-pool"
     print(
         f"Deploying {len(FUNCTION_FLOWS)} flows to work pool: {work_pool_name}"
+        f" (git ref: {GIT_REF})"
     )
     print("-" * 60)
     for flow_obj, deployment_name in FUNCTION_FLOWS:
-        # flow_obj is a Prefect Flow; underlying function is flow_obj.fn
+        entrypoint = f"plate_resort/workflows/flows.py:{flow_obj.fn.__name__}"
         print(
-            f"Deploying '{deployment_name}' (flow: {flow_obj.fn.__name__})"
+            f"Deploying '{deployment_name}' (flow: {flow_obj.fn.__name__},"
+            f" entrypoint: {entrypoint})"
         )
-        flow_obj.deploy(
+    # Attach remote source; from_source returns new Flow with storage metadata
+        source_flow = flow_obj.from_source(
+            source=REPO_URL,
+            entrypoint=entrypoint,
+            # NOTE: Prefect clones default ref; commit SHA pin needs tag/branch.
+        )
+        source_flow.deploy(
             name=deployment_name,
             work_pool_name=work_pool_name,
         )
@@ -39,8 +57,9 @@ def main():
     print(f"Successfully deployed all flows to '{work_pool_name}'")
     print("\nNext steps:")
     print(f"1. Start worker: prefect worker start --pool {work_pool_name}")
-    print("2. Submit jobs using orchestrator.py or Prefect CLI")
+    print("2. Run a deployment: prefect deployment run 'connect/connect'")
+    print("3. (Optional) Pin git ref: set PLATE_RESORT_GIT_REF then redeploy")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

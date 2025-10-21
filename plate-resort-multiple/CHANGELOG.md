@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 ## [2.0.6] - 2025-10-16
 ## [2.0.11] - 2025-10-21
 
+## [2.0.12] - 2025-10-21
+
+### Added
+- Remote Git repository source in `deploy.py` using `flow.from_source` to satisfy Prefect Cloud requirement for image or storage without building a container image.
+
+### Changed
+- Deployment script now prints git ref (env `PLATE_RESORT_GIT_REF`, default `main`).
+
+### Notes
+- Use `export PLATE_RESORT_GIT_REF=<branch-or-tag>` before `plate-resort-deploy` to pin a version.
+- No container image needed; worker clones repo directly.
+
 ### Fixed
 - Removed unsupported `entrypoint` argument from `Flow.deploy` calls (Prefect 3.4.23 API does not accept it).
 
