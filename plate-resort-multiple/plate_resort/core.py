@@ -61,9 +61,7 @@ class PlateResort:
                     break
             else:
                 # Use package defaults location (final fallback)
-                config_file = os.path.join(
-                    package_dir, "config", "defaults.yaml"
-                )
+                config_file = os.path.join(package_dir, "config", "defaults.yaml")
 
         # Load configuration
         self.config = self._load_config(config_file)
@@ -196,9 +194,7 @@ class PlateResort:
         if timeout is None:
             timeout = self.config["movement_timeout"]
         if hotel not in self.hotels:
-            raise ValueError(
-                f"Hotel {hotel} not found. Available: {self.hotels}"
-            )
+            raise ValueError(f"Hotel {hotel} not found. Available: {self.hotels}")
 
         if self.port is None:
             raise Exception("Not connected. Call connect() first.")
@@ -209,10 +205,7 @@ class PlateResort:
         self.packet_handler.write4ByteTxRx(
             self.port, self.motor_id, self.ADDR_GOAL_POSITION, goal_pos
         )
-        print(
-            f"Moving to hotel {hotel} at {target_angle}° "
-            f"(position {goal_pos})"
-        )
+        print(f"Moving to hotel {hotel} at {target_angle}° " f"(position {goal_pos})")
 
         # Wait for position to be reached
         import time
@@ -229,9 +222,7 @@ class PlateResort:
                 self.current_hotel = hotel
                 print(
                     "✓ Hotel {hotel} activated! Position: "
-                    f"{current_pos:.1f}° (error: {error:.2f}°)".format(
-                        hotel=hotel
-                    )
+                    f"{current_pos:.1f}° (error: {error:.2f}°)".format(hotel=hotel)
                 )
                 return True
 
@@ -303,10 +294,7 @@ class PlateResort:
             error = abs(current_pos - angle)
 
             if error <= tolerance:
-                print(
-                    "✓ Target position reached! Position: "
-                    f"{current_pos:.1f}°"
-                )
+                print("✓ Target position reached! Position: " f"{current_pos:.1f}°")
                 return True
 
             time.sleep(0.1)
@@ -390,9 +378,7 @@ class PlateResort:
         voltage, result, error = self.packet_handler.read2ByteTxRx(
             self.port, self.motor_id, self.ADDR_PRESENT_VOLTAGE
         )
-        health["voltage"] = (
-            voltage * 0.1 if result == 0 else None
-        )  # Convert to volts
+        health["voltage"] = voltage * 0.1 if result == 0 else None  # Convert to volts
 
         # Hardware error status
         hw_error, result, error = self.packet_handler.read1ByteTxRx(
@@ -409,25 +395,14 @@ class PlateResort:
             health["temperature"]
             and health["temperature"] > self.config["temperature_limit"]
         ):
-            health["warnings"].append(
-                f"High temperature: {health['temperature']}°C"
-            )
-        if (
-            health["current"]
-            and abs(health["current"]) > self.config["current_limit"]
-        ):
-            health["warnings"].append(
-                f"High current: {health['current']:.0f}mA"
-            )
+            health["warnings"].append(f"High temperature: {health['temperature']}°C")
+        if health["current"] and abs(health["current"]) > self.config["current_limit"]:
+            health["warnings"].append(f"High current: {health['current']:.0f}mA")
         if health["voltage"]:
             if health["voltage"] < self.config["voltage_min"]:
-                health["warnings"].append(
-                    f"Low voltage: {health['voltage']:.1f}V"
-                )
+                health["warnings"].append(f"Low voltage: {health['voltage']:.1f}V")
             elif health["voltage"] > self.config["voltage_max"]:
-                health["warnings"].append(
-                    f"High voltage: {health['voltage']:.1f}V"
-                )
+                health["warnings"].append(f"High voltage: {health['voltage']:.1f}V")
         if health["hardware_error"] and health["hardware_error"] > 0:
             health["warnings"].append(
                 f"Hardware error: 0x{health['hardware_error']:02X}"

@@ -33,7 +33,10 @@ FUNCTION_FLOWS = [
 
 def main():
     """Deploy function-based flows using remote Git source (no image build)."""
-    work_pool_name = "plate-resort-pool"
+    import os
+
+    # Work pool name can be overridden via environment variable for flexibility
+    work_pool_name = os.getenv("PLATE_RESORT_POOL", "plate-resort-pool")
     print(
         f"Deploying {len(FUNCTION_FLOWS)} flows to work pool: {work_pool_name}"
         f" (ref: {GIT_REF}{' commit: ' + GIT_COMMIT if GIT_COMMIT else ''})"
@@ -46,14 +49,14 @@ def main():
         # Repo layout nests package in 'plate-resort-multiple/plate_resort/'.
         # Entrypoint must include that base folder for Prefect Cloud cloning.
         entrypoint = (
-            "plate-resort-multiple/plate_resort/workflows/flows.py:" +
-            f"{flow_obj.fn.__name__}"
+            "plate-resort-multiple/plate_resort/workflows/flows.py:"
+            + f"{flow_obj.fn.__name__}"
         )
         print(
             f"Deploying '{deployment_name}' (flow: {flow_obj.fn.__name__},"
             f" entrypoint: {entrypoint})"
         )
-    # Attach remote source; from_source returns new Flow with storage metadata
+        # Attach remote source; from_source returns new Flow with storage metadata
         if GIT_COMMIT:
             storage = GitRepository(url=REPO_URL, commit_sha=GIT_COMMIT)
             source_flow = flow_obj.from_source(
@@ -66,7 +69,7 @@ def main():
                 source=REPO_URL,
                 entrypoint=entrypoint,
             )
-    # Local existence sanity check (running inside repo; worker skip)
+        # Local existence sanity check (running inside repo; worker skip)
         local_path = Path(__file__).parent.parent / "workflows" / "flows.py"
         if not local_path.exists():
             print("WARNING: flows.py missing; verify remote path.")

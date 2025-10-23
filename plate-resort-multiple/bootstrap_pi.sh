@@ -27,7 +27,7 @@ MOTOR_ID=""
 API_KEY="${PREFECT_API_KEY:-}"
 API_URL="${PREFECT_API_URL:-}"
 REPO_URL="https://github.com/AccelerationConsortium/plate-RESORT.git"
-WORK_POOL="plate-resort-pool"
+WORK_POOL="${PLATE_RESORT_POOL:-plate-resort-pool}"
 VENV_DIR="plate-resort-env"
 RUN_VERIFY=1
 

@@ -18,8 +18,12 @@ def main():
     CLI entry point: starts the custom ProcessWorker for 'plate-resort-pool'.
     """
     import asyncio
+    import os
 
-    worker = PlateResortWorker(work_pool_name="plate-resort-pool")
+    # Allow overriding the work pool via environment variable for flexibility.
+    pool = os.getenv("PLATE_RESORT_POOL", "plate-resort-pool")
+
+    worker = PlateResortWorker(work_pool_name=pool)
     asyncio.run(worker.start())
 
 

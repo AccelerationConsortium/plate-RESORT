@@ -13,7 +13,7 @@ set -euo pipefail
 #   --force-refresh             Remove venv & reinstall (fresh clone of package)
 #   --ref <branch|tag|commit>   Override git ref (default: copilot/replace-rest-api-with-prefect)
 
-POOL="plate-resort-pool"
+POOL="${PLATE_RESORT_POOL:-plate-resort-pool}"
 AUTO_ACTIVATE=1
 EDITABLE=0
 FORCE_REFRESH=0
@@ -30,7 +30,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo "🚀 Plate Resort - Prefect Installer"
+    echo "🚀 Plate Resort - Prefect Installer"
 
 # Require Prefect Cloud environment variables before any installation so flows can deploy immediately.
 if [[ -z "${PREFECT_API_URL:-}" || -z "${PREFECT_API_KEY:-}" ]]; then

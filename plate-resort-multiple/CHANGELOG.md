@@ -53,6 +53,13 @@ All notable changes to this project will be documented in this file.
 ### Notes
 - Run `plate-resort-deploy` again to register flows without error.
 
+## [2.0.16] - 2025-10-23
+
+### Notes
+- Operational status: the persistent worker and key deployments (connect, activate-hotel) are exercising correctly in Prefect Cloud — activation and connection flows submit and run as expected.
+- Known issue: `get-position` has intermittently crashed in a small number of runs (observed as CRASHED). This is documented and intentionally left unfixed for now; core functionality (connect, activate-hotel) prioritized.
+
+
 ## [2.0.10] - 2025-10-21
 
 ### Fixed

@@ -135,6 +135,8 @@ resort:
 prefect:
   server_host: "0.0.0.0"
   server_port: 4200
+  # Default work pool name; can be overridden at runtime by setting
+  # the PLATE_RESORT_POOL environment variable.
   work_pool_name: "plate-resort-pool"
 ```
 

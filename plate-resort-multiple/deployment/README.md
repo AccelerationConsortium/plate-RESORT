@@ -52,10 +52,12 @@ source /home/ac/plate-RESORT/plate-resort-env/bin/activate
 python -m plate_resort.workflows.worker_service
 ```
 
-If you want the unit to run the Prefect CLI worker instead, edit `ExecStart` to:
+If you want the unit to run the Prefect CLI worker instead, edit `ExecStart` to include your desired pool name or use the environment variable `PLATE_RESORT_POOL` in your EnvironmentFile. Example using an explicit pool name:
 
 ```text
 ExecStart=/bin/bash -lc 'source /home/ac/plate-RESORT/plate-resort-env/bin/activate && exec prefect worker start --pool "plate-resort-pool" --type process --install-policy if-not-present'
 ```
+
+Or set `PLATE_RESORT_POOL` in `/home/ac/plate-RESORT/secrets.local.env` and use the custom Python worker (recommended) which will pick it up automatically.
 
 Note: the custom Python worker is recommended for hardware persistence because it maintains a single PlateResort instance across runs.

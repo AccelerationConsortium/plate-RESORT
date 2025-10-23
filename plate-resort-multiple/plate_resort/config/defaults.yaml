@@ -42,6 +42,8 @@ prefect:
   server_port: 4200
   
   # Work pool settings
+  # Default value kept for backward compatibility. You can override at runtime
+  # by setting the PLATE_RESORT_POOL environment variable.
   work_pool_name: "plate-resort-pool"
   worker_name: "plate-resort-worker"
   
