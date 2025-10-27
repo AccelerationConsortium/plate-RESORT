@@ -2,6 +2,70 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.22] - 2025-10-27
+
+### Changed
+- Major README overhaul: removed duplicate/inconsistent sections; consolidated Quick Start, client setup (interactive vs example script), configuration overrides, troubleshooting table.
+
+### Added
+- Explicit documentation of `client-requirements.txt` and `plate_resort/client/env.sh` usage.
+
+### Notes
+- No functional code changes; documentation only.
+
+## [2.0.21] - 2025-10-27
+
+### Added
+- Restored minimal interactive CLI at `plate_resort/client/interactive.py` supporting local and remote Prefect submissions (commands: connect, activate <hotel>, position, stop, disconnect).
+
+### Notes
+- Console script `plate-resort-interactive` now functions again for both modes; remote requires PREFECT_API_URL and PREFECT_API_KEY.
+
+## [2.0.20] - 2025-10-27
+
+### Changed
+- Flows (`activate_hotel`, `go_home`, `move_to_angle`, `set_speed`, `get_motor_health`, `get_current_position`, `emergency_stop`) no longer auto-disconnect or release torque after completion. Connection remains active to keep motor locked unless the explicit `disconnect` flow is run.
+
+### Removed
+- Deprecated local hardware test scripts and example chaining script from `tests/`.
+- Pi-specific venv setup doc (`docs/pi-venv-prefect-setup.md`) superseded by simpler deployment approach.
+- Legacy installer scripts (`install.sh`, `bootstrap_pi.sh`) replaced by direct venv + plate-resort-deploy instructions in README.
+
+### Added
+- Relocated client example to `plate_resort/client/example_prefect_client.py`.
+- Added `plate_resort/client/env.sh` for quick environment variable export.
+
+### Notes
+- Ensures motor holds position continuously between operations. Use `disconnect` flow to intentionally release torque and close port.
+
+
+## [2.0.19] - 2025-10-27
+
+### Changed
+- Consolidated client examples into `tests/example_prefect_client.py` demonstrating sequential hotel activation (A→D) with completion waits after each activation.
+- Removed older verbose scripts (`test_orchestrator_connect_activate.py`, `example_chain_hotels.py`).
+
+### Notes
+- Waiting is optional; core orchestrator functions remain non-blocking unless `orchestrator.wait()` is invoked.
+
+## [2.0.18] - 2025-10-27
+
+### Added
+- `orchestrator.wait(flow_run)` helper for optional blocking until a flow run reaches a final state (polling Prefect Cloud).
+- Example chaining script `tests/example_chain_hotels.py` demonstrating sequential hotel activation (A→D) in blocking and non-blocking modes.
+
+### Notes
+- Non-blocking behavior remains default; blocking is opt-in for safety-critical sequences.
+- Minimal example script for connect + activate remains unchanged.
+
+## [2.0.17] - 2025-10-27
+
+### Changed
+- Cleaned and refocused `README.md` on Prefect Cloud orchestration: clarified remote workflow submission uses Prefect deployments and the Pi process worker; removed legacy REST/keygen notes section.
+- Added explicit references to setup scripts (`install.sh`, `bootstrap_pi.sh`) and systemd unit usage for persistent worker.
+
+### Notes
+- Environment override `PLATE_RESORT_POOL` documented; systemd unit and installer continue to auto-deploy when Prefect env vars are present.
 ## [2.0.5] - 2025-10-16
 ## [2.0.6] - 2025-10-16
 ## [2.0.11] - 2025-10-21

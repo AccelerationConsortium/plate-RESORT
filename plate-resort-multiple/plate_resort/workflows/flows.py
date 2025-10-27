@@ -23,78 +23,67 @@ def disconnect():
 
 @flow
 def get_motor_health():
-    """Get motor health"""
+    """Get motor health.
+
+    Connection is established if needed and left active (torque enabled)
+    after completion. Use disconnect() flow explicitly to release torque.
+    """
     resort = PlateResort()
     resort.connect()
-    try:
-        health = resort.get_motor_health()
-        return health
-    finally:
-        resort.disconnect()
+    health = resort.get_motor_health()
+    return health
 
 
 @flow
 def activate_hotel(hotel: str):
-    """Activate a hotel"""
+    """Activate a hotel.
+
+    Leaves connection/torque enabled for motor locking after move.
+    """
     resort = PlateResort()
     resort.connect()
-    try:
-        resort.activate_hotel(hotel)
-    finally:
-        resort.disconnect()
+    resort.activate_hotel(hotel)
 
 
 @flow
 def go_home():
-    """Go to home position"""
+    """Go to home position and keep connection active."""
     resort = PlateResort()
     resort.connect()
-    try:
-        resort.go_home()
-    finally:
-        resort.disconnect()
+    resort.go_home()
 
 
 @flow
 def move_to_angle(angle: float):
-    """Move to specific angle"""
+    """Move to specific angle; connection left active."""
     resort = PlateResort()
     resort.connect()
-    try:
-        resort.move_to_angle(angle)
-    finally:
-        resort.disconnect()
+    resort.move_to_angle(angle)
 
 
 @flow
 def set_speed(speed: int):
-    """Set movement speed"""
+    """Set movement speed; keep connection active."""
     resort = PlateResort()
     resort.connect()
-    try:
-        resort.set_speed(speed)
-    finally:
-        resort.disconnect()
+    resort.set_speed(speed)
 
 
 @flow
 def emergency_stop():
-    """Emergency stop"""
+    """Emergency stop.
+
+    Leaves torque disabled (stop) but keeps port connection active.
+    """
     resort = PlateResort()
     resort.connect()
-    try:
-        resort.emergency_stop()
-    finally:
-        resort.disconnect()
+    resort.emergency_stop()
 
 
 @flow
 def get_current_position():
-    """Get current position"""
+    """Get current position; keep connection active."""
     resort = PlateResort()
     resort.connect()
-    try:
-        position = resort.get_current_position()
-        return position
-    finally:
-        resort.disconnect()
+    position = resort.get_current_position()
+    return position

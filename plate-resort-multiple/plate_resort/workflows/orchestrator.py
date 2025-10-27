@@ -8,13 +8,57 @@ deployment-name is specified in deploy.py
 """
 
 from prefect.deployments import run_deployment
+import asyncio
+import time
+from prefect.client.orchestration import get_client
 
 
-def connect(device: str = "/dev/ttyUSB0", baudrate: int = 57600, motor_id: int = 1):
+def wait(flow_run, poll: float = 2.0, timeout: float = 600.0):
+    """Block until the given flow run reaches a final state.
+
+    Parameters
+    ----------
+    flow_run: FlowRun or object with `id` attribute
+        The run returned by `run_deployment`.
+    poll: float
+        Seconds between state checks.
+    timeout: float
+        Maximum seconds to wait before raising TimeoutError.
+
+    Returns
+    -------
+    prefect.states.State
+        Final state object.
+    """
+    run_id = getattr(flow_run, "id", flow_run)
+    start = time.time()
+    
+    async def _fetch(rid: str):
+        async with get_client() as client:
+            fr = await client.read_flow_run(rid)
+            return fr.state
+    while True:
+        state = asyncio.run(_fetch(run_id))
+        if state.is_final():
+            return state
+        if time.time() - start > timeout:
+            raise TimeoutError(f"Flow run {run_id} timed out after {timeout}s")
+        time.sleep(poll)
+
+
+def connect(
+    device: str = "/dev/ttyUSB0",
+    baudrate: int = 57600,
+    motor_id: int = 1,
+):
     """Connect to the motor using function-based flow deployment."""
     return run_deployment(
         name="connect/connect",
-        parameters={"device": device, "baudrate": baudrate, "motor_id": motor_id},
+        parameters={
+            "device": device,
+            "baudrate": baudrate,
+            "motor_id": motor_id,
+        },
     )
 
 
