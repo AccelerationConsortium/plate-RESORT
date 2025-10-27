@@ -85,6 +85,20 @@ plate-resort-deploy
 ```
 This re-registers function-based flows with Prefect Cloud using the current working tree (Git storage reference if configured).
 
+Pinning / ensuring correct source:
+
+Option A (branch ref):
+```bash
+export PLATE_RESORT_GIT_REF=copilot/replace-rest-api-with-prefect
+plate-resort-deploy
+```
+Option B (commit hash, reproducible) – recommended; resolved prior path issues during testing:
+```bash
+export PLATE_RESORT_GIT_COMMIT=$(git rev-parse HEAD)
+plate-resort-deploy
+```
+Commit pin (Option B) takes precedence over branch ref and guarantees the worker loads the exact code you just validated.
+
 ## 5. Available Flows
 All in `plate_resort/workflows/flows.py`:
 ```

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.24] - 2025-10-27
+
+### Added
+- README note detailing redeployment options: branch ref vs commit hash (Option B) and clarifying that commit pinning resolved previous missing entrypoint path issues.
+
+### Notes
+- Documentation-only change. Prefer `PLATE_RESORT_GIT_COMMIT=$(git rev-parse HEAD)` before `plate-resort-deploy` for reproducible deployments.
+
 ## [2.0.23] - 2025-10-27
 
 ### Fixed
