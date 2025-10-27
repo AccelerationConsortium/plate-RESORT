@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.23] - 2025-10-27
+
+### Fixed
+- `deploy.py` now uses `GitRepository(reference=PLATE_RESORT_GIT_REF)` when no commit SHA is provided instead of cloning a default path blindly, preventing missing entrypoint errors on non-main branches.
+
+### Notes
+- Set `PLATE_RESORT_GIT_COMMIT` to pin a specific commit (takes precedence over ref).
+
 ## [2.0.22] - 2025-10-27
 
 ### Changed

@@ -15,8 +15,10 @@ from pathlib import Path
 from prefect.runner.storage import GitRepository
 
 REPO_URL = "https://github.com/AccelerationConsortium/plate-RESORT.git"
-GIT_REF = os.getenv("PLATE_RESORT_GIT_REF", "main")  # branch/tag info
-GIT_COMMIT = os.getenv("PLATE_RESORT_GIT_COMMIT")  # 40-char commit SHA
+GIT_REF = os.getenv("PLATE_RESORT_GIT_REF", "main")  # branch/tag or default
+GIT_COMMIT = os.getenv(
+    "PLATE_RESORT_GIT_COMMIT"
+)  # 40-char commit SHA (takes precedence)
 
 FUNCTION_FLOWS = [
     (flows.connect, "connect"),
@@ -41,9 +43,13 @@ def main():
         f"Deploying {len(FUNCTION_FLOWS)} flows to work pool: {work_pool_name}"
         f" (ref: {GIT_REF}{' commit: ' + GIT_COMMIT if GIT_COMMIT else ''})"
     )
-    if not GIT_COMMIT:
-        print("WARNING: no commit SHA; cloning default 'main'.")
-    print("If path missing: set PLATE_RESORT_GIT_COMMIT and redeploy.")
+    if GIT_COMMIT:
+        print(f"Pinning to commit: {GIT_COMMIT}")
+    else:
+        print(f"Using Git ref: {GIT_REF} (no commit SHA provided)")
+    print(
+        "Tip: set PLATE_RESORT_GIT_COMMIT for fully reproducible deployments."
+    )
     print("-" * 60)
     for flow_obj, deployment_name in FUNCTION_FLOWS:
         # Repo layout nests package in 'plate-resort-multiple/plate_resort/'.
@@ -56,7 +62,7 @@ def main():
             f"Deploying '{deployment_name}' (flow: {flow_obj.fn.__name__},"
             f" entrypoint: {entrypoint})"
         )
-        # Attach remote source; from_source returns new Flow with storage metadata
+    # Attach remote source; from_source returns new Flow with storage metadata
         if GIT_COMMIT:
             storage = GitRepository(url=REPO_URL, commit_sha=GIT_COMMIT)
             source_flow = flow_obj.from_source(
@@ -64,9 +70,10 @@ def main():
                 entrypoint=entrypoint,
             )
         else:
-            # Fallback: no commit provided; attempt clone of default branch.
+            # Use branch/tag via 'reference' for non-pinned deployments.
+            storage = GitRepository(url=REPO_URL, reference=GIT_REF)
             source_flow = flow_obj.from_source(
-                source=REPO_URL,
+                source=storage,
                 entrypoint=entrypoint,
             )
         # Local existence sanity check (running inside repo; worker skip)
