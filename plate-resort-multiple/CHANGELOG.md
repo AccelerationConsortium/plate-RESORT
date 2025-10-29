@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.25] - 2025-10-29
+
+### Changed
+- Restored legacy blind hotel activation: `activate_hotel` now immediately returns success after issuing goal position without polling / position verification. This matches earlier behavior where activation succeeded even if position feedback intermittently failed.
+
+### Notes
+- Remote flows relying on `activate_hotel` will no longer block or fail due to position read errors. Use a future diagnostic flow or `get_motor_health` to inspect position when available.
+
 ## [2.0.24] - 2025-10-27
 
 ### Added
