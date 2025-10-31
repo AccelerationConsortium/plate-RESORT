@@ -42,6 +42,24 @@ Added adaptive backoff near target: when a pulse produces a delta > `TOLERANCE *
 ### Notes
 - Legacy `activate_hotel` retained (blind immediate command). Use `activate_hotel_precise` when confirmation within tolerance and controlled near-target approach are required.
 
+## [2.0.57] - 2025-10-31
+### Added
+- Runtime tuning helpers `show_precise_params()` and `tune_precise(**updates)` to inspect and adjust precise movement parameters without editing YAML.
+### Changed
+- More conservative fallback defaults in `_precise_cfg` (lower start PWM, slower escalation, slightly larger switch error). Helps prevent aggressive overshoot when user override file lacks new keys.
+### Notes
+- `tune_precise` modifications are in-memory only; update `~/plate-resort-config/defaults.yaml` to persist across sessions.
+## [2.0.58] - 2025-10-31
+### Fixed
+- Corrected misuse of control table address 32 (Velocity Limit) for torque/current limiting; now writes current limit to address 38 (`ADDR_CURRENT_LIMIT`).
+- Ensured profile velocity (addr 112) and optional profile acceleration (addr 108) are re-applied after every operating mode switch in precise movement helper `_set_mode`.
+### Changed
+- Refactored comment for goal current register to clarify applicability only in Current / Current-based Position modes (0 or 5); harmless when written in Position mode (3).
+- Wrapped long lines in `core.py` to satisfy lint width constraints.
+### Notes
+- Slower Stage 1 positioning can now be reliably tuned via `default_speed` (profile velocity) and `profile_acceleration` since writes persist after mode transitions.
+- For further near-target refinement adjust `pulse_pwm_start`, `pwm_step`, and `pwm_backoff_step` in `defaults.yaml` or via `tune_precise()`.
+
 ### Notes
 - Reboot performs protocol reboot then waits ~0.8s before exit; torque disabled during cleanup.
 - Voltage reported as decoded 0.1V units; current is raw value (no mA conversion applied).

@@ -103,7 +103,9 @@ class PlateResort:
         self.ADDR_GOAL_POSITION = 116
         self.ADDR_PRESENT_POSITION = 132
         self.ADDR_GOAL_TORQUE = 102
-        self.ADDR_TORQUE_LIMIT = 32
+        # Corrected address mapping (XM430 Protocol 2.0)
+        self.ADDR_VELOCITY_LIMIT = 32  # currently unused (velocity ceiling)
+        self.ADDR_CURRENT_LIMIT = 38   # actual current/torque limit register
         self.ADDR_PRESENT_TEMPERATURE = 146
         self.ADDR_PRESENT_CURRENT = 144
         self.ADDR_PRESENT_VOLTAGE = 144
@@ -156,18 +158,24 @@ class PlateResort:
         )  # Position control mode
 
         # Set torque settings
-        self.packet_handler.write2ByteTxRx(
-            self.port,
-            self.motor_id,
-            self.ADDR_TORQUE_LIMIT,
-            self.config["torque_limit"],
-        )
-        self.packet_handler.write2ByteTxRx(
-            self.port,
-            self.motor_id,
-            self.ADDR_GOAL_TORQUE,
-            self.config["goal_torque"],
-        )
+        # Apply current limit if provided (guard absent key)
+        if "current_limit" in self.config:
+            self.packet_handler.write2ByteTxRx(
+                self.port,
+                self.motor_id,
+                self.ADDR_CURRENT_LIMIT,
+                self.config["current_limit"],
+            )
+    # Goal current only meaningful in current / current-based
+    # position modes (0 or 5). Retained for optional future use;
+    # harmless in mode 3.
+        if "goal_torque" in self.config:
+            self.packet_handler.write2ByteTxRx(
+                self.port,
+                self.motor_id,
+                self.ADDR_GOAL_TORQUE,
+                self.config["goal_torque"],
+            )
 
         self.packet_handler.write1ByteTxRx(
             self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 1
@@ -180,6 +188,15 @@ class PlateResort:
             112,
             self.speed,
         )
+        # Optional acceleration application
+        accel = self.config.get("profile_acceleration", 0)
+        if accel and accel > 0:
+            self.packet_handler.write4ByteTxRx(
+                self.port,
+                self.motor_id,
+                108,
+                int(accel),
+            )
 
     def activate_hotel(self, hotel, tolerance=None, timeout=None):
         """
@@ -537,29 +554,52 @@ class PlateResort:
         """Assemble config for precise move with overrides."""
         base = {
             "tolerance": self.config.get("position_tolerance", 0.5),
-            "switch_error": self.config.get("switch_error", 3.0),
-            "stage1_timeout": self.config.get("stage1_timeout", 8.0),
-            "poll_interval": self.config.get("poll_interval", 0.3),
+            # Safer, conservative defaults if keys absent:
+            "switch_error": self.config.get("switch_error", 4.0),
+            "stage1_timeout": self.config.get("stage1_timeout", 10.0),
+            "poll_interval": self.config.get("poll_interval", 0.35),
             # Pulse stage
-            "pulse_pwm_start": self.config.get("pulse_pwm_start", 180),
-            "pwm_step": self.config.get("pwm_step", 25),
-            "pwm_max": self.config.get("pwm_max", 600),
-            "pulse_duration": self.config.get("pulse_duration", 0.30),
-            "pulse_rest": self.config.get("pulse_rest", 0.20),
-            "pulse_max": self.config.get("pulse_max", 25),
-            "motion_threshold": self.config.get("motion_threshold", 0.12),
+            "pulse_pwm_start": self.config.get("pulse_pwm_start", 140),
+            "pwm_step": self.config.get("pwm_step", 20),
+            "pwm_max": self.config.get("pwm_max", 480),
+            "pulse_duration": self.config.get("pulse_duration", 0.25),
+            "pulse_rest": self.config.get("pulse_rest", 0.25),
+            "pulse_max": self.config.get("pulse_max", 30),
+            "motion_threshold": self.config.get("motion_threshold", 0.10),
             "stall_pulses": self.config.get("stall_pulses", 6),
             # Backoff
             "enable_backoff": self.config.get("enable_backoff", True),
-            "max_step_factor": self.config.get("max_step_factor", 1.5),
-            "pwm_backoff_step": self.config.get(
-                "pwm_backoff_step", 60
-            ),
+            "max_step_factor": self.config.get("max_step_factor", 1.4),
+            "pwm_backoff_step": self.config.get("pwm_backoff_step", 50),
             "precise_log": self.config.get("precise_log", True),
         }
         for k, v in overrides.items():
             base[k] = v
         return base
+
+    def show_precise_params(self):
+        """Print current precise movement parameters (resolved)."""
+        cfg = self._precise_cfg({})
+        print("\n[Precise Params]")
+        for k in sorted(cfg.keys()):
+            print(f"  {k}: {cfg[k]}")
+        return cfg
+
+    def tune_precise(self, **updates):
+        """Runtime update of YAML-backed config keys for precise move.
+
+        Example:
+            resort.tune_precise(pulse_pwm_start=160, pwm_step=30)
+        These persist only for this process (do not write back to file).
+        """
+        for k, v in updates.items():
+            self.config[k] = v
+        # Show summary after update
+        if updates:
+            print("[TUNE] Updated keys:")
+            for k, v in updates.items():
+                print(f"  {k} -> {v}")
+        return self.show_precise_params()
 
     def _deg_to_raw(self, deg):  # small helper for clarity
         return int(deg * self.MAX_POSITION / self.MAX_ANGLE)
@@ -581,6 +621,21 @@ class PlateResort:
         self.packet_handler.write1ByteTxRx(
             self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 1
         )
+        # Reapply profile velocity & acceleration after mode switch
+        self.packet_handler.write4ByteTxRx(
+            self.port,
+            self.motor_id,
+            112,
+            self.speed,
+        )
+        accel = self.config.get("profile_acceleration", 0)
+        if accel and accel > 0:
+            self.packet_handler.write4ByteTxRx(
+                self.port,
+                self.motor_id,
+                108,
+                int(accel),
+            )
 
     def _two_stage_move(self, target_angle, cfg):
         """Coarse position then PWM pulses toward target angle."""
