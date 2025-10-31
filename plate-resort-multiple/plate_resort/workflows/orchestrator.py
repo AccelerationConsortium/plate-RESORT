@@ -73,7 +73,11 @@ def get_health():
     return run_deployment(name="get-motor-health/health")
 
 
-def activate_hotel(hotel: str, precise: bool = True, **overrides):
+def activate_hotel(
+    hotel: str,
+    precise: bool = True,
+    overrides: dict | None = None,
+):
     """Activate a hotel using precise two-stage move by default.
 
     Parameters
@@ -83,12 +87,14 @@ def activate_hotel(hotel: str, precise: bool = True, **overrides):
     precise : bool, default True
         When True, remote flow performs coarse+PWM refinement and returns
         a result dict. When False, legacy blind activation is used.
-    **overrides : dict
-        Optional precise parameter overrides forwarded to the flow
-        (e.g., switch_error=5.0, pulse_pwm_start=150).
+    overrides : dict, optional
+        Optional precise parameter overrides forwarded to the flow as a
+        single dict (e.g., {"switch_error": 5.0, "pulse_pwm_start": 150}).
+        Pass None (default) for no overrides.
     """
     params = {"hotel": hotel, "precise": precise}
-    params.update(overrides)
+    if overrides:
+        params["overrides"] = overrides
     return run_deployment(
         name="activate-hotel/activate-hotel",
         parameters=params,

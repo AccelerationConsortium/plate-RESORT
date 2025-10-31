@@ -81,6 +81,14 @@ Added adaptive backoff near target: when a pulse produces a delta > `TOLERANCE *
 - Reboot performs protocol reboot then waits ~0.8s before exit; torque disabled during cleanup.
 - Voltage reported as decoded 0.1V units; current is raw value (no mA conversion applied).
 
+## [2.0.61] - 2025-10-31
+### Fixed
+- Prefect `activate_hotel` flow parameter schema error (`'overrides' is a required property`) caused by variadic `**overrides`. Replaced with explicit optional `overrides: dict | None` parameter so deployments no longer require an overrides object.
+### Changed
+- Orchestrator helper `activate_hotel` now accepts `overrides: dict | None` and forwards only when provided.
+### Notes
+- To pass overrides remotely use: `--param overrides='{"pulse_pwm_start": 140, "pwm_step": 20}'` (CLI JSON string) or programmatically `activate_hotel("A", overrides={"pulse_pwm_start":140})`.
+
 
 ## [2.0.49] - 2025-10-30
 ### Added

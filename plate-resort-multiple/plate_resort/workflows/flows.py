@@ -39,7 +39,11 @@ def get_motor_health():
 
 
 @flow
-def activate_hotel(hotel: str, precise: bool = True, **overrides):
+def activate_hotel(
+    hotel: str,
+    precise: bool = True,
+    overrides: dict | None = None,
+):
     """Activate a hotel (precise two-stage by default).
 
     Args:
@@ -47,12 +51,21 @@ def activate_hotel(hotel: str, precise: bool = True, **overrides):
         precise: When True (default), uses two-stage coarse+PWM refinement
             via `activate_hotel_precise`; when False, uses legacy blind
             `activate_hotel` (immediate goal position write, no verification).
-        **overrides: Optional precise movement parameter overrides passed to
-            `activate_hotel_precise` (e.g., switch_error=5.0,
-            pulse_pwm_start=150).
+        overrides: Optional dict of precise movement parameter overrides
+            passed to `activate_hotel_precise` (e.g.,
+            {"switch_error": 5.0, "pulse_pwm_start": 150}). If omitted or
+            null, defaults are used.
 
     Returns:
         dict | None: Precise result dict when precise=True, else None.
+
+    Notes:
+        - Replaces earlier variadic ``**overrides`` parameter which caused a
+          Prefect parameter schema validation error ("'overrides' is a
+          required property"). Using an explicit optional dict keeps the
+          parameter optional and avoids schema enforcement issues.
+        - To override parameters remotely now call the deployment with, e.g.:
+            overrides={"pulse_pwm_start": 140, "pwm_step": 20}
 
     Leaves connection/torque enabled for motor locking after move so that
     subsequent flow invocations operate on an already-engaged motor.
@@ -60,10 +73,9 @@ def activate_hotel(hotel: str, precise: bool = True, **overrides):
     resort = PlateResort()
     resort.connect()
     if precise:
-        return resort.activate_hotel_precise(hotel, **overrides)
-    else:
-        resort.activate_hotel(hotel)
-        return None
+        return resort.activate_hotel_precise(hotel, **(overrides or {}))
+    resort.activate_hotel(hotel)
+    return None
 
 
 @flow
