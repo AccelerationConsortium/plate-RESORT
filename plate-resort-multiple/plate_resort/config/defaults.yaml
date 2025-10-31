@@ -21,6 +21,30 @@ resort:
   position_tolerance: 0.5  # Position accuracy in degrees
   movement_timeout: 20  # Max wait time in seconds
   
+  # Two-stage precise movement (coarse position -> PWM pulses)
+  enable_precise_move: true            # Master toggle for two-stage strategy
+  switch_error: 3.0                    # Residual error (deg) to switch to pulses (if not already within tolerance)
+  stage1_timeout: 8.0                  # Optional coarse stage cap (seconds); set null to disable
+  poll_interval: 0.3                   # Coarse stage poll interval (s)
+  
+  # Pulse stage parameters
+  pulse_pwm_start: 180                 # Starting PWM magnitude
+  pwm_step: 25                         # Increment when motion small
+  pwm_max: 600                         # Ceiling for PWM
+  pulse_duration: 0.30                 # On-time (s)
+  pulse_rest: 0.20                     # Off-time (s)
+  pulse_max: 25                        # Safety cap on pulses
+  motion_threshold: 0.12               # Minimum deg motion to count as effective
+  stall_pulses: 6                      # Consecutive low-motion pulses to declare stall
+  
+  # Adaptive backoff (reduce PWM when single pulse moves too much near target)
+  enable_backoff: true
+  max_step_factor: 1.5                 # Allow at most tolerance * factor per pulse
+  pwm_backoff_step: 60                 # Amount to reduce PWM on oversize movement
+  
+  # Logging verbosity for precise moves
+  precise_log: true                    # Print per-pulse telemetry lines
+  
   # Torque settings
   goal_torque: 1023  # Max torque output (0-1023, 1023 = 100%)
   torque_limit: 1023  # Torque limit for safety (0-1023)

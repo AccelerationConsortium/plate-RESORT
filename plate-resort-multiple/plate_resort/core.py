@@ -208,8 +208,8 @@ class PlateResort:
         target_angle = self.hotel_angles[hotel]
         goal_pos = int(target_angle * self.MAX_POSITION / self.MAX_ANGLE)
 
-    # Issue command and optimistically mark hotel active without
-    # verifying position (legacy blind behavior).
+        # Issue command and optimistically mark hotel active without
+        # verifying position (legacy blind behavior).
         self.packet_handler.write4ByteTxRx(
             self.port,
             self.motor_id,
@@ -222,6 +222,31 @@ class PlateResort:
         )
         self.current_hotel = hotel
         return True
+
+    def activate_hotel_precise(self, hotel, **overrides):
+        """Precise activation using two-stage strategy (coarse -> PWM pulses).
+
+        Args:
+            hotel (str): Hotel identifier.
+            **overrides: Optional per-call overrides for configuration keys.
+
+        Returns:
+            dict: Result details {success: bool, reason: str, pulses: int,
+                  final_angle: float, final_error: float}
+        """
+        if hotel not in self.hotels:
+            raise ValueError(
+                f"Hotel {hotel} not found. Available: {self.hotels}"
+            )
+        if self.port is None:
+            raise Exception("Not connected. Call connect() first.")
+
+        cfg = self._precise_cfg(overrides)
+        target_angle = self.hotel_angles[hotel]
+        result = self._two_stage_move(target_angle, cfg)
+        if result["success"]:
+            self.current_hotel = hotel
+        return result
 
     def go_home(self):
         """Go to home position (0 degrees)"""
@@ -295,6 +320,21 @@ class PlateResort:
             f"{self.get_current_position():.1f}°"
         )
         return False
+
+    def move_to_angle_precise(self, angle, **overrides):
+        """Precise move to angle using two-stage strategy.
+
+        Args:
+            angle (float): Target angle in degrees.
+            **overrides: Per-call override of precise movement parameters.
+
+        Returns:
+            dict: See `activate_hotel_precise` for shape.
+        """
+        if self.port is None:
+            raise Exception("Not connected. Call connect() first.")
+        cfg = self._precise_cfg(overrides)
+        return self._two_stage_move(angle, cfg)
 
     def emergency_stop(self):
         """Emergency stop - disable torque immediately"""
@@ -491,3 +531,195 @@ class PlateResort:
             self.port = None
 
     # Removed duplicate is_connected (runtime artifact)
+
+    # -------------------- Internal precise movement helpers -----------------
+    def _precise_cfg(self, overrides):
+        """Assemble config for precise move with overrides."""
+        base = {
+            "tolerance": self.config.get("position_tolerance", 0.5),
+            "switch_error": self.config.get("switch_error", 3.0),
+            "stage1_timeout": self.config.get("stage1_timeout", 8.0),
+            "poll_interval": self.config.get("poll_interval", 0.3),
+            # Pulse stage
+            "pulse_pwm_start": self.config.get("pulse_pwm_start", 180),
+            "pwm_step": self.config.get("pwm_step", 25),
+            "pwm_max": self.config.get("pwm_max", 600),
+            "pulse_duration": self.config.get("pulse_duration", 0.30),
+            "pulse_rest": self.config.get("pulse_rest", 0.20),
+            "pulse_max": self.config.get("pulse_max", 25),
+            "motion_threshold": self.config.get("motion_threshold", 0.12),
+            "stall_pulses": self.config.get("stall_pulses", 6),
+            # Backoff
+            "enable_backoff": self.config.get("enable_backoff", True),
+            "max_step_factor": self.config.get("max_step_factor", 1.5),
+            "pwm_backoff_step": self.config.get(
+                "pwm_backoff_step", 60
+            ),
+            "precise_log": self.config.get("precise_log", True),
+        }
+        for k, v in overrides.items():
+            base[k] = v
+        return base
+
+    def _deg_to_raw(self, deg):  # small helper for clarity
+        return int(deg * self.MAX_POSITION / self.MAX_ANGLE)
+
+    def _read_deg(self):
+        pos, res, err = self.packet_handler.read4ByteTxRx(
+            self.port, self.motor_id, self.ADDR_PRESENT_POSITION
+        )
+        if res == 0 and err == 0:
+            return pos * self.MAX_ANGLE / self.MAX_POSITION
+        raise RuntimeError("position read failed")
+
+    def _set_mode(self, mode):
+        # Disable torque, set mode, enable torque (Operating Mode addr=11)
+        self.packet_handler.write1ByteTxRx(
+            self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 0
+        )
+        self.packet_handler.write1ByteTxRx(self.port, self.motor_id, 11, mode)
+        self.packet_handler.write1ByteTxRx(
+            self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 1
+        )
+
+    def _two_stage_move(self, target_angle, cfg):
+        """Coarse position then PWM pulses toward target angle."""
+        # Stage 1: coarse position mode (3)
+        self._set_mode(3)
+        goal_pos = self._deg_to_raw(target_angle)
+        self.packet_handler.write4ByteTxRx(
+            self.port, self.motor_id, self.ADDR_GOAL_POSITION, goal_pos
+        )
+        import time
+
+        start = time.time()
+        while True:
+            try:
+                present = self._read_deg()
+            except Exception:
+                return {
+                    "success": False,
+                    "reason": "read_fail_stage1",
+                    "pulses": 0,
+                    "final_angle": None,
+                    "final_error": None,
+                }
+            err = abs(target_angle - present)
+            if cfg["precise_log"]:
+                print(f"pos={present:.2f}° err={err:.2f}°")
+            if err <= cfg["tolerance"]:
+                return {
+                    "success": True,
+                    "reason": "coarse_success",
+                    "pulses": 0,
+                    "final_angle": present,
+                    "final_error": err,
+                }
+            if err <= cfg["switch_error"]:
+                if cfg["precise_log"]:
+                    print(
+                        f"[SWITCH] residual {err:.2f}° <= "
+                        f"{cfg['switch_error']:.2f}° -> pulses"
+                    )
+                break
+            if (
+                cfg["stage1_timeout"] is not None
+                and time.time() - start > cfg["stage1_timeout"]
+            ):
+                if cfg["precise_log"]:
+                    print("[TIMEOUT] stage1 -> pulses")
+                break
+            time.sleep(cfg["poll_interval"])
+
+        # Stage 2: PWM pulses (mode 16)
+        self._set_mode(16)
+        pulses = 0
+        pwm_value = int(cfg["pulse_pwm_start"])
+        stall_count = 0
+        last_angle = self._read_deg()
+        while pulses < cfg["pulse_max"]:
+            present = last_angle
+            err_signed = target_angle - present
+            abs_err = abs(err_signed)
+            if cfg["precise_log"]:
+                print(
+                    f"pulse={pulses} pos={present:.2f}° err={abs_err:.2f}° "
+                    f"pwm={pwm_value}"
+                )
+            if abs_err <= cfg["tolerance"]:
+                return {
+                    "success": True,
+                    "reason": "pulses_success",
+                    "pulses": pulses,
+                    "final_angle": present,
+                    "final_error": abs_err,
+                }
+            direction = 1 if err_signed > 0 else -1
+            applied_pwm = direction * pwm_value
+            # Write PWM (addr 100), mask to 2 bytes
+            self.packet_handler.write2ByteTxRx(
+                self.port, self.motor_id, 100, applied_pwm & 0xFFFF
+            )
+            time.sleep(cfg["pulse_duration"])
+            self.packet_handler.write2ByteTxRx(
+                self.port, self.motor_id, 100, 0
+            )
+            time.sleep(cfg["pulse_rest"])
+            try:
+                new_angle = self._read_deg()
+            except Exception:
+                return {
+                    "success": False,
+                    "reason": "read_fail_pulse",
+                    "pulses": pulses,
+                    "final_angle": None,
+                    "final_error": None,
+                }
+            delta = abs(new_angle - present)
+            last_angle = new_angle
+            # Backoff
+            if (
+                cfg["enable_backoff"]
+                and abs_err < cfg["switch_error"]
+                and delta > cfg["tolerance"] * cfg["max_step_factor"]
+            ):
+                new_pwm = max(
+                    int(cfg["pulse_pwm_start"]),
+                    pwm_value - cfg["pwm_backoff_step"],
+                )
+                if cfg["precise_log"]:
+                    limit = cfg["tolerance"] * cfg["max_step_factor"]
+                    print(
+                        f"[BACKOFF] delta={delta:.2f}° > {limit:.2f}° "
+                        f"pwm {pwm_value}->{new_pwm}"
+                    )
+                pwm_value = new_pwm
+            # Escalate
+            if delta < cfg["motion_threshold"] and abs_err > cfg["tolerance"]:
+                pwm_value = min(pwm_value + cfg["pwm_step"], cfg["pwm_max"])
+            # Stall tracking
+            if delta < cfg["motion_threshold"]:
+                stall_count += 1
+            else:
+                stall_count = 0
+            if stall_count >= cfg["stall_pulses"]:
+                if cfg["precise_log"]:
+                    print(
+                        f"[STALL] <{cfg['motion_threshold']}° for "
+                        f"{stall_count} pulses; stopping"
+                    )
+                return {
+                    "success": False,
+                    "reason": "stall",
+                    "pulses": pulses,
+                    "final_angle": new_angle,
+                    "final_error": abs_err,
+                }
+            pulses += 1
+        return {
+            "success": False,
+            "reason": "max_pulses",
+            "pulses": pulses,
+            "final_angle": last_angle,
+            "final_error": abs(target_angle - last_angle),
+        }
