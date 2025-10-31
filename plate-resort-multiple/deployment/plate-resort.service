@@ -1,0 +1,20 @@
+[Unit]
+Description=Plate-RESORT persistent Prefect worker (custom Python worker)
+After=network.target
+
+[Service]
+Type=simple
+# Point this to a file with PREFECT_API_URL and PREFECT_API_KEY, and also set PREFECT_CLI_PROMPT=false
+EnvironmentFile=/home/ac/plate-RESORT/secrets.local.env
+Environment=PREFECT_CLI_PROMPT=false
+User=ac
+Group=ac
+WorkingDirectory=/home/ac/plate-RESORT
+# Adjust the path to your venv activate script
+ExecStart=/bin/bash -lc 'source /home/ac/plate-RESORT/plate-resort-env/bin/activate && exec python -m plate_resort.workflows.worker_service'
+Restart=always
+RestartSec=5
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

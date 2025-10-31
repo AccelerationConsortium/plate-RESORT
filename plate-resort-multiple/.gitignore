@@ -62,6 +62,7 @@ venv/
 secrets.yaml
 secrets.json
 secrets.ini
+secrets.local.ini
 
 # Server logs
 server/*.log
@@ -74,3 +75,6 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+archived/
+archived_gui/
+verify_prefect.py

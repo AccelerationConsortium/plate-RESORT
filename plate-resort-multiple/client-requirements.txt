@@ -1,0 +1,8 @@
+# Minimal client requirements for submitting Prefect Plate Resort deployments.
+# Remote-only (no hardware): prefect + pyyaml
+# Local hardware: add dynamixel-sdk
+
+prefect==3.4.23
+pyyaml>=6.0
+# dynamixel-sdk>=3.8.4  # optional for hardware access
+
