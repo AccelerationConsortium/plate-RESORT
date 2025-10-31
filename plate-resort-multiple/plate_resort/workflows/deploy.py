@@ -30,6 +30,7 @@ FUNCTION_FLOWS = [
     (flows.set_speed, "set-speed"),
     (flows.emergency_stop, "emergency-stop"),
     (flows.get_current_position, "get-position"),
+    (flows.reboot, "reboot"),
 ]
 
 

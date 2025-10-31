@@ -103,9 +103,8 @@ class PlateResort:
         self.ADDR_GOAL_POSITION = 116
         self.ADDR_PRESENT_POSITION = 132
         self.ADDR_GOAL_TORQUE = 102
-        # Corrected address mapping (XM430 Protocol 2.0)
-        self.ADDR_VELOCITY_LIMIT = 32  # currently unused (velocity ceiling)
-        self.ADDR_CURRENT_LIMIT = 38   # actual current/torque limit register
+        self.ADDR_VELOCITY_LIMIT = 32
+        self.ADDR_CURRENT_LIMIT = 38
         self.ADDR_PRESENT_TEMPERATURE = 146
         self.ADDR_PRESENT_CURRENT = 144
         self.ADDR_PRESENT_VOLTAGE = 144
@@ -166,9 +165,9 @@ class PlateResort:
                 self.ADDR_CURRENT_LIMIT,
                 self.config["current_limit"],
             )
-    # Goal current only meaningful in current / current-based
-    # position modes (0 or 5). Retained for optional future use;
-    # harmless in mode 3.
+        # Goal current only meaningful in current / current-based
+        # position modes (0 or 5). Retained for optional future use;
+        # harmless in mode 3.
         if "goal_torque" in self.config:
             self.packet_handler.write2ByteTxRx(
                 self.port,
@@ -363,6 +362,76 @@ class PlateResort:
             self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 0
         )
         return True
+
+    def reboot(self, wait: float = 0.8, reapply: bool = True):
+        """Soft reboot the Dynamixel and optionally reapply settings.
+
+        Args:
+            wait (float): Seconds to wait after issuing reboot before writes.
+            reapply (bool): When True, reapply operating mode, limits, speed
+                and acceleration similar to initial connect.
+
+        Returns:
+            dict: {status: 'ok', reapply: bool, wait: float}
+        """
+        if self.port is None:
+            raise Exception("Not connected. Call connect() first.")
+        import time
+
+        # Disable torque for safety before reboot
+        self.packet_handler.write1ByteTxRx(
+            self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 0
+        )
+        print("[REBOOT] issuing reboot")
+        # Dynamixel SDK provides reboot API on packet handler
+        self.packet_handler.reboot(self.port, self.motor_id)
+        time.sleep(wait)
+        if reapply:
+            # Reapply baseline configuration (position mode + limits + speed)
+            self.packet_handler.write1ByteTxRx(
+                self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 0
+            )
+            # Ensure position control mode (3)
+            self.packet_handler.write1ByteTxRx(
+                self.port, self.motor_id, 11, 3
+            )
+            # Current limit
+            if "current_limit" in self.config:
+                self.packet_handler.write2ByteTxRx(
+                    self.port,
+                    self.motor_id,
+                    self.ADDR_CURRENT_LIMIT,
+                    self.config["current_limit"],
+                )
+            # Optional goal current (harmless in mode 3)
+            if "goal_torque" in self.config:
+                self.packet_handler.write2ByteTxRx(
+                    self.port,
+                    self.motor_id,
+                    self.ADDR_GOAL_TORQUE,
+                    self.config["goal_torque"],
+                )
+            # Enable torque
+            self.packet_handler.write1ByteTxRx(
+                self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 1
+            )
+            # Reapply profile velocity
+            self.packet_handler.write4ByteTxRx(
+                self.port,
+                self.motor_id,
+                112,
+                self.speed,
+            )
+            accel = self.config.get("profile_acceleration", 0)
+            if accel and accel > 0:
+                self.packet_handler.write4ByteTxRx(
+                    self.port,
+                    self.motor_id,
+                    108,
+                    int(accel),
+                )
+        print("[REBOOT] complete")
+        return {"status": "ok", "reapply": reapply, "wait": wait}
 
     def get_active_hotel(self):
         """

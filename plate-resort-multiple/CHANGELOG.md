@@ -50,6 +50,23 @@ Added adaptive backoff near target: when a pulse produces a delta > `TOLERANCE *
 ### Notes
 - `tune_precise` modifications are in-memory only; update `~/plate-resort-config/defaults.yaml` to persist across sessions.
 ## [2.0.58] - 2025-10-31
+## [2.0.59] - 2025-10-31
+## [2.0.60] - 2025-10-31
+### Added
+- `reboot` Prefect flow: performs soft reboot of Dynamixel, optional reapplication of mode, current limit, goal current, profile velocity & acceleration, and returns a health snapshot.
+- Orchestrator helper `reboot(wait=0.8, reapply=True)` for remote triggering.
+### Changed
+- Core: added `PlateResort.reboot(wait=0.8, reapply=True)` method with safety torque disable before reboot and controlled reapply sequence.
+### Notes
+- Use reboot to clear transient hardware error bits or communication glitches. For persistent thermal/overload conditions, a full power cycle is still recommended.
+### Changed
+- Prefect `activate_hotel` flow now performs precise two-stage activation by default (coarse position + PWM pulse refinement). Added `precise` boolean parameter to fall back to legacy blind activation when needed.
+- Flow returns the precise result dict (success, reason, pulses, final_angle, final_error) when `precise=True` for remote observability.
+- Orchestrator client function `activate_hotel` updated to accept `precise` flag and arbitrary precise parameter overrides (forwarded to flow).
+### Added
+- Ability to override precise tuning parameters per remote call (e.g., `pulse_pwm_start`, `switch_error`) without editing configuration files.
+### Notes
+- External clients can now inspect fine-grained outcome data directly from the flow run result state.
 ### Fixed
 - Corrected misuse of control table address 32 (Velocity Limit) for torque/current limiting; now writes current limit to address 38 (`ADDR_CURRENT_LIMIT`).
 - Ensured profile velocity (addr 112) and optional profile acceleration (addr 108) are re-applied after every operating mode switch in precise movement helper `_set_mode`.

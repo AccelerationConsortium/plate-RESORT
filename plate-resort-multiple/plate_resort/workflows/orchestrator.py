@@ -1,6 +1,7 @@
 """
 Orchestrator for executing Plate Resort flows remotely.
-This runs on a remote machine (e.g., laptop) and submits jobs to the Prefect work pool.
+This runs on a remote machine (e.g., laptop) and submits jobs to the
+Prefect work pool.
 
 Deployment names follow the format: flow-name/deployment-name
 where flow-name is the Prefect flow name (from @flow decorator) and
@@ -72,11 +73,25 @@ def get_health():
     return run_deployment(name="get-motor-health/health")
 
 
-def activate_hotel(hotel: str):
-    """Activate a hotel"""
+def activate_hotel(hotel: str, precise: bool = True, **overrides):
+    """Activate a hotel using precise two-stage move by default.
+
+    Parameters
+    ----------
+    hotel : str
+        Hotel identifier.
+    precise : bool, default True
+        When True, remote flow performs coarse+PWM refinement and returns
+        a result dict. When False, legacy blind activation is used.
+    **overrides : dict
+        Optional precise parameter overrides forwarded to the flow
+        (e.g., switch_error=5.0, pulse_pwm_start=150).
+    """
+    params = {"hotel": hotel, "precise": precise}
+    params.update(overrides)
     return run_deployment(
         name="activate-hotel/activate-hotel",
-        parameters={"hotel": hotel},
+        parameters=params,
     )
 
 
@@ -109,3 +124,11 @@ def emergency_stop():
 def get_position():
     """Get current position"""
     return run_deployment(name="get-position/get-position")
+
+
+def reboot(wait: float = 0.8, reapply: bool = True):
+    """Soft reboot the motor via deployed flow."""
+    return run_deployment(
+        name="reboot/reboot",
+        parameters={"wait": wait, "reapply": reapply},
+    )
