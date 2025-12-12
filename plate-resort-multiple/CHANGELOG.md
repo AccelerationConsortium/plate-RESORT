@@ -89,6 +89,15 @@ Added adaptive backoff near target: when a pulse produces a delta > `TOLERANCE *
 ### Notes
 - To pass overrides remotely use: `--param overrides='{"pulse_pwm_start": 140, "pwm_step": 20}'` (CLI JSON string) or programmatically `activate_hotel("A", overrides={"pulse_pwm_start":140})`.
 
+## [2.0.62] - 2025-10-31
+### Added
+- Prefect flow structured logging via `get_run_logger()` for: `activate_hotel`, `get_motor_health`, `move_to_angle`, `set_speed`, `get_current_position`, `reboot`, and `emergency_stop`.
+- Orchestrator `watch(flow_run, ...)` helper streams live Prefect logs and final state to stdout.
+### Changed
+- Activation, health and reboot flows now emit concise telemetry lines (angle, error, temperature, hardware error) visible in Prefect UI and through `watch`.
+### Notes
+- Use `watch(oz.activate_hotel("A"))` in a Python session for real-time progress without opening the UI.
+
 
 ## [2.0.49] - 2025-10-30
 ### Added

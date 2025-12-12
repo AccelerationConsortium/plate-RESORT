@@ -4,7 +4,7 @@ Submits hotel A activation, waits for completion, then submits hotel D.
 Requires PREFECT_API_URL and PREFECT_API_KEY exported.
 """
 
-from plate_resort.workflows import orchestrator
+from plate_resort.interfaces.prefect import orchestrator
 
 print("Activating hotel A then hotel D (waiting for each to complete):")
 

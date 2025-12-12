@@ -74,3 +74,17 @@ prefect:
   # Flow settings
   default_retries: 3
   retry_delay_seconds: 5
+
+# REST API Server Configuration
+server:
+  # Network settings
+  host: "0.0.0.0"  # Bind to all interfaces
+  port: 8000
+  
+  # Security
+  api_key: "changeme"  # Generate secure key with: plate-resort-keygen --generate
+  # API key can be overridden with PLATE_API_KEY environment variable
+  
+  # API settings
+  reload: false  # Enable auto-reload during development
+  docs_enabled: true  # Enable /docs endpoint

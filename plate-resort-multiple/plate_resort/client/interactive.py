@@ -20,8 +20,8 @@ Environment (remote mode requires): PREFECT_API_URL, PREFECT_API_KEY
 from __future__ import annotations
 import sys
 from typing import Optional
-from plate_resort.workflows import orchestrator
-from plate_resort.workflows import flows  # local direct flows
+from plate_resort.interfaces.prefect import orchestrator
+from plate_resort.interfaces.prefect import flows  # local direct flows
 
 HOTELS = {"A", "B", "C", "D"}
 

@@ -10,7 +10,7 @@ Environment overrides:
 Pin a specific commit: export PLATE_RESORT_GIT_REF=<ref>
 """
 import os
-from plate_resort.workflows import flows
+from plate_resort.interfaces.prefect import flows
 from pathlib import Path
 from prefect.runner.storage import GitRepository
 
@@ -56,7 +56,7 @@ def main():
         # Repo layout nests package in 'plate-resort-multiple/plate_resort/'.
         # Entrypoint must include that base folder for Prefect Cloud cloning.
         entrypoint = (
-            "plate-resort-multiple/plate_resort/workflows/flows.py:"
+            "plate-resort-multiple/plate_resort/interfaces/prefect/flows.py:"
             + f"{flow_obj.fn.__name__}"
         )
         print(
@@ -77,8 +77,8 @@ def main():
                 source=storage,
                 entrypoint=entrypoint,
             )
-        # Local existence sanity check (running inside repo; worker skip)
-        local_path = Path(__file__).parent.parent / "workflows" / "flows.py"
+        # Local existence sanity check (running inside repo; worker skip) 
+        local_path = Path(__file__).parent / "flows.py"
         if not local_path.exists():
             print("WARNING: flows.py missing; verify remote path.")
         source_flow.deploy(

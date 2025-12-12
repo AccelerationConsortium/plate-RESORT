@@ -3,7 +3,7 @@ import sys
 import argparse
 from typing import Dict, Any
 from plate_resort.core import PlateResort
-from plate_resort.workflows import orchestrator
+from plate_resort.interfaces.prefect import orchestrator
 
 
 class PlateResortClient:

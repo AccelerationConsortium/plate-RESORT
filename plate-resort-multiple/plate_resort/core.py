@@ -95,6 +95,11 @@ class PlateResort:
         self.port = None
         self.packet_handler = None
 
+        # Motor detection and capabilities
+        self._motor_model = None
+        self._supports_current_control = True
+        self._max_current = 2300  # Default for XM430
+
         # Call counter for testing instance persistence
         self._call_counter = 0
 
@@ -180,6 +185,9 @@ class PlateResort:
             self.port, self.motor_id, self.ADDR_TORQUE_ENABLE, 1
         )
 
+        # Detect motor model and set capabilities
+        self._detect_motor_model()
+
         # Set profile velocity (speed)
         self.packet_handler.write4ByteTxRx(
             self.port,
@@ -196,6 +204,68 @@ class PlateResort:
                 108,
                 int(accel),
             )
+
+    def _detect_motor_model(self):
+        """Detect motor model and set capabilities"""
+        try:
+            # Read model number (address 0)
+            model_number, result, error = self.packet_handler.read2ByteTxRx(
+                self.port, self.motor_id, 0
+            )
+            
+            if result == 0 and error == 0:
+                if model_number == 1020:  # XM430-W350
+                    self._motor_model = "XM430-W350"
+                    self._supports_current_control = True
+                    self._max_current = 2300  # mA
+                    print(f"Detected motor: {self._motor_model}")
+                    
+                elif model_number == 1060:  # XL430-W250
+                    self._motor_model = "XL430-W250" 
+                    self._supports_current_control = False
+                    self._max_current = 1400  # mA
+                    print(f"Detected motor: {self._motor_model} (current control disabled)")
+                    
+                else:
+                    self._motor_model = f"Unknown ({model_number})"
+                    self._supports_current_control = True  # Assume full features
+                    print(f"Unknown motor model: {model_number}")
+            else:
+                self._motor_model = "Detection Failed"
+                print(f"Motor detection failed: result={result}, error={error}")
+                
+        except Exception as e:
+            print(f"Motor detection error: {e}")
+            self._motor_model = "Unknown"
+
+    def get_motor_info(self):
+        """Get motor model and capabilities"""
+        return {
+            "model": self._motor_model,
+            "supports_current_control": self._supports_current_control,
+            "max_current_ma": self._max_current
+        }
+
+    def set_current_limit_safe(self, current_limit):
+        """Set current limit with motor-specific validation"""
+        if not self._supports_current_control:
+            print(f"Current control not supported on {self._motor_model}")
+            return False
+            
+        # Validate current limit for motor type
+        if current_limit > self._max_current:
+            print(f"Current limit {current_limit}mA exceeds max for {self._motor_model} ({self._max_current}mA)")
+            current_limit = self._max_current
+            
+        try:
+            self.packet_handler.write2ByteTxRx(
+                self.port, self.motor_id, self.ADDR_CURRENT_LIMIT, current_limit
+            )
+            print(f"Set current limit to {current_limit}mA")
+            return True
+        except Exception as e:
+            print(f"Failed to set current limit: {e}")
+            return False
 
     def activate_hotel(self, hotel, tolerance=None, timeout=None):
         """

@@ -12,6 +12,19 @@ from prefect.deployments import run_deployment
 import asyncio
 import time
 from prefect.client.orchestration import get_client
+from prefect.client.schemas import FlowRun
+
+
+async def _fetch_state_and_logs(rid: str, since: float | None):
+    async with get_client() as client:
+        fr: FlowRun = await client.read_flow_run(rid)
+        # Fetch logs newer than 'since'
+        logs = []
+        if since is not None:
+            logs = await client.read_flow_run_logs(rid, min_timestamp=since)
+        else:
+            logs = await client.read_flow_run_logs(rid)
+        return fr.state, logs
 
 
 def wait(flow_run, poll: float = 2.0, timeout: float = 600.0):
@@ -41,6 +54,37 @@ def wait(flow_run, poll: float = 2.0, timeout: float = 600.0):
     while True:
         state = asyncio.run(_fetch(run_id))
         if state.is_final():
+            return state
+        if time.time() - start > timeout:
+            raise TimeoutError(f"Flow run {run_id} timed out after {timeout}s")
+        time.sleep(poll)
+
+
+def watch(flow_run, poll: float = 2.0, timeout: float = 600.0):
+    """Stream logs while waiting for final state.
+
+    Parameters
+    ----------
+    flow_run : FlowRun or object with `id`
+        Deployment run handle.
+    poll : float
+        Seconds between refresh.
+    timeout : float
+        Max seconds before abort.
+    """
+    run_id = getattr(flow_run, "id", flow_run)
+    start = time.time()
+    last_ts = None
+    while True:
+        state, logs = asyncio.run(_fetch_state_and_logs(run_id, last_ts))
+        # Print new logs
+        for log in logs:
+            ts = log.timestamp.isoformat()
+            print(f"[{ts}] {log.level:<5} {log.message}")
+            if last_ts is None or log.timestamp.timestamp() > (last_ts or 0):
+                last_ts = log.timestamp.timestamp()
+        if state.is_final():
+            print(f"Final state: {state.type}")
             return state
         if time.time() - start > timeout:
             raise TimeoutError(f"Flow run {run_id} timed out after {timeout}s")
