@@ -10,7 +10,6 @@ def load_api_key():
     """Load API key from environment, secrets.ini, or config file"""
     # First check environment variable
     env_key = os.getenv("PLATE_API_KEY")
-    print(f"DEBUG: Environment key = {env_key}")
     if env_key:
         return env_key
     
@@ -135,7 +134,7 @@ class PlateResortWrapper:
                 return {"error": str(e)}
 
     def activate_hotel(self, hotel: str):
-        """Move to specified hotel"""
+        """Move to specified hotel using precise two-stage movement"""
         with self.lock:
             if not self.connected:
                 raise RuntimeError("Not connected to motor")
@@ -143,7 +142,14 @@ class PlateResortWrapper:
             if not self.resort:
                 raise RuntimeError("Resort not initialized")
             
-            return self.resort.activate_hotel(hotel)
+            # Use precise two-stage movement instead of blind move
+            result = self.resort.activate_hotel_precise(hotel)
+            
+            # Convert precise result to simple boolean for REST API compatibility
+            if result["success"]:
+                return {"status": "success", "hotel": hotel, "pulses": result["pulses"]}
+            else:
+                raise RuntimeError(f"Movement failed: {result['reason']}")
 
     def go_home(self):
         """Return to home position"""
