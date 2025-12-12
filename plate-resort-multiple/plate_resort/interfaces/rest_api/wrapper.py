@@ -10,6 +10,7 @@ def load_api_key():
     """Load API key from environment, secrets.ini, or config file"""
     # First check environment variable
     env_key = os.getenv("PLATE_API_KEY")
+    print(f"DEBUG: Environment key = {env_key}")
     if env_key:
         return env_key
     
