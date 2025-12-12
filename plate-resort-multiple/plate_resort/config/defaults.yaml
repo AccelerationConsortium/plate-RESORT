@@ -84,6 +84,7 @@ server:
   # Security
   api_key: "changeme"  # Generate secure key with: plate-resort-keygen --generate
   # API key can be overridden with PLATE_API_KEY environment variable
+  # For deployment: Set PLATE_API_KEY environment variable or run plate-resort-keygen
   
   # API settings
   reload: false  # Enable auto-reload during development
