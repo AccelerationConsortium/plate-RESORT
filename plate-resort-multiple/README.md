@@ -1,290 +1,239 @@
-# Plate Resort Control System
+# Plate Resort - Quick Setup Guide
 
-**Professional laboratory plate management system with REST API server-client architecture.**
+Control laboratory plate handling hardware from your computer.
 
-## 🚀 Quick Setup
+## Setup Steps
 
-### Server Setup (Raspberry Pi)
-
-**One command installs everything and starts the server:**
-
+### 1. Get the API Key
+SSH into the Pi and get the key:
 ```bash
-curl -sSL https://raw.githubusercontent.com/AccelerationConsortium/plate-RESORT/main/plate-resort-multiple/install-pip.sh | bash
+ssh your_username@pi_ip_address
+cd ~/plate-RESORT/plate-resort-multiple
+plate-resort-rest-server
 ```
+Copy the API key shown, then press `Ctrl+C`.
 
-**That's it!** The installer:
-- ✅ Installs the package and dependencies
-- ✅ Configures system permissions 
-- ✅ Generates a secure API key
-- ✅ **Automatically starts the server**
-- ✅ Sets up systemd service for auto-start
-
-**Your API key will be displayed during installation - save it for client access!**
-
-### Client Setup (Any Machine)
-
+### 2. Install on Your Computer
 ```bash
-# Install client tools
-pip install git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
-
-# Configure client credentials (recommended)
-cp secrets.ini.template secrets.ini
-# Edit secrets.ini with your Pi IP and API key
-
-# Or use command line directly
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
-```
-
-### 🔐 Client Configuration
-
-**Option 1: secrets.ini file (recommended)**
-```bash
-# Copy and edit the template
-cp secrets.ini.template secrets.ini
-
-# Edit secrets.ini:
-[server]
-api_key = YOUR_API_KEY_FROM_PI_INSTALLATION
-
-[client]  
-default_host = YOUR_PI_IP
-default_port = 8000
-```
-
-**Option 2: Environment variables**
-```bash
-export PLATE_API_KEY=YOUR_API_KEY
-export PLATE_HOST=YOUR_PI_IP
-export PLATE_PORT=8000
-```
-
-**Option 3: Command line arguments**
-```bash
-python interactive_client.py YOUR_PI_IP YOUR_API_KEY
-python demo_client.py YOUR_PI_IP YOUR_API_KEY
-```
-
-## 🎯 Usage
-
-### 📡 Server Management
-
-```bash
-# Server auto-starts after installation
-plate-resort-update                    # Update to latest version
-sudo systemctl status plate-resort-server  # Check status
-sudo systemctl restart plate-resort-server # Restart service
-```
-
-**Server automatically available at:** `http://YOUR_PI_IP:8000`  
-**API Documentation:** `http://YOUR_PI_IP:8000/docs`
-
-### 💻 Client Tools
-
-#### Command Line Interface
-```bash
-# Motor control
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY connect
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY status
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY health
-
-# Movement commands
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY activate A
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY move 90
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY position
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY home
-
-# Emergency stop
-plate-resort-client --host YOUR_PI_IP --api-key YOUR_API_KEY stop
-```
-
-#### Interactive Client
-```bash
-# Start interactive session
-python interactive_client.py
-
-# Then use commands like:
-# connect, status, move 90, position, activate A, home, stop, quit
-```
-
-#### Demo Client
-```bash
-# Run automated demonstration
-python demo_client.py
-```
-
-### 🐍 Python API
-
-```python
-from plate_resort.client import PlateResortClient
-
-# Initialize client with your API key
-client = PlateResortClient("http://YOUR_PI_IP:8000", "YOUR_API_KEY")
-
-# Motor control
-client.connect()
-status = client.status()
-health = client.health()
-
-# Movement
-client.activate_hotel("A")          # Move to hotel A, B, C, or D
-client.move_to_angle(90.0)         # Move to specific angle
-position = client.get_position()    # Get current position
-client.go_home()                    # Return to home position
-
-# Safety
-client.emergency_stop()
-client.disconnect()
-```
-
-## � API Key Management
-
-**Your API key is generated during installation and shown on screen.**
-
-To regenerate or view your API key:
-```bash
-# On the Pi server
-plate-resort-keygen --generate --update-config
-```
-
-## � Project Structure
-
-```
-plate-resort-multiple/
-├── 📦 plate_resort/           # Main package
-│   ├── core.py               # Motor control logic
-│   ├── client/               # Client tools
-│   ├── server/               # REST API server
-│   ├── setup.py              # System configuration
-│   ├── keygen.py             # API key management
-│   └── update.py             # Update utilities
-├── 🎮 interactive_client.py   # Interactive CLI tool
-├── 📊 demo_client.py          # Automated demo
-├── 🔧 test_scripts/           # Hardware testing
-├── 🏗️ install-pip.sh          # One-line installer
-├── 📚 README.md               # This file
-└── ⚙️ pyproject.toml          # Package configuration
-```
-
-## 🧪 Testing & Development
-
-### Test Scripts
-```bash
-# Test motor connection and functionality  
-cd test_scripts
-python test_plate_resort.py      # Main functionality test
-python test_motor_health.py      # Health monitoring
-python test_dxl_ping.py          # Low-level motor test
-```
-
-### Interactive Tools
-```bash
-python interactive_client.py     # Interactive command line
-python demo_client.py           # Automated demonstration
-```
-
-### Development Installation
-```bash
-# For development work
 git clone https://github.com/AccelerationConsortium/plate-RESORT.git
 cd plate-RESORT/plate-resort-multiple
-pip install -e .                 # Install in development mode
+pip install -e .
 ```
 
-## ⚙️ Configuration
+### 3. Set Connection Info
+**Windows:**
+```cmd
+set PLATE_RESORT_API_KEY=your-api-key-here
+set PLATE_RESORT_URL=http://sdl3-pi5-plate-resort.tail6a1dd7.ts.net:8000
+```
 
-The system uses `resort_config.yaml` for motor and hotel configuration. The default configuration works with most setups, but you can customize:
-
-- Motor communication settings (port, baud rate, ID)
-- Hotel positions and angles  
-- Safety limits and timeouts
-- Server settings
-
-## 🔒 Security & Features
-
-- **🔐 API Key Authentication:** All endpoints protected with secure keys
-- **✅ Request Validation:** Input sanitization and validation  
-- **🛡️ Error Handling:** Graceful error responses
-- **🌐 REST API:** 9 endpoints for complete motor control
-- **📚 Auto-Documentation:** Interactive API docs at `/docs`
-- **🔄 One-Command Updates:** `plate-resort-update`
-
-## 📋 System Requirements
-
-### Raspberry Pi (Server)
-- Raspberry Pi 3B+ or newer
-- Raspberry Pi OS (modern version)  
-- USB port for Dynamixel adapter
-- Network connection
-
-### Client Machine  
-- Python 3.8+
-- Network access to Pi server
-- API key from server installation
-
-### Hardware
-- Dynamixel motor (XC330 or compatible)
-- USB-to-RS485 adapter (U2D2 or FTDI)
-- 12V power supply for motors
-
-## � API Endpoints
-
-The REST API provides complete motor control:
-
-- `POST /connect` - Connect to motor
-- `POST /disconnect` - Disconnect motor
-- `GET /status` - Get system status
-- `GET /health` - Motor health diagnostics
-- `POST /activate` - Move to hotel position (A, B, C, D)
-- `POST /move_to_angle` - Move to specific angle
-- `GET /position` - Get current position
-- `POST /home` - Return to home position
-- `POST /emergency_stop` - Emergency stop
-
-## 📚 Documentation
-
-- **Interactive API Docs:** `http://YOUR_PI_IP:8000/docs`
-- **OpenAPI Spec:** `http://YOUR_PI_IP:8000/openapi.json`
-- **Test Scripts:** `test_scripts/README.md`
-
-## 🐛 Troubleshooting
-
-### Server Issues
+**Mac/Linux:**
 ```bash
-# Check if server is running
-sudo systemctl status plate-resort-server
-
-# View server logs  
-sudo journalctl -u plate-resort-server -f
-
-# Restart server service
-sudo systemctl restart plate-resort-server
+export PLATE_RESORT_API_KEY="your-api-key-here"
+export PLATE_RESORT_URL="http://sdl3-pi5-plate-resort.tail6a1dd7.ts.net:8000"
 ```
 
-### Client Connection Issues
+### 4. Start the Pi Server
+SSH back to Pi:
 ```bash
-# Test network connectivity
-ping YOUR_PI_IP
-
-# Test API access (replace with your IP and key)
-curl -H "X-API-Key: YOUR_API_KEY" http://YOUR_PI_IP:8000/status
+plate-resort-rest-server
 ```
+Keep this running.
 
-### Updates
+## Commands
+
+**Check status:**
 ```bash
-# Update server to latest version
-plate-resort-update
-
-# Update client tools
-pip install --upgrade git+https://github.com/AccelerationConsortium/plate-RESORT.git#subdirectory=plate-resort-multiple
+plate-resort-rest-client status
 ```
 
-## 🤝 Support
+**Move to hotel:**
+```bash
+plate-resort-rest-client activate A  # or B, C, D
+```
 
-- **Issues:** [GitHub Issues](https://github.com/AccelerationConsortium/plate-RESORT/issues)
-- **Documentation:** Visit `/docs` on your server for complete API reference
-- **Hardware:** See `mechanical/` directory for BOM and specifications
+**Go home:**
+```bash
+plate-resort-rest-client home
+```
 
----
+**Emergency stop:**
+```bash
+plate-resort-rest-client stop
+```
 
-**Ready to manage plates like a pro! 🍽️🤖**
+## Troubleshooting
 
+- **Connection refused:** Check Pi server is running and IP address is correct
+- **Authentication failed:** Double-check your API key  
+- **Motor issues:** SSH to Pi and run `python tests/soft_reset.py`
+
+## For GUI Development
+
+All commands return JSON responses. Use any programming language to build your interface:
+- Python (tkinter, PyQt, Streamlit)
+- Web (HTML/JavaScript) 
+- LabVIEW, MATLAB, etc.
+
+Choose your interface mode based on your needs. Both modes can run on the same Raspberry Pi if needed.
+
+## 2A. Prefect Interface Setup (Recommended)
+
+### 2A.1 Raspberry Pi (Worker Host)
+```bash
+export PREFECT_API_URL="https://api.prefect.cloud/api/accounts/<account-id>/workspaces/<workspace-id>"
+export PREFECT_API_KEY="pnu_XXXXXXXXXXXXXXXX"
+
+python3 -m venv plate-resort-env
+source plate-resort-env/bin/activate
+pip install -e .
+plate-resort-prefect-deploy     # registers deployments
+plate-resort-prefect-worker    # starts Prefect worker
+```
+Optional systemd (adjust path/username):
+```bash
+sudo cp deployment/plate-resort.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now plate-resort.service
+```
+Environment file (example): `/home/<user>/plate-RESORT/secrets.local.env`
+```
+PREFECT_API_URL=...
+PREFECT_API_KEY=...
+PLATE_RESORT_POOL=plate-resort-pool
+```
+
+### 2A.2 Client Machine
+Two supported approaches:
+1. Interactive CLI (`plate-resort-prefect-interactive --remote`)
+2. Minimal script (`plate_resort/client/example_prefect_client.py` pattern)
+
+Install only what’s needed:
+```bash
+python -m venv plate-resort-client
+source plate-resort-client/bin/activate
+pip install -r client-requirements.txt
+```
+Export credentials (or source `plate_resort/client/env.sh` after editing IDs):
+```bash
+source plate_resort/client/env.sh   # edit placeholders first
+```
+Verify a deployment submission:
+```bash
+python -c "from plate_resort.interfaces.prefect import orchestrator; print(orchestrator.connect())"
+```
+
+## 2B. REST API Interface Setup (Traditional)
+
+### 2B.1 Raspberry Pi (Server Host)
+```bash
+python3 -m venv plate-resort-env
+source plate-resort-env/bin/activate
+pip install -e .
+plate-resort-keygen                 # generate API key
+plate-resort-rest-server           # start FastAPI server
+```
+The server runs on port 8000 by default. API documentation available at `http://<pi-ip>:8000/docs`
+
+### 2B.2 Client Machine  
+```bash
+python -m venv plate-resort-client
+source plate-resort-client/bin/activate
+pip install -e .
+export PLATE_RESORT_BASE_URL="http://<pi-ip>:8000"
+export PLATE_RESORT_API_KEY="<generated-key>"
+plate-resort-rest-client --help    # see available commands
+```
+
+Example REST usage:
+```bash
+# Connect and activate hotel
+plate-resort-rest-client connect
+plate-resort-rest-client activate A
+plate-resort-rest-client position
+plate-resort-rest-client disconnect
+```
+
+## 3. Client Usage (Prefect Interface)
+
+### 3.1 Interactive CLI
+```bash
+plate-resort-prefect-interactive --remote
+```
+Commands:
+```
+connect | activate <A|B|C|D> | position | stop | disconnect | help | exit
+```
+
+### 3.2 Example Script (A -> D)
+```bash
+python plate_resort/client/example_prefect_client.py
+```
+That script: activates hotel A, waits, then activates hotel D with state checks.
+
+### 3.3 Direct Orchestrator Calls
+```python
+from plate_resort.interfaces.prefect import orchestrator
+run = orchestrator.activate_hotel("A")
+state = orchestrator.wait(run)
+print(state.type)
+```
+
+## 4. Deployments & Redeploy (Prefect Interface)
+Run on Pi whenever code changes:
+```bash
+plate-resort-prefect-deploy
+```
+This re-registers function-based flows with Prefect Cloud using the current working tree (Git storage reference if configured).
+
+Pinning / ensuring correct source:
+
+Option A (branch ref):
+```bash
+export PLATE_RESORT_GIT_REF=copilot/replace-rest-api-with-prefect
+plate-resort-prefect-deploy
+```
+Option B (commit hash, reproducible) – recommended; resolved prior path issues during testing:
+```bash
+export PLATE_RESORT_GIT_COMMIT=$(git rev-parse HEAD)
+plate-resort-prefect-deploy
+```
+Commit pin (Option B) takes precedence over branch ref and guarantees the worker loads the exact code you just validated.
+
+## 5. Available Flows
+All in `plate_resort/interfaces/prefect/flows.py`:
+```
+connect, disconnect, activate_hotel, move_to_angle,
+get_current_position, get_motor_health, go_home,
+emergency_stop, set_speed
+```
+Remote submission uses deployment names of form `flow-name/flow-name` (e.g. `activate-hotel/activate-hotel`).
+
+## 6. Behavior Notes
+* Motor connection is re-established per flow if needed and left active afterward (persistent torque).
+* Use `disconnect` flow to deliberately release torque/close port.
+* `orchestrator.wait()` polls Prefect for a final state.
+
+## 7. Configuration
+Search path includes packaged defaults plus optional override directory: `~/plate-resort-config/`.
+
+`defaults.yaml` (excerpt):
+```yaml
+resort:
+  device: "/dev/ttyUSB0"
+  hotels: ["A", "B", "C", "D"]
+prefect:
+  work_pool_name: "plate-resort-pool"  # Overridden by PLATE_RESORT_POOL
+```
+
+To override: create `~/plate-resort-config/defaults.yaml` with keys you want to change; unspecified values fall back to packaged defaults.
+
+## 8. Minimal Client Assets
+* `client-requirements.txt` – pins `prefect` + `pyyaml` (add `dynamixel-sdk` only if talking directly to hardware from client).
+* `plate_resort/client/env.sh` – template for exporting Prefect API variables.
+* `plate_resort/client/example_prefect_client.py` – sequential A -> D example.
+
+## 9. Troubleshooting
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| Flow run stays SCHEDULED | Worker not running or wrong pool | Start worker; confirm pool name or set PLATE_RESORT_POOL |

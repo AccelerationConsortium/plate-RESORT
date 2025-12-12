@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plate-resort"
-version = "2.0.0"
+version = "2.0.62"
 description = "Plate Resort Control System - Server-Client Architecture for Laboratory Plate Management"
 readme = "README.md"
 license = {text = "MIT"}
@@ -23,11 +23,14 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: System :: Hardware :: Hardware Drivers",
 ]
-keywords = ["laboratory", "automation", "robotics", "dynamixel", "plate-handling"]
+keywords = ["laboratory", "automation", "robotics", "dynamixel", "plate-handling", "prefect"]
 requires-python = ">=3.8"
 dependencies = [
     "dynamixel-sdk>=3.7.51",
     "pyyaml>=6.0",
+    # Pin Prefect minor version to ensure stable deployment behavior; update intentionally in future releases
+    "prefect==3.4.23",
+    # REST API dependencies
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
     "requests>=2.31.0",
@@ -48,15 +51,21 @@ Issues = "https://github.com/AccelerationConsortium/plate-RESORT/issues"
 Documentation = "https://github.com/AccelerationConsortium/plate-RESORT/blob/main/README.md"
 
 [project.scripts]
-plate-resort-server = "plate_resort.server.main:run_server"
-plate-resort-client = "plate_resort.client.cli:main"
-plate-resort-setup = "plate_resort.setup:setup_system"
-plate-resort-keygen = "plate_resort.keygen:main"
-plate-resort-update = "plate_resort.update:main"
+# Prefect workflow interface - modern cloud-native orchestration
+plate-resort-prefect-interactive = "plate_resort.client.interactive:main"
+plate-resort-prefect-worker = "plate_resort.interfaces.prefect.worker_service:main"
+plate-resort-prefect-deploy = "plate_resort.interfaces.prefect.deploy:main"
+# REST API interface - traditional HTTP server
+plate-resort-rest-server = "plate_resort.interfaces.rest_api.main:run_server"
+plate-resort-rest-client = "plate_resort.client.cli_rest:main"
+plate-resort-keygen = "plate_resort.utils.keygen_rest:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["plate_resort*"]
 
 [tool.setuptools.package-data]
-plate_resort = ["*.yaml", "*.yml", "*.ini", "*.template"]
+plate_resort = [
+    "config/*.yaml",
+    "config/*.template"
+]
