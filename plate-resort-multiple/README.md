@@ -24,13 +24,13 @@ pip install -e .
 **Windows:**
 ```cmd
 set PLATE_RESORT_API_KEY=your-api-key-here
-set PLATE_RESORT_URL=http://pi-ip-address:8000
+set PLATE_RESORT_URL=http://sdl3-pi5-plate-resort.tail6a1dd7.ts.net:8000
 ```
 
 **Mac/Linux:**
 ```bash
 export PLATE_RESORT_API_KEY="your-api-key-here"
-export PLATE_RESORT_URL="http://pi-ip-address:8000"
+export PLATE_RESORT_URL="http://sdl3-pi5-plate-resort.tail6a1dd7.ts.net:8000"
 ```
 
 ### 4. Start the Pi Server
