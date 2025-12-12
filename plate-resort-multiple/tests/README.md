@@ -9,6 +9,27 @@ Install the plate-resort package:
 pip install -e .  # From the root directory
 ```
 
+## Quick Test Scripts
+
+### Hotel Activation
+```bash
+python activate_hotel.py B    # Activate hotel B
+python activate_hotel.py A    # Activate hotel A
+python activate_hotel.py C    # Activate hotel C  
+python activate_hotel.py D    # Activate hotel D
+```
+
+### Status Check
+```bash
+python status.py             # Show current position, settings, and hotel positions
+```
+
+### Manual Positioning
+```bash
+python move_to.py 45.5       # Move to 45.5 degrees
+python move_to.py 90         # Move to 90 degrees
+```
+
 ## Available Tests
 
 ### Hardware Tests
