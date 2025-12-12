@@ -1,22 +1,79 @@
-# Plate Resort – Dual Interface Control
+# Plate Resort - Quick Setup Guide
 
-Control system for the Plate Resort device with two interface modes: modern Prefect workflow orchestration and traditional REST API server.
+Control laboratory plate handling hardware from your computer.
 
----
+## Setup Steps
 
-## 1. Overview
+### 1. Get the API Key
+SSH into the Pi and get the key:
+```bash
+ssh your_username@pi_ip_address
+cd ~/plate-RESORT/plate-resort-multiple
+plate-resort-rest-server
+```
+Copy the API key shown, then press `Ctrl+C`.
 
-The Plate Resort system now supports **two distinct interface modes**:
+### 2. Install on Your Computer
+```bash
+git clone https://github.com/AccelerationConsortium/plate-RESORT.git
+cd plate-RESORT/plate-resort-multiple
+pip install -e .
+```
 
-### Prefect Interface (Recommended)
-Modern cloud-native workflow orchestration with distributed execution, monitoring, and robust error handling. Single‑purpose flows (connect, activate_hotel, move_to_angle, etc.) run on a Raspberry Pi worker while clients submit them via Prefect Cloud.
+### 3. Set Connection Info
+**Windows:**
+```cmd
+set PLATE_RESORT_API_KEY=your-api-key-here
+set PLATE_RESORT_URL=http://pi-ip-address:8000
+```
 
-### REST API Interface  
-Traditional HTTP-based control with FastAPI for direct synchronous operations and legacy system integrations.
+**Mac/Linux:**
+```bash
+export PLATE_RESORT_API_KEY="your-api-key-here"
+export PLATE_RESORT_URL="http://pi-ip-address:8000"
+```
 
-Both interfaces share the same underlying motor control core with automatic XM430/XL430 detection and current control capabilities.
+### 4. Start the Pi Server
+SSH back to Pi:
+```bash
+plate-resort-rest-server
+```
+Keep this running.
 
-## 2. Quick Start
+## Commands
+
+**Check status:**
+```bash
+plate-resort-rest-client status
+```
+
+**Move to hotel:**
+```bash
+plate-resort-rest-client activate A  # or B, C, D
+```
+
+**Go home:**
+```bash
+plate-resort-rest-client home
+```
+
+**Emergency stop:**
+```bash
+plate-resort-rest-client stop
+```
+
+## Troubleshooting
+
+- **Connection refused:** Check Pi server is running and IP address is correct
+- **Authentication failed:** Double-check your API key  
+- **Motor issues:** SSH to Pi and run `python tests/soft_reset.py`
+
+## For GUI Development
+
+All commands return JSON responses. Use any programming language to build your interface:
+- Python (tkinter, PyQt, Streamlit)
+- Web (HTML/JavaScript) 
+- LabVIEW, MATLAB, etc.
 
 Choose your interface mode based on your needs. Both modes can run on the same Raspberry Pi if needed.
 
@@ -180,25 +237,3 @@ To override: create `~/plate-resort-config/defaults.yaml` with keys you want to 
 | Symptom | Likely Cause | Fix |
 |---------|--------------|-----|
 | Flow run stays SCHEDULED | Worker not running or wrong pool | Start worker; confirm pool name or set PLATE_RESORT_POOL |
-| ModuleNotFoundError (dynamixel_sdk) | Missing dependency in worker venv | Activate worker venv, install package: `pip install dynamixel-sdk` |
-| CLI exits immediately | Entry point cannot import (stale install) | Reinstall editable or upgrade to latest version |
-| Permission error on serial | User lacks dialout/tty group | Add user to relevant group, re-login |
-
-## 10. Development
-Editable install on Pi:
-```bash
-pip install -e .
-```
-Redeploy after changes:
-```bash
-plate-resort-prefect-deploy
-```
-
-## 11. Versioning
-See `CHANGELOG.md` for semantic version increments. Deployment uses whichever version you installed/published; Git commit pinning handled via environment (if implemented for storage).
-
-## 12. License
-MIT (see project metadata).
-
----
-*Lean Prefect flow orchestration for Plate Resort.*
