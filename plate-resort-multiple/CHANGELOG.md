@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-07-08
+### Changed
+- Replaced the two-stage (coarse position + host-side PWM pulse) movement strategy with a single closed-loop move executed by the servo's internal controller. Root cause of the chronic undershoot was the firmware's default Position I Gain of 0: a P-only controller parks where its output balances load friction, leaving a load-proportional steady-state error. The PWM pulse stage compounded this by freewheeling (Goal PWM 0) between pulses, letting the loaded carousel back-drive, and by leaving the servo in PWM mode after every move so subsequent Goal Position writes were silently ignored.
+- Default operating mode is now Current-based Position Control (5): multi-turn goals with torque capped by `goal_current_ma`. Non-zero `position_i_gain` (default 300) drives steady-state error to zero under load; firmware anti-windup is built in.
+- Moves are wrap-aware and shortest-path (no more 350° swings across the 0/360 seam); Present Position is decoded as signed and scaled by 4096 counts/rev.
+- All control-critical register writes are now checked (`getTxRxResult`/`getRxPacketError`) instead of silently discarded.
+
+### Added
+- `move(angle, tolerance, timeout)` — verified closed-loop move returning `{success, reason, final_angle, final_error, elapsed_s, peak_current_ma, hardware_error}`. Peak current lets you judge torque headroom (XM430-W210 stall ≈ 2.3 A @ 12 V).
+- `goto_hotel(hotel, ...)` — verified hotel activation returning the same result dict.
+- `show_control_params()` / `tune_control(**updates)` — runtime gain/limit tuning that re-applies the servo configuration immediately.
+- Multi-turn housekeeping: the turn counter is reset (Clear Multi-turn) after settling once accumulated rotation exceeds `multi_turn_clear_revs`.
+- `tests/test_closed_loop.py` — hardware test (single hotel, `--angle`, `--cycle`) plus `--selftest` angle-math checks that run without hardware.
+- New config keys: `operating_mode`, `position_p_gain`, `position_i_gain`, `position_d_gain`, `feedforward_1st_gain`, `feedforward_2nd_gain`, `goal_current_ma`, `current_limit_register_ma` (optional), `settle_polls`, `settle_poll_interval`, `multi_turn_clear_revs`.
+
+### Fixed
+- `activate_hotel` is no longer blind: it performs the verified move and returns the real outcome (the REST server path previously always reported success without checking position).
+- Model detection now recognizes the deployed motor (XM430-W210, model number 1030).
+- `get_motor_health` read Present Input Voltage (addr 144) where it meant Present Current (addr 126); current telemetry was a constant ~323 mA and the overcurrent warning could never fire.
+- `set_current_limit_safe` now converts mA to register units (2.69 mA/LSB), clamps to the model ceiling, performs the required torque-off EEPROM write, and reports the actual result. Previously the raw-mA write was out of range on the W210 and silently rejected.
+- Negative/out-of-range goals from `rotation_direction: -1` are gone: hotel angles normalize into [0, 360) and multi-turn goals are computed from the present position.
+- Misleading `default_speed` comment ("slow but enough torque"): Profile Velocity only shapes the trajectory and does not add torque; slow profiles actually aggravate stiction stalls under P-only control.
+
+### Removed
+- `_two_stage_move`, `_set_mode`, and all pulse-stage config keys (`pulse_pwm_start`, `pwm_step`, `pwm_max`, `pulse_duration`, `pulse_rest`, `pulse_max`, `motion_threshold`, `stall_pulses`, `enable_backoff`, `max_step_factor`, `pwm_backoff_step`, `switch_error`, `stage1_timeout`, `poll_interval`, `enable_precise_move`, `precise_log`) and the dead `goal_torque`/`torque_limit`/`moving_threshold` keys. `activate_hotel_precise`/`move_to_angle_precise` remain as deprecated wrappers that ignore pulse-era overrides and return the same result-dict shape (`pulses` is always 0).
+
 ## [2.0.50] - 2025-10-31
 ### Added
 - `diagnostics/xm430_simple_debug.py`: minimal two-mode (position mode 3, PWM pulse mode 16) script for direct tuning without advanced stall/plateau logic. Provides adjustable profile velocity/accel and current limit in position mode; short escalating PWM pulses (pulse, rest, check) until within tolerance.
