@@ -3,7 +3,11 @@ from pydantic import BaseModel
 import os
 import yaml
 
-from plate_resort.interfaces.rest_api.wrapper import PlateResortWrapper, require_api_key, load_api_key
+from plate_resort.interfaces.rest_api.wrapper import (
+    PlateResortWrapper,
+    require_api_key,
+    load_api_key,
+)
 
 
 def load_config():
@@ -27,7 +31,7 @@ def load_config():
             except Exception as e:
                 print(f"Warning: Could not load config file {config_file}: {e}")
                 continue
-    
+
     # Return default server config if no file found
     return {"server": {"host": "0.0.0.0", "port": 8000, "api_key": "changeme"}}
 
@@ -183,8 +187,7 @@ def run_server():
 
     # Use import string for reload to work properly
     if reload:
-        uvicorn.run("plate_resort.server.main:app", host=host, port=port,
-                    reload=reload)
+        uvicorn.run("plate_resort.server.main:app", host=host, port=port, reload=reload)
     else:
         uvicorn.run(app, host=host, port=port, reload=False)
 

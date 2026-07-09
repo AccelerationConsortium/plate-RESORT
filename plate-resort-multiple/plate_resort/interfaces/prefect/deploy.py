@@ -48,9 +48,7 @@ def main():
         print(f"Pinning to commit: {GIT_COMMIT}")
     else:
         print(f"Using Git ref: {GIT_REF} (no commit SHA provided)")
-    print(
-        "Tip: set PLATE_RESORT_GIT_COMMIT for fully reproducible deployments."
-    )
+    print("Tip: set PLATE_RESORT_GIT_COMMIT for fully reproducible deployments.")
     print("-" * 60)
     for flow_obj, deployment_name in FUNCTION_FLOWS:
         # Repo layout nests package in 'plate-resort-multiple/plate_resort/'.
@@ -63,7 +61,7 @@ def main():
             f"Deploying '{deployment_name}' (flow: {flow_obj.fn.__name__},"
             f" entrypoint: {entrypoint})"
         )
-    # Attach remote source; from_source returns new Flow with storage metadata
+        # Attach remote source; from_source returns new Flow with storage metadata
         if GIT_COMMIT:
             storage = GitRepository(url=REPO_URL, commit_sha=GIT_COMMIT)
             source_flow = flow_obj.from_source(
@@ -77,7 +75,7 @@ def main():
                 source=storage,
                 entrypoint=entrypoint,
             )
-        # Local existence sanity check (running inside repo; worker skip) 
+        # Local existence sanity check (running inside repo; worker skip)
         local_path = Path(__file__).parent / "flows.py"
         if not local_path.exists():
             print("WARNING: flows.py missing; verify remote path.")

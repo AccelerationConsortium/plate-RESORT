@@ -12,40 +12,39 @@ def load_api_key():
     env_key = os.getenv("PLATE_API_KEY")
     if env_key:
         return env_key
-    
+
     # Check secrets.ini file
     try:
         config = configparser.ConfigParser()
         secrets_file = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "secrets.ini"
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "secrets.ini"
         )
         if os.path.exists(secrets_file):
             config.read(secrets_file)
-            api_key = config.get('server', 'api_key', fallback=None)
-            if api_key and api_key != 'changeme':
+            api_key = config.get("server", "api_key", fallback=None)
+            if api_key and api_key != "changeme":
                 return api_key
     except Exception:
         pass
-    
+
     # Fall back to main config file
     try:
         config_file = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "resort_config.yaml"
+            "resort_config.yaml",
         )
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             config = yaml.safe_load(f)
-            api_key = config.get('server', {}).get('api_key', 'changeme')
-            
+            api_key = config.get("server", {}).get("api_key", "changeme")
+
             # Warn if using default key
-            if api_key in ['changeme', 'change_me', 'default']:
+            if api_key in ["changeme", "change_me", "default"]:
                 print("⚠️  WARNING: Using default API key!")
                 print("   Create secrets.ini with: [server]\\napi_key = YOUR_KEY")
-            
+
             return api_key
     except Exception:
-        return 'changeme'
+        return "changeme"
 
 
 def require_api_key(x_api_key: str = Header(None)):
@@ -53,25 +52,25 @@ def require_api_key(x_api_key: str = Header(None)):
     expected = load_api_key()
     if x_api_key != expected:
         raise HTTPException(
-            status_code=401,
-            detail="Invalid API key. Use X-API-Key header."
+            status_code=401, detail="Invalid API key. Use X-API-Key header."
         )
     return x_api_key
 
 
 class PlateResortWrapper:
     """Thread-safe wrapper around PlateResort for API access"""
-    
+
     def __init__(self):
         self.lock = threading.Lock()
         self.resort = None
         self.connected = False
         self._load_resort_class()
-    
+
     def _load_resort_class(self):
         """Lazy load PlateResort class"""
         try:
             from plate_resort.core import PlateResort
+
             self.resort = PlateResort()
         except ImportError as e:
             raise RuntimeError(f"Failed to import PlateResort: {e}")
@@ -81,13 +80,11 @@ class PlateResortWrapper:
         with self.lock:
             if not self.connected and self.resort:
                 # Update config if different from defaults
-                if (device != "/dev/ttyUSB0" or 
-                    baudrate != 57600 or 
-                    motor_id != 1):
+                if device != "/dev/ttyUSB0" or baudrate != 57600 or motor_id != 1:
                     self.resort.device = device
                     self.resort.baud = baudrate
                     self.resort.motor_id = motor_id
-                
+
                 self.resort.connect()
                 self.connected = True
 
@@ -103,20 +100,20 @@ class PlateResortWrapper:
         with self.lock:
             if not self.resort:
                 return {"error": "resort not initialized"}
-            
+
             status = {
                 "connected": self.connected,
                 "position": None,
                 "active_hotel": None,
             }
-            
+
             if self.connected:
                 try:
                     status["position"] = self.resort.get_current_position()
                     status["active_hotel"] = getattr(self.resort, "current_hotel", None)
                 except Exception as e:
                     status["error"] = str(e)
-            
+
             return status
 
     def get_motor_health(self) -> Dict[str, Any]:
@@ -124,10 +121,10 @@ class PlateResortWrapper:
         with self.lock:
             if not self.connected:
                 return {"error": "not connected"}
-            
+
             if not self.resort:
                 return {"error": "resort not initialized"}
-            
+
             try:
                 return self.resort.get_motor_health()
             except Exception as e:
@@ -138,13 +135,13 @@ class PlateResortWrapper:
         with self.lock:
             if not self.connected:
                 raise RuntimeError("Not connected to motor")
-            
+
             if not self.resort:
                 raise RuntimeError("Resort not initialized")
-            
+
             # Use precise two-stage movement instead of blind move
             result = self.resort.activate_hotel_precise(hotel)
-            
+
             # Convert precise result to simple boolean for REST API compatibility
             if result["success"]:
                 return {"status": "success", "hotel": hotel, "pulses": result["pulses"]}
@@ -156,10 +153,10 @@ class PlateResortWrapper:
         with self.lock:
             if not self.connected:
                 raise RuntimeError("Not connected to motor")
-            
+
             if not self.resort:
                 raise RuntimeError("Resort not initialized")
-            
+
             return self.resort.go_home()
 
     def move_to_angle(self, angle: float):
@@ -167,10 +164,10 @@ class PlateResortWrapper:
         with self.lock:
             if not self.connected:
                 raise RuntimeError("Not connected to motor")
-            
+
             if not self.resort:
                 raise RuntimeError("Resort not initialized")
-            
+
             return self.resort.move_to_angle(angle)
 
     def get_current_position(self):
@@ -178,10 +175,10 @@ class PlateResortWrapper:
         with self.lock:
             if not self.connected:
                 raise RuntimeError("Not connected to motor")
-            
+
             if not self.resort:
                 raise RuntimeError("Resort not initialized")
-            
+
             return self.resort.get_current_position()
 
     def set_speed(self, speed: int):
@@ -189,7 +186,7 @@ class PlateResortWrapper:
         with self.lock:
             if not self.resort:
                 raise RuntimeError("Resort not initialized")
-            
+
             return self.resort.set_speed(speed)
 
     def emergency_stop(self):
@@ -197,16 +194,16 @@ class PlateResortWrapper:
         with self.lock:
             if not self.resort:
                 raise RuntimeError("Resort not initialized")
-            
+
             return self.resort.emergency_stop()
 
     def get_hotels(self) -> Dict[str, Any]:
         """Get available hotels and their angles"""
         if not self.resort:
             return {"error": "resort not initialized"}
-        
+
         return {
             "hotels": list(self.resort.hotels),
             "hotel_angles": dict(self.resort.hotel_angles),
-            "rooms_per_hotel": self.resort.rooms
+            "rooms_per_hotel": self.resort.rooms,
         }

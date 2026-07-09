@@ -37,10 +37,7 @@ def get_motor_health():
     resort.connect()
     health = resort.get_motor_health()
     logger.info(
-        (
-            "motor_health temp=%s current=%s volt=%s pos=%s hwErr=%s "
-            "warnings=%s"
-        ),
+        ("motor_health temp=%s current=%s volt=%s pos=%s hwErr=%s " "warnings=%s"),
         health.get("temperature"),
         health.get("current"),
         health.get("voltage"),
