@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.2] - 2026-07-09
+### Fixed
+- Position and current reads no longer fail when a hardware fault latches mid-move: the servo sets the alert bit on every status packet, which `_read_position_deg`/`_read_current_ma` treated as a failed read. A fault during a move surfaced as `read_fail` with `position None` (and crashed the test report) instead of naming the fault. Reads now only require comm success and record the alert bit.
+- `move()` aborts as soon as the alert bit appears, returning `reason="hardware_fault"` with the decoded Hardware Error Status (e.g. "overload"), final position, and peak current — so a mid-move fault reports what tripped and where it stopped.
+- `tests/test_closed_loop.py` report is None-safe and prints decoded fault names.
+
 ## [2.1.1] - 2026-07-09
 ### Added
 - `connect()` now recovers from a latched Hardware Error Status (e.g. overload shutdown): it decodes the fault bits, reboots the servo, and verifies the flag cleared before applying configuration. Previously the first checked write raised on the alert bit, so `reboot()` — the recovery path — could never be reached; `soft_reset.py` was wedged by the very fault it exists to clear.

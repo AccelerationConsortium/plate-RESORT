@@ -137,6 +137,8 @@ class PlateResort:
         self.current_hotel = None
         self.port = None
         self.packet_handler = None
+        # Alert bit seen on the last position read (latched hardware fault)
+        self._alert = False
 
         # Motor detection and capabilities
         self._motor_model = None
@@ -529,6 +531,18 @@ class PlateResort:
             if current_ma is not None:
                 peak_ma = max(peak_ma, abs(current_ma))
 
+            if self._alert:
+                hw = self._read_hardware_error()
+                if hw:
+                    faults = ", ".join(self._decode_hardware_error(hw)) or (
+                        f"0x{hw:02X}"
+                    )
+                    print(f"[FAULT] hardware error mid-move: {faults}")
+                    return result(
+                        False, "hardware_fault", pos, err, start, peak_ma, hw
+                    )
+                self._alert = False
+
             if abs(err) <= tolerance:
                 ok_polls += 1
                 if ok_polls >= settle_polls:
@@ -875,22 +889,27 @@ class PlateResort:
             )
 
     def _read_position_deg(self):
-        """Present position in degrees (signed; multi-turn aware)."""
+        """Present position in degrees (signed; multi-turn aware).
+
+        A latched hardware fault sets the alert bit in the error byte of
+        every status packet without invalidating the returned value; it is
+        recorded in self._alert so move() can abort with the decoded fault
+        instead of misreporting a read failure.
+        """
         pos, result, error = self.packet_handler.read4ByteTxRx(
             self.port, self.motor_id, self.ADDR_PRESENT_POSITION
         )
-        if result == 0 and error == 0:
-            return (
-                self._to_signed32(pos) * self.MAX_ANGLE / self.COUNTS_PER_REV
-            )
-        raise RuntimeError("Failed to read position")
+        if result != 0:
+            raise RuntimeError("Failed to read position")
+        self._alert = bool(error)
+        return self._to_signed32(pos) * self.MAX_ANGLE / self.COUNTS_PER_REV
 
     def _read_current_ma(self):
         """Present current in mA (signed), or None if the read fails."""
-        value, result, error = self.packet_handler.read2ByteTxRx(
+        value, result, _error = self.packet_handler.read2ByteTxRx(
             self.port, self.motor_id, self.ADDR_PRESENT_CURRENT
         )
-        if result == 0 and error == 0:
+        if result == 0:
             return self._to_signed16(value) * self.CURRENT_UNIT_MA
         return None
 

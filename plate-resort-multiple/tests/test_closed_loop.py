@@ -59,13 +59,19 @@ def report(result):
     print("\n📊 Move result:")
     print(f"   ✅ Success: {result['success']}")
     print(f"   📝 Reason: {result['reason']}")
-    print(f"   📍 Final position: {result['final_angle']:.3f}°")
-    print(f"   📏 Final error: {result['final_error']:.3f}°")
+    if result.get("final_angle") is not None:
+        print(f"   📍 Final position: {result['final_angle']:.3f}°")
+        print(f"   📏 Final error: {result['final_error']:.3f}°")
     print(f"   ⏱️ Elapsed: {result['elapsed_s']:.2f}s")
     if result.get("peak_current_ma") is not None:
         print(f"   ⚡ Peak current: {result['peak_current_ma']:.0f}mA")
     if result.get("hardware_error"):
-        print(f"   🚨 Hardware error: 0x{result['hardware_error']:02X}")
+        faults = ", ".join(
+            PlateResort._decode_hardware_error(result["hardware_error"])
+        ) or "unknown"
+        print(
+            f"   🚨 Hardware error: 0x{result['hardware_error']:02X} ({faults})"
+        )
 
 
 def main():
