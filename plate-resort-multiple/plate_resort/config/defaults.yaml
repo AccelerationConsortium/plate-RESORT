@@ -17,7 +17,8 @@ resort:
   # angle_i = offset_angle + i * (360 / len(hotels)) * rotation_direction
   
   # Movement settings
-  default_speed: 30  # Profile Velocity register (0.229 rpm/unit; 30 ≈ 6.9 rpm ≈ 41 °/s). Shapes the trajectory only — does NOT limit torque.
+  default_speed: 17  # Profile Velocity register (0.229 rpm/unit; 17 ≈ 3.9 rpm ≈ 23 °/s — full rotation ≈ 15 s). Shapes the trajectory only — does NOT limit torque.
+  max_speed: 17      # Upper bound accepted by set_speed()/config (17 keeps a full rotation at ≈ 15 s or slower). Values < 1 are always rejected: Profile Velocity 0 means NO velocity profile (unlimited-speed move), not slow.
   position_tolerance: 0.5  # Position accuracy in degrees
   movement_timeout: 20  # Max wait time in seconds
   profile_acceleration: 10  # Profile Acceleration register (214.577 rev/min²/unit; 10 ≈ 215 °/s²). 0 = infinite (step); gentle ramp reduces stick-slip on a heavy carousel.

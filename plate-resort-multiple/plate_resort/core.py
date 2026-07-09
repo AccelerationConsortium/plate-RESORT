@@ -351,7 +351,11 @@ class PlateResort:
 
         # Trajectory shaping. Profile velocity/acceleration only shape the
         # goal trajectory — they do not limit torque.
-        self._write4(self.ADDR_PROFILE_VELOCITY, int(self.speed), "profile velocity")
+        self._write4(
+            self.ADDR_PROFILE_VELOCITY,
+            self._validated_speed(self.speed),
+            "profile velocity",
+        )
         self._write4(
             self.ADDR_PROFILE_ACCELERATION,
             int(cfg.get("profile_acceleration", 10)),
@@ -836,8 +840,34 @@ class PlateResort:
         else:
             print("✓ All parameters within normal range")
 
+    def _validated_speed(self, speed):
+        """Validate a Profile Velocity value against config bounds.
+
+        Profile Velocity 0 means "no velocity profile" on Dynamixel — the
+        servo would move at whatever speed the torque cap and supply
+        voltage allow — so 0 is rejected, not treated as slow/stopped.
+        """
+        speed = int(speed)
+        max_speed = int(self.config.get("max_speed", 100))
+        if speed < 1:
+            raise ValueError(
+                "speed must be >= 1 (Profile Velocity 0 disables the "
+                "velocity profile: unlimited-speed move)"
+            )
+        if speed > max_speed:
+            raise ValueError(
+                f"speed {speed} exceeds max_speed cap ({max_speed}); "
+                "raise max_speed in config if intentional"
+            )
+        return speed
+
     def set_speed(self, speed):
-        """Set motor speed (profile velocity)"""
+        """Set motor speed (Profile Velocity, 0.229 rpm per unit).
+
+        Raises:
+            ValueError: If speed < 1 or above the max_speed config cap.
+        """
+        speed = self._validated_speed(speed)
         self.speed = speed
         if self.port:
             self._write4(
@@ -902,6 +932,7 @@ class PlateResort:
         "feedforward_2nd_gain",
         "goal_current_ma",
         "default_speed",
+        "max_speed",
         "profile_acceleration",
         "position_tolerance",
         "movement_timeout",

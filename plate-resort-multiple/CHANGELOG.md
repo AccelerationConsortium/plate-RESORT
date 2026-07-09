@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.1] - 2026-07-09
+### Added
+- `connect()` now recovers from a latched Hardware Error Status (e.g. overload shutdown): it decodes the fault bits, reboots the servo, and verifies the flag cleared before applying configuration. Previously the first checked write raised on the alert bit, so `reboot()` — the recovery path — could never be reached; `soft_reset.py` was wedged by the very fault it exists to clear.
+- `max_speed` config key (default 17 ≈ 3.9 rpm — full rotation ≈ 15 s): upper bound enforced by `set_speed()` and at connect; `default_speed` lowered to match. Values < 1 are always rejected — Profile Velocity 0 means "no velocity profile" on Dynamixel (an unlimited-speed move), not slow/stopped. Configs without the key fall back to a permissive 100 so existing user configs keep connecting.
+
+### Fixed
+- `_read_hardware_error()` returned None exactly when a fault was latched, because the servo sets the alert bit in the error byte of every status packet while faulted — the very condition the read exists to diagnose. It now checks only the comm result.
+- `tests/status.py` printed the long-dead `enable_precise_move` flag (it was never read by any control code); it now shows the operating mode and PID gains.
+
 ## [2.1.0] - 2026-07-08
 ### Changed
 - Replaced the two-stage (coarse position + host-side PWM pulse) movement strategy with a single closed-loop move executed by the servo's internal controller. Root cause of the chronic undershoot was the firmware's default Position I Gain of 0: a P-only controller parks where its output balances load friction, leaving a load-proportional steady-state error. The PWM pulse stage compounded this by freewheeling (Goal PWM 0) between pulses, letting the loaded carousel back-drive, and by leaving the servo in PWM mode after every move so subsequent Goal Position writes were silently ignored.

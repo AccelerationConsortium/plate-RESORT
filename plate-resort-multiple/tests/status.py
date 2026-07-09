@@ -28,7 +28,10 @@ def main():
             f"   🎯 Position tolerance: {resort.config.get('position_tolerance', 'N/A')}°"
         )
         print(
-            f"   🔧 Two-stage move: {'Enabled' if resort.config.get('enable_precise_move') else 'Disabled'}"
+            f"   🔧 Control: mode {resort.config.get('operating_mode', 5)}, "
+            f"gains P={resort.config.get('position_p_gain', 800)} "
+            f"I={resort.config.get('position_i_gain', 300)} "
+            f"D={resort.config.get('position_d_gain', 0)}"
         )
 
         # Show hotel positions
