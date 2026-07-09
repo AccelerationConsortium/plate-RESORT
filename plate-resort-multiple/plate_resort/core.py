@@ -229,7 +229,53 @@ class PlateResort:
         if not self.port.setBaudRate(self.baud):
             raise Exception(f"Failed to set baudrate {self.baud}")
 
+        self._recover_hardware_error()
         self._apply_motor_config()
+
+    # Hardware Error Status (addr 70) bit meanings, X-series Protocol 2.0
+    HARDWARE_ERROR_BITS = {
+        0: "input voltage",
+        2: "overheating",
+        3: "motor encoder",
+        4: "electrical shock",
+        5: "overload",
+    }
+
+    @classmethod
+    def _decode_hardware_error(cls, value):
+        """Names of the fault bits set in a Hardware Error Status byte."""
+        return [
+            name
+            for bit, name in cls.HARDWARE_ERROR_BITS.items()
+            if value & (1 << bit)
+        ]
+
+    def _recover_hardware_error(self):
+        """Clear a latched hardware fault (e.g. overload shutdown) by reboot.
+
+        A latched fault sets the alert bit on every status packet, so the
+        checked writes in _apply_motor_config would raise before reboot()
+        could ever be reached. Recover here, before any configuration.
+        """
+        value = self._read_hardware_error()
+        if not value:
+            return
+        faults = self._decode_hardware_error(value) or [f"0x{value:02X}"]
+        print(
+            f"[RECOVER] hardware error latched ({', '.join(faults)}, "
+            f"0x{value:02X}); rebooting servo"
+        )
+        self.packet_handler.reboot(self.port, self.motor_id)
+        time.sleep(1.0)
+        value = self._read_hardware_error()
+        if value:
+            faults = self._decode_hardware_error(value) or [f"0x{value:02X}"]
+            raise RuntimeError(
+                f"Hardware error persists after reboot "
+                f"({', '.join(faults)}); power-cycle the motor and "
+                f"check the load/wiring before retrying"
+            )
+        print("[RECOVER] fault cleared")
 
     def _apply_motor_config(self):
         """Configure operating mode, gains, limits and profile, then enable
@@ -819,11 +865,16 @@ class PlateResort:
         return None
 
     def _read_hardware_error(self):
-        """Hardware Error Status byte, or None if the read fails."""
-        value, result, error = self.packet_handler.read1ByteTxRx(
+        """Hardware Error Status byte, or None if the read fails.
+
+        Only the comm result is checked: when a fault is latched the servo
+        sets the alert bit in the error byte of every status packet, which
+        is precisely the condition this read exists to diagnose.
+        """
+        value, result, _error = self.packet_handler.read1ByteTxRx(
             self.port, self.motor_id, self.ADDR_HARDWARE_ERROR
         )
-        return value if result == 0 and error == 0 else None
+        return value if result == 0 else None
 
     def get_current_position(self):
         """Get current motor position in degrees, normalized to [0, 360)"""
