@@ -54,6 +54,7 @@ Thumbs.db
 # Virtual environment
 venv/
 .venv/
+.venv-stepper/
 
 # API keys and secrets
 .env
