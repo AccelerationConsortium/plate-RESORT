@@ -1,0 +1,15 @@
+ref,category,vendor,part_number,description,qty,unit_cost,currency,notes
+A1,fastener,McMaster-Carr,92125A234,"M6 FH screw, 10 mm, SS",22,0.20,USD,2 per tray
+A2,fastener,McMaster-Carr,93590A106,"M6 coupling nut, 18 mm, SS",22,0.89,USD,2 per tray
+A3,fastener,McMaster-Carr,94639A569,"M6 spacer, 1/4 in, nylon",3,0.1789,USD,
+A4,fastener,McMaster-Carr,92095A224,"M6 PH screw, 10 mm, SS",22,0.2318,USD,2 per tray
+A5,structure,McMaster-Carr,8961K96,"DIN 3 rail, 600 mm",1,5.70,USD,
+A6,structure,McMaster-Carr,4844N123,"Single closed gusset for 25 mm rail (with fasteners)",3,5.90,USD,BOM RevA xlsx listed 4844N111
+A7,fastener,McMaster-Carr,92095A128,"M6 PH screw, 15 mm, SS",3,0.228,USD,
+A8,structure,McMaster-Carr,4633N79,"Extrusion, square, 25 mm, 2 ft",1,10.62,USD,
+A9,fastener,McMaster-Carr,94180A371,"M6 heat-set insert",3,0.552,USD,
+A10,structure,McMaster-Carr,3136N534,"Cap, 25 mm rail",1,2.65,USD,
+A11,consumable,McMaster-Carr,91458A115,"Threadlocker, Loctite 243 (medium)",1,,USD,
+A12,fastener,McMaster-Carr,92125A111,"M6 FH screw, 15 mm, SS",1,0.1892,USD,from BOM RevA xlsx; not used in the steps below
+B1,printed,,,"Well plate tray",11,,,48.9 g each; print vertically
+B2,printed,,,"Plate hotel base",1,,,50 g

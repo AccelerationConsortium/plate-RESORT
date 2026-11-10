@@ -1,0 +1,33 @@
+ref,category,vendor,part_number,description,qty,unit_cost,currency,notes
+A1,fastener,McMaster-Carr,92125A104,"M4 FH screw, 15 mm",8,0.0928,USD,
+A2,fastener,McMaster-Carr,98952A029,"M4 standoff, M-F, 12 mm",4,0.92,USD,
+A3,fastener,McMaster-Carr,95947A071,"M4 standoff, F-F, 40 mm",8,1.49,USD,
+A4,fastener,McMaster-Carr,92125A190,"M4 FH screw, 10 mm",8,0.095,USD,
+A5,fastener,McMaster-Carr,92125A202,"M4 FH screw, 25 mm",4,0.192,USD,
+A6,structure,McMaster-Carr,4844N111,"Single closed gusset for 25 mm rail (with fasteners)",4,5.90,USD,
+A7,structure,McMaster-Carr,8961K15,"DIN 3 rail, 1 m",4,7.06,USD,one per hotel tower
+A8,structure,McMaster-Carr,4633N81,"Extrusion, square, 25 mm, 3 ft",1,14.67,USD,
+A9,fastener,McMaster-Carr,93590A106,"M6 coupling nut, 18 mm, SS",160,0.47,USD,2 per tray
+A10,fastener,McMaster-Carr,94639A569,"M6 spacer, 1/4 in, nylon",16,0.1789,USD,
+A11,fastener,McMaster-Carr,92095A128,"M6 PH screw, 15 mm, SS",16,0.228,USD,
+A12,fastener,McMaster-Carr,92125A234,"M6 FH screw, 10 mm, SS",160,0.20,USD,2 per tray
+A13,fastener,McMaster-Carr,92095A224,"M6 PH screw, 10 mm, SS",160,0.2318,USD,2 per tray
+A14,fastener,McMaster-Carr,91406A102,"M6 to M8 thread adapter",1,6.73,USD,
+A15,fastener,McMaster-Carr,9129A480,"M8 screw",1,1.656,USD,TODO verify part number (as listed in BOM RevA)
+A16,consumable,McMaster-Carr,91458A115,"Threadlocker, Loctite 243 (medium)",1,,USD,
+A17,fastener,McMaster-Carr,94180A371,"M6 heat-set insert",20,0.552,USD,
+A18,bearing,igus,TODO,"Bearing",4,6.97,USD,TODO part number
+E1,electronics,Raspberry Pi,,"Raspberry Pi (4/5 or Zero 2 W)",1,,,see electronics.md
+E2,electronics,Pololu,TODO,"Tic T825 USB multi-interface stepper controller",1,,,
+E3,electronics,STEPPERONLINE,17HS19-1684S-MG100,"NEMA 17 stepper, 100:1 planetary gearbox",1,,,example motor; replaces Dynamixel servo
+E4,electronics,Adafruit,TODO,"AS5600 magnetic angle sensor breakout",1,,,plus diametrically magnetized magnet
+E5,electronics,,TODO,"Dry-contact NC microswitch",1,,,home switch
+E6,electronics,,TODO,"12 V regulated supply",1,,,motor power
+E7,mechanical,,TODO,"Motor shaft coupling / carousel hub",1,,,replaces Dynamixel servo hub; TODO
+B1,printed,,,"Well plate tray (see hardware/plate-hotel)",80,,,48.9 g each; 20 per tower
+B2,printed,,,"Bottom housing, rotating",1,,,311 g; 100% infill
+B3,printed,,,"Bottom housing, base",1,,,297 g; 100% infill
+B4,printed,,,"Bottom housing, bottom",1,,,272 g; 100% infill
+B5,printed,,,"Rail adapter",4,,,47.6 g each; 0.16 mm layers
+B6,printed,,,"Regrip plate",2,,,42.5 g each; 0.16 mm layers
+B7,printed,,,"Top bearing",1,,,134 g; 0.2 mm layers
